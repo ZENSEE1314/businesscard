@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BadgeCheck, Trophy, MapPin } from "lucide-react";
 import { qrSvg } from "@/lib/qr";
+import { absoluteUrl } from "@/lib/utils";
 import { cardLinks, type CardView } from "@/features/cards/queries";
 import { ContactActions, ShareButton } from "@/components/card/card-actions";
 import { NfcButton } from "@/components/card/nfc-button";
@@ -121,7 +122,7 @@ export async function PublicCard({
               messageHref={messageHref}
             />
             <ShareButton targetId={card.userId} url={card.profileUrl} title={card.name} />
-            <NfcButton url={card.profileUrl} />
+            <NfcButton cardUrl={card.profileUrl} vcardUrl={absoluteUrl(vcardUrl)} />
           </div>
 
           {/* Contact details */}
