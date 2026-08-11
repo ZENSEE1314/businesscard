@@ -23,12 +23,14 @@ const ALLOWED_MIME = new Set([
 const MAX_BYTES = 8 * 1024 * 1024; // 8MB
 
 let s3: S3Client | null = null;
-function getS3(): S3Client {
+export function getS3(): S3Client {
   if (!s3) {
     s3 = new S3Client({
-      region: env.s3.region,
+      region: env.s3.region || "auto",
       endpoint: env.s3.endpoint || undefined,
-      forcePathStyle: true,
+      // Provider addressing style. Railway/Tigris buckets use virtual-host
+      // (default); set S3_FORCE_PATH_STYLE=true for MinIO-style path routing.
+      forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
       credentials: {
         accessKeyId: env.s3.accessKeyId,
         secretAccessKey: env.s3.secretAccessKey,
@@ -37,6 +39,8 @@ function getS3(): S3Client {
   }
   return s3;
 }
+
+export const S3_BUCKET = env.s3.bucket;
 
 function randomName(ext: string): string {
   return `${Date.now()}-${randomBytes(8).toString("hex")}.${ext}`;
@@ -54,11 +58,12 @@ async function putObject(
         Key: key,
         Body: body,
         ContentType: contentType,
-        ACL: "public-read",
       }),
     );
+    // If a public bucket URL is configured, use it directly; otherwise serve
+    // through the app proxy (/api/files/*) so we never depend on public ACLs.
     const base = env.s3.publicUrl.replace(/\/$/, "");
-    return `${base}/${key}`;
+    return base ? `${base}/${key}` : `/api/files/${key}`;
   }
 
   // Local disk driver (development): write under /public so Next serves it.
