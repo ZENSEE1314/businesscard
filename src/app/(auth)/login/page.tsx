@@ -48,17 +48,26 @@ export default function LoginPage() {
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
+            name="email"
             type="email"
-            autoComplete="email"
+            autoComplete="username"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         <div>
-          <Label htmlFor="password">Password</Label>
+          <div className="mb-1.5 flex items-center justify-between">
+            <Label htmlFor="password" className="mb-0">
+              Password
+            </Label>
+            <Link href="/forgot" className="text-xs font-medium text-primary">
+              Forgot password?
+            </Link>
+          </div>
           <Input
             id="password"
+            name="password"
             type="password"
             autoComplete="current-password"
             required

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ExternalLink, Pencil, Crown } from "lucide-react";
+import { ExternalLink, Pencil, Crown, Lock } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { Card, ButtonLink, Badge } from "@/components/ui";
@@ -59,6 +59,9 @@ export default async function MyProfilePage() {
           </ButtonLink>
           <ButtonLink href="/me/edit" variant="outline" size="sm">
             <Pencil className="h-4 w-4" /> Edit profile
+          </ButtonLink>
+          <ButtonLink href="/me/password" variant="outline" size="sm">
+            <Lock className="h-4 w-4" /> Change password
           </ButtonLink>
           {businessProfile && (
             <ButtonLink

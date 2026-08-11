@@ -84,7 +84,9 @@ export async function approveMembership(membershipId: string, adminId: string) {
     await tx.user.update({
       where: { id: user.id },
       data: {
-        role: "BUSINESS",
+        // Admins keep ADMIN (which already grants business capabilities);
+        // everyone else is upgraded to BUSINESS.
+        role: user.role === "ADMIN" ? "ADMIN" : "BUSINESS",
         membershipTier: membership.tier,
         membershipStatus: "ACTIVE",
         membershipExpiresAt: expiresAt,

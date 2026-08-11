@@ -118,14 +118,12 @@ async function main() {
       include: { profile: true },
     });
     if (existing) {
-      await prisma.user.update({
-        where: { id: existing.id },
-        data: { role: "ADMIN", passwordHash: hash },
-      });
-      if (existing.profile) {
-        await prisma.profile.update({
-          where: { userId: existing.id },
-          data: { fullName: adminName },
+      // Ensure the account is an admin, but NEVER clobber an existing user's
+      // password or profile on redeploys — that would wipe any password they set.
+      if (existing.role !== "ADMIN") {
+        await prisma.user.update({
+          where: { id: existing.id },
+          data: { role: "ADMIN" },
         });
       }
     } else {
