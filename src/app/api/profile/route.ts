@@ -5,7 +5,7 @@ import { profileUpdateSchema, emptyToNull } from "@/lib/validation/profile";
 import { awardPoints, PointEvents } from "@/lib/points/engine";
 import { handle, ok } from "@/lib/api";
 
-const IMG_FIELDS = ["avatarUrl", "coverUrl"] as const;
+const IMG_FIELDS = ["avatarUrl", "coverUrl", "coverVideoUrl"] as const;
 
 // Considered "complete" once the essentials for a useful name card are present.
 function isComplete(p: {

@@ -109,6 +109,16 @@ enum NotificationType {
   SYSTEM
 }
 
+enum MediaKind {
+  IMAGE
+  VIDEO
+}
+
+enum MediaSection {
+  PRODUCT
+  INTRO
+}
+
 enum AnalyticsEventType {
   PROFILE_VIEW
   POST_VIEW
@@ -251,6 +261,7 @@ model Profile {
   displayName String?
   avatarUrl   String?
   coverUrl    String?
+  coverVideoUrl String?
   bio         String?
   jobTitle    String?
   companyName String?
@@ -293,6 +304,7 @@ model BusinessProfile {
   showOwner    Boolean @default(true)
   logoUrl      String?
   coverUrl     String?
+  coverVideoUrl String?
   description  String?
 
   categoryId String?
@@ -326,10 +338,26 @@ model BusinessProfile {
   updatedAt DateTime @updatedAt
 
   awards BusinessAward[]
+  media  BusinessMedia[]
 
   @@index([categoryId])
   @@index([verification])
   @@index([city])
+}
+
+model BusinessMedia {
+  id                String          @id @default(uuid())
+  businessProfileId String
+  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  kind              MediaKind
+  section           MediaSection
+  url               String
+  thumbUrl          String?
+  caption           String?
+  sortOrder         Int             @default(0)
+  createdAt         DateTime        @default(now())
+
+  @@index([businessProfileId, section])
 }
 
 model BusinessCategory {

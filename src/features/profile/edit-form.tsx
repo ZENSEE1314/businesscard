@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, ImagePlus, Video, X } from "lucide-react";
 import { Button, Card, Input, Label, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
 
@@ -21,11 +21,13 @@ function ImageUpload({
   folder,
   value,
   onChange,
+  kind = "image",
 }: {
   label: string;
   folder: string;
   value: string | null;
   onChange: (url: string) => void;
+  kind?: "image" | "video";
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -55,8 +57,12 @@ function ImageUpload({
       <div className="flex items-center gap-3">
         <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-surface-2 text-muted">
           {value ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={value} alt="" className="h-full w-full object-cover" />
+            kind === "video" ? (
+              <video src={value} className="h-full w-full object-cover" muted />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={value} alt="" className="h-full w-full object-cover" />
+            )
           ) : (
             <Upload className="h-5 w-5" />
           )}
@@ -70,10 +76,15 @@ function ImageUpload({
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upload"}
         </Button>
+        {value && (
+          <Button type="button" variant="ghost" size="sm" onClick={() => onChange("")}>
+            Remove
+          </Button>
+        )}
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={kind === "video" ? "video/*" : "image/*"}
           className="hidden"
           onChange={onFile}
         />
@@ -101,14 +112,106 @@ function Field({
   );
 }
 
+export interface MediaItemState {
+  id: string;
+  kind: "IMAGE" | "VIDEO";
+  section: "PRODUCT" | "INTRO";
+  url: string;
+  caption: string | null;
+}
+
+function MediaManager({
+  title,
+  section,
+  folder,
+  initial,
+}: {
+  title: string;
+  section: "PRODUCT" | "INTRO";
+  folder: string;
+  initial: MediaItemState[];
+}) {
+  const [items, setItems] = useState<MediaItemState[]>(initial);
+  const [busy, setBusy] = useState(false);
+  const imgRef = useRef<HTMLInputElement>(null);
+  const vidRef = useRef<HTMLInputElement>(null);
+
+  async function add(file: File, kind: "IMAGE" | "VIDEO") {
+    setBusy(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("folder", folder);
+    const up = await fetch("/api/upload", { method: "POST", body: fd });
+    const uj = await up.json().catch(() => ({}));
+    if (up.ok && uj.ok) {
+      const res = await apiFetch<{ media: MediaItemState }>("/api/business/media", {
+        method: "POST",
+        body: JSON.stringify({ section, kind, url: uj.data.url }),
+      });
+      if (res.ok && res.data) setItems((i) => [...i, res.data!.media]);
+    }
+    setBusy(false);
+  }
+
+  async function remove(id: string) {
+    const res = await apiFetch(`/api/business/media/${id}`, { method: "DELETE" });
+    if (res.ok) setItems((i) => i.filter((x) => x.id !== id));
+  }
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <Label className="mb-0">{title}</Label>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => imgRef.current?.click()}>
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+            Photo
+          </Button>
+          <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => vidRef.current?.click()}>
+            <Video className="h-4 w-4" /> Video
+          </Button>
+        </div>
+      </div>
+      <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) add(f, "IMAGE"); e.target.value = ""; }} />
+      <input ref={vidRef} type="file" accept="video/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) add(f, "VIDEO"); e.target.value = ""; }} />
+      {items.length === 0 ? (
+        <p className="text-xs text-muted">No {title.toLowerCase()} yet.</p>
+      ) : (
+        <div className="grid grid-cols-3 gap-2">
+          {items.map((m) => (
+            <div key={m.id} className="relative overflow-hidden rounded-lg border border-border bg-surface-2">
+              {m.kind === "VIDEO" ? (
+                <video src={m.url} className="aspect-square w-full object-cover" muted />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={m.url} alt="" className="aspect-square w-full object-cover" />
+              )}
+              <button type="button" onClick={() => remove(m.id)} className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/60 text-white" aria-label="Remove">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface Props {
   role: string;
   profile: Dict;
   business: Dict | null;
   categories: { id: string; name: string }[];
+  media?: MediaItemState[];
 }
 
-export function ProfileEditForm({ role, profile, business, categories }: Props) {
+export function ProfileEditForm({
+  role,
+  profile,
+  business,
+  categories,
+  media = [],
+}: Props) {
   const router = useRouter();
   const p = useForm({
     fullName: (profile.fullName as string) ?? "",
@@ -135,6 +238,7 @@ export function ProfileEditForm({ role, profile, business, categories }: Props) 
     showAddress: (profile.showAddress as boolean) ?? true,
     avatarUrl: (profile.avatarUrl as string) ?? "",
     coverUrl: (profile.coverUrl as string) ?? "",
+    coverVideoUrl: (profile.coverVideoUrl as string) ?? "",
   });
 
   const b = useForm({
@@ -159,6 +263,7 @@ export function ProfileEditForm({ role, profile, business, categories }: Props) 
     twitter: (business?.twitter as string) ?? "",
     logoUrl: (business?.logoUrl as string) ?? "",
     coverUrl: (business?.coverUrl as string) ?? "",
+    coverVideoUrl: (business?.coverVideoUrl as string) ?? "",
   });
 
   const [saving, setSaving] = useState(false);
@@ -228,6 +333,13 @@ export function ProfileEditForm({ role, profile, business, categories }: Props) 
             folder="cover"
             value={p.state.coverUrl || null}
             onChange={(url) => p.set("coverUrl", url)}
+          />
+          <ImageUpload
+            kind="video"
+            label="Cover video (optional)"
+            folder="cover-video"
+            value={p.state.coverVideoUrl || null}
+            onChange={(url) => p.set("coverVideoUrl", url)}
           />
         </div>
         <Field label="Full name" value={p.state.fullName} onChange={(v) => p.set("fullName", v)} required />
@@ -306,6 +418,13 @@ export function ProfileEditForm({ role, profile, business, categories }: Props) 
               value={b.state.coverUrl || null}
               onChange={(url) => b.set("coverUrl", url)}
             />
+            <ImageUpload
+              kind="video"
+              label="Cover video (optional)"
+              folder="cover-video"
+              value={b.state.coverVideoUrl || null}
+              onChange={(url) => b.set("coverVideoUrl", url)}
+            />
           </div>
           <Field label="Business name" value={b.state.name} onChange={(v) => b.set("name", v)} required />
           <div>
@@ -337,6 +456,21 @@ export function ProfileEditForm({ role, profile, business, categories }: Props) 
           </div>
           <Field label="Address" value={b.state.address} onChange={(v) => b.set("address", v)} />
           <Field label="Map link" value={b.state.mapUrl} onChange={(v) => b.set("mapUrl", v)} placeholder="https://maps.google.com/…" />
+
+          <div className="space-y-4 border-t border-border pt-4">
+            <MediaManager
+              title="Introduction"
+              section="INTRO"
+              folder="intro"
+              initial={media.filter((m) => m.section === "INTRO")}
+            />
+            <MediaManager
+              title="Products & Services"
+              section="PRODUCT"
+              folder="product"
+              initial={media.filter((m) => m.section === "PRODUCT")}
+            />
+          </div>
         </Card>
       )}
 

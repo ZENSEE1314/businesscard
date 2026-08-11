@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
         status: input.status === "DRAFT" ? "DRAFT" : "PUBLISHED",
         location: input.location || null,
         websiteUrl: input.websiteUrl || null,
+        videoUrl: input.videoUrl || null,
         ctaType: input.ctaType,
         ctaLabel: noneCta ? null : input.ctaLabel || null,
         ctaValue: noneCta ? null : input.ctaValue || null,

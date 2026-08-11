@@ -15,6 +15,7 @@ export const postCreateSchema = z.object({
   ctaLabel: z.string().trim().max(40).optional().or(z.literal("")),
   ctaValue: z.string().trim().max(200).optional().or(z.literal("")),
   images: z.array(imageSchema).max(10).optional(),
+  videoUrl: z.string().url().optional().or(z.literal("")),
   status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
 });
 

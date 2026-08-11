@@ -69,6 +69,14 @@ export const businessUpdateSchema = z.object({
   twitter: optionalStr(120),
 });
 
+export const businessMediaSchema = z.object({
+  section: z.enum(["PRODUCT", "INTRO"]),
+  kind: z.enum(["IMAGE", "VIDEO"]),
+  url: z.string().url(),
+  thumbUrl: z.string().url().optional().or(z.literal("")),
+  caption: z.string().trim().max(200).optional().or(z.literal("")),
+});
+
 export const usernameUpdateSchema = z.object({
   username: z
     .string()

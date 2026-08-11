@@ -5,7 +5,7 @@ import { businessUpdateSchema, emptyToNull } from "@/lib/validation/profile";
 import { awardPoints, PointEvents } from "@/lib/points/engine";
 import { handle, ok, Errors } from "@/lib/api";
 
-const IMG_FIELDS = ["logoUrl", "coverUrl"] as const;
+const IMG_FIELDS = ["logoUrl", "coverUrl", "coverVideoUrl"] as const;
 
 function isComplete(b: {
   name: string;

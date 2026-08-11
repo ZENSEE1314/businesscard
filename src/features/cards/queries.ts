@@ -22,6 +22,7 @@ export interface CardView {
   org?: string | null;
   avatarUrl?: string | null;
   coverUrl?: string | null;
+  coverVideoUrl?: string | null;
   bio?: string | null;
   verified: boolean;
   phone?: string | null;
@@ -34,7 +35,17 @@ export interface CardView {
   country?: string | null;
   socials: Social;
   awards: { name: string; year: number | null }[];
+  media: MediaItem[];
   isBusiness: boolean;
+}
+
+export interface MediaItem {
+  id: string;
+  kind: "IMAGE" | "VIDEO";
+  section: "PRODUCT" | "INTRO";
+  url: string;
+  thumbUrl: string | null;
+  caption: string | null;
 }
 
 function pickSocials(p: Social): Social {
@@ -66,6 +77,7 @@ export async function getPersonalCard(username: string): Promise<CardView | null
     org: profile.companyName,
     avatarUrl: profile.avatarUrl,
     coverUrl: profile.coverUrl,
+    coverVideoUrl: profile.coverVideoUrl,
     bio: profile.bio,
     verified: false,
     phone: profile.showPhone ? normalizePhone(profile.phone) : null,
@@ -78,6 +90,7 @@ export async function getPersonalCard(username: string): Promise<CardView | null
     country: profile.country,
     socials: pickSocials(profile),
     awards: [],
+    media: [],
     isBusiness: profile.user.role === "BUSINESS",
   };
 }
@@ -91,6 +104,7 @@ export async function getBusinessCard(slug: string): Promise<CardView | null> {
       awards: {
         include: { award: { select: { name: true, year: true } } },
       },
+      media: { orderBy: { sortOrder: "asc" } },
     },
   });
   if (!biz || biz.user.status !== "ACTIVE") return null;
@@ -106,6 +120,7 @@ export async function getBusinessCard(slug: string): Promise<CardView | null> {
     org: biz.showOwner ? biz.ownerName : null,
     avatarUrl: biz.logoUrl,
     coverUrl: biz.coverUrl,
+    coverVideoUrl: biz.coverVideoUrl,
     bio: biz.description,
     verified: biz.verification === "VERIFIED",
     phone: normalizePhone(biz.phone),
@@ -118,6 +133,14 @@ export async function getBusinessCard(slug: string): Promise<CardView | null> {
     country: biz.country,
     socials: pickSocials(biz),
     awards: biz.awards.map((a) => ({ name: a.award.name, year: a.award.year })),
+    media: biz.media.map((m) => ({
+      id: m.id,
+      kind: m.kind,
+      section: m.section,
+      url: m.url,
+      thumbUrl: m.thumbUrl,
+      caption: m.caption,
+    })),
     isBusiness: true,
   };
 }

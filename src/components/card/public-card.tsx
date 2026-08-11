@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BadgeCheck, Trophy, MapPin } from "lucide-react";
 import { qrSvg } from "@/lib/qr";
 import { absoluteUrl } from "@/lib/utils";
-import { cardLinks, type CardView } from "@/features/cards/queries";
+import { cardLinks, type CardView, type MediaItem } from "@/features/cards/queries";
 import { ContactActions, ShareButton } from "@/components/card/card-actions";
 import { NfcButton } from "@/components/card/nfc-button";
 import { env } from "@/lib/env";
@@ -37,6 +37,43 @@ const socialLabel: Record<string, string> = {
   twitter: "X",
 };
 
+function MediaSection({ title, items }: { title: string; items: MediaItem[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-5 border-t border-border pt-4">
+      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+      <div className="grid grid-cols-2 gap-2">
+        {items.map((m) => (
+          <figure key={m.id} className="overflow-hidden rounded-lg bg-surface-2">
+            {m.kind === "VIDEO" ? (
+              <video
+                src={m.url}
+                controls
+                playsInline
+                preload="metadata"
+                className="aspect-square w-full bg-black object-contain"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={m.url}
+                alt={m.caption ?? ""}
+                loading="lazy"
+                className="aspect-square w-full object-cover"
+              />
+            )}
+            {m.caption && (
+              <figcaption className="px-2 py-1 text-xs text-muted">
+                {m.caption}
+              </figcaption>
+            )}
+          </figure>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export async function PublicCard({
   card,
   isGuest,
@@ -58,9 +95,17 @@ export async function PublicCard({
   return (
     <div className="mx-auto w-full max-w-md">
       <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-lg">
-        {/* Cover — show the whole image, never cropped */}
+        {/* Cover — video if set, else the whole image (never cropped) */}
         <div className="relative flex items-center justify-center bg-surface-2">
-          {card.coverUrl ? (
+          {card.coverVideoUrl ? (
+            <video
+              src={card.coverVideoUrl}
+              controls
+              playsInline
+              preload="metadata"
+              className="max-h-72 w-full bg-black"
+            />
+          ) : card.coverUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={card.coverUrl}
@@ -176,6 +221,18 @@ export async function PublicCard({
               ))}
             </div>
           )}
+
+          {/* Introduction & Products */}
+          {(() => {
+            const intro = card.media.filter((m) => m.section === "INTRO");
+            const products = card.media.filter((m) => m.section === "PRODUCT");
+            return (
+              <>
+                <MediaSection title="Introduction" items={intro} />
+                <MediaSection title="Products & Services" items={products} />
+              </>
+            );
+          })()}
 
           {/* QR */}
           <div className="mt-6 flex flex-col items-center border-t border-border pt-5">

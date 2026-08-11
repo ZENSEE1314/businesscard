@@ -73,6 +73,38 @@ async function putObject(
   return `/${key}`;
 }
 
+const ALLOWED_VIDEO_MIME = new Set([
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "video/x-m4v",
+]);
+const MAX_VIDEO_BYTES = 60 * 1024 * 1024; // 60MB
+
+export interface StoredVideo {
+  url: string;
+  kind: "video";
+  mimeType: string;
+}
+
+// Stores an uploaded video as-is (no transcoding). Validates type and size.
+export async function storeVideo(
+  file: File,
+  folder: string,
+): Promise<StoredVideo> {
+  if (!ALLOWED_VIDEO_MIME.has(file.type)) {
+    throw new Error("Unsupported video type. Use MP4, WebM or MOV.");
+  }
+  if (file.size > MAX_VIDEO_BYTES) {
+    throw new Error("Video is too large (max 60MB).");
+  }
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const ext = file.type === "video/webm" ? "webm" : "mp4";
+  const key = `uploads/${folder}/${randomName(ext)}`;
+  const url = await putObject(key, buffer, file.type);
+  return { url, kind: "video", mimeType: file.type };
+}
+
 // Validates, compresses and stores an uploaded image plus a thumbnail.
 // Never trusts the client-supplied extension — the format is derived from the
 // decoded image via sharp.

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, X, Loader2 } from "lucide-react";
+import { ImagePlus, Video, X, Loader2 } from "lucide-react";
 import { Button, Card, Input, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
 
@@ -29,10 +29,29 @@ export function Composer() {
   const [ctaType, setCtaType] = useState<string>("NONE");
   const [ctaValue, setCtaValue] = useState("");
   const [images, setImages] = useState<UploadedImage[]>([]);
+  const [video, setVideo] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
+
+  async function onVideo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setVideoUploading(true);
+    setError(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("folder", "post-video");
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const json = await res.json().catch(() => ({}));
+    setVideoUploading(false);
+    if (res.ok && json.ok) setVideo(json.data.url as string);
+    else setError(json.error ?? "Video upload failed.");
+    if (videoRef.current) videoRef.current.value = "";
+  }
 
   async function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []).slice(0, 10 - images.length);
@@ -70,6 +89,7 @@ export function Composer() {
         ctaType,
         ctaValue: ctaType === "NONE" ? "" : ctaValue,
         images,
+        videoUrl: video ?? "",
       }),
     });
     setPosting(false);
@@ -82,6 +102,7 @@ export function Composer() {
     setCtaType("NONE");
     setCtaValue("");
     setImages([]);
+    setVideo(null);
     setOpen(false);
     router.refresh();
   }
@@ -130,6 +151,19 @@ export function Composer() {
         </div>
       )}
 
+      {video && (
+        <div className="relative overflow-hidden rounded-lg border border-border bg-black">
+          <video src={video} controls className="max-h-64 w-full" />
+          <button
+            onClick={() => setVideo(null)}
+            className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white"
+            aria-label="Remove video"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
       <Input placeholder="Location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} />
 
       <div className="flex flex-wrap gap-2">
@@ -166,6 +200,17 @@ export function Composer() {
           Photos
         </Button>
         <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={onFiles} />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={videoUploading || video !== null}
+          onClick={() => videoRef.current?.click()}
+        >
+          {videoUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
+          Video
+        </Button>
+        <input ref={videoRef} type="file" accept="video/*" className="hidden" onChange={onVideo} />
         <div className="ml-auto flex gap-2">
           <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
             Cancel

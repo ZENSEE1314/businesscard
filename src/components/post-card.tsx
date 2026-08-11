@@ -46,6 +46,19 @@ export function PostCard({ post }: { post: FeedPost }) {
         </div>
       </div>
 
+      {/* Video */}
+      {post.videoUrl && (
+        <div className="bg-black">
+          <video
+            src={post.videoUrl}
+            controls
+            playsInline
+            preload="metadata"
+            className="max-h-[560px] w-full"
+          />
+        </div>
+      )}
+
       {/* Media — whole photo shown (letterboxed, never cropped), swipeable */}
       {hasImages && (
         <div className="relative bg-surface-2">

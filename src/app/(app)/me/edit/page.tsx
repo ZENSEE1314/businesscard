@@ -12,7 +12,10 @@ export default async function EditProfilePage() {
   const [user, categories] = await Promise.all([
     prisma.user.findUnique({
       where: { id: current.id },
-      include: { profile: true, businessProfile: true },
+      include: {
+        profile: true,
+        businessProfile: { include: { media: { orderBy: { sortOrder: "asc" } } } },
+      },
     }),
     prisma.businessCategory.findMany({ orderBy: { sortOrder: "asc" } }),
   ]);
@@ -31,6 +34,17 @@ export default async function EditProfilePage() {
             : null
         }
         categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+        media={
+          user.businessProfile
+            ? user.businessProfile.media.map((m) => ({
+                id: m.id,
+                kind: m.kind,
+                section: m.section,
+                url: m.url,
+                caption: m.caption,
+              }))
+            : []
+        }
       />
     </div>
   );
