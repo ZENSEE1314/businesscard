@@ -56,11 +56,17 @@ export async function PublicCard({
   return (
     <div className="mx-auto w-full max-w-md">
       <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-lg">
-        {/* Cover */}
-        <div className="relative h-32 bg-gradient-to-br from-brand-500 to-accent">
-          {card.coverUrl && (
+        {/* Cover — show the whole image, never cropped */}
+        <div className="relative flex items-center justify-center bg-surface-2">
+          {card.coverUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={card.coverUrl} alt="" className="h-full w-full object-cover" />
+            <img
+              src={card.coverUrl}
+              alt=""
+              className="max-h-72 w-full object-contain"
+            />
+          ) : (
+            <div className="h-32 w-full bg-gradient-to-br from-brand-500 to-accent" />
           )}
         </div>
 

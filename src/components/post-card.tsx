@@ -46,22 +46,22 @@ export function PostCard({ post }: { post: FeedPost }) {
         </div>
       </div>
 
-      {/* Media — Instagram-style square, swipeable when multiple */}
+      {/* Media — whole photo shown (letterboxed, never cropped), swipeable */}
       {hasImages && (
-        <div className="relative">
+        <div className="relative bg-surface-2">
           <div className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto">
             {post.images.map((img) => (
               <Link
                 key={img.id}
                 href={`/post/${post.id}`}
-                className="relative aspect-square w-full shrink-0 snap-center"
+                className="flex h-96 w-full shrink-0 snap-center items-center justify-center"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={img.url}
                   alt=""
                   loading="lazy"
-                  className="h-full w-full object-cover"
+                  className="max-h-full max-w-full object-contain"
                 />
               </Link>
             ))}
