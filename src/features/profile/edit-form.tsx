@@ -1,0 +1,350 @@
+"use client";
+
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Upload, Loader2 } from "lucide-react";
+import { Button, Card, Input, Label, Textarea } from "@/components/ui";
+import { apiFetch } from "@/lib/client";
+
+type Dict = Record<string, unknown>;
+
+function useForm<T extends Dict>(initial: T) {
+  const [state, setState] = useState<T>(initial);
+  function set<K extends keyof T>(key: K, value: T[K]) {
+    setState((s) => ({ ...s, [key]: value }));
+  }
+  return { state, set };
+}
+
+function ImageUpload({
+  label,
+  folder,
+  value,
+  onChange,
+}: {
+  label: string;
+  folder: string;
+  value: string | null;
+  onChange: (url: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    setError(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("folder", folder);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const json = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok || !json.ok) {
+      setError(json.error ?? "Upload failed.");
+      return;
+    }
+    onChange(json.data.url as string);
+  }
+
+  return (
+    <div>
+      <Label>{label}</Label>
+      <div className="flex items-center gap-3">
+        <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-surface-2 text-muted">
+          {value ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={value} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <Upload className="h-5 w-5" />
+          )}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upload"}
+        </Button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onFile}
+        />
+      </div>
+      {error && <p className="mt-1 text-xs text-danger">{error}</p>}
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  ...rest
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
+  return (
+    <div>
+      <Label>{label}</Label>
+      <Input value={value} onChange={(e) => onChange(e.target.value)} {...rest} />
+    </div>
+  );
+}
+
+interface Props {
+  role: string;
+  profile: Dict;
+  business: Dict | null;
+  categories: { id: string; name: string }[];
+}
+
+export function ProfileEditForm({ role, profile, business, categories }: Props) {
+  const router = useRouter();
+  const p = useForm({
+    fullName: (profile.fullName as string) ?? "",
+    displayName: (profile.displayName as string) ?? "",
+    jobTitle: (profile.jobTitle as string) ?? "",
+    companyName: (profile.companyName as string) ?? "",
+    bio: (profile.bio as string) ?? "",
+    phone: (profile.phone as string) ?? "",
+    whatsapp: (profile.whatsapp as string) ?? "",
+    email: (profile.email as string) ?? "",
+    website: (profile.website as string) ?? "",
+    address: (profile.address as string) ?? "",
+    city: (profile.city as string) ?? "",
+    country: (profile.country as string) ?? "",
+    instagram: (profile.instagram as string) ?? "",
+    facebook: (profile.facebook as string) ?? "",
+    tiktok: (profile.tiktok as string) ?? "",
+    linkedin: (profile.linkedin as string) ?? "",
+    telegram: (profile.telegram as string) ?? "",
+    twitter: (profile.twitter as string) ?? "",
+    showPhone: (profile.showPhone as boolean) ?? true,
+    showEmail: (profile.showEmail as boolean) ?? true,
+    showWhatsapp: (profile.showWhatsapp as boolean) ?? true,
+    showAddress: (profile.showAddress as boolean) ?? true,
+    avatarUrl: (profile.avatarUrl as string) ?? "",
+    coverUrl: (profile.coverUrl as string) ?? "",
+  });
+
+  const b = useForm({
+    name: (business?.name as string) ?? "",
+    ownerName: (business?.ownerName as string) ?? "",
+    showOwner: (business?.showOwner as boolean) ?? true,
+    description: (business?.description as string) ?? "",
+    categoryId: (business?.categoryId as string) ?? "",
+    phone: (business?.phone as string) ?? "",
+    whatsapp: (business?.whatsapp as string) ?? "",
+    email: (business?.email as string) ?? "",
+    website: (business?.website as string) ?? "",
+    address: (business?.address as string) ?? "",
+    mapUrl: (business?.mapUrl as string) ?? "",
+    city: (business?.city as string) ?? "",
+    country: (business?.country as string) ?? "",
+    instagram: (business?.instagram as string) ?? "",
+    facebook: (business?.facebook as string) ?? "",
+    tiktok: (business?.tiktok as string) ?? "",
+    linkedin: (business?.linkedin as string) ?? "",
+    telegram: (business?.telegram as string) ?? "",
+    twitter: (business?.twitter as string) ?? "",
+    logoUrl: (business?.logoUrl as string) ?? "",
+    coverUrl: (business?.coverUrl as string) ?? "",
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const isBusiness = role === "BUSINESS" && business;
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSaved(false);
+
+    const profileRes = await apiFetch("/api/profile", {
+      method: "PATCH",
+      body: JSON.stringify(p.state),
+    });
+    if (!profileRes.ok) {
+      setSaving(false);
+      setError(profileRes.error ?? "Could not save.");
+      return;
+    }
+
+    if (isBusiness) {
+      const bizRes = await apiFetch("/api/business", {
+        method: "PATCH",
+        body: JSON.stringify(b.state),
+      });
+      if (!bizRes.ok) {
+        setSaving(false);
+        setError(bizRes.error ?? "Could not save business profile.");
+        return;
+      }
+    }
+
+    setSaving(false);
+    setSaved(true);
+    router.refresh();
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      {error && (
+        <div role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-danger">
+          {error}
+        </div>
+      )}
+      {saved && (
+        <div className="rounded-lg bg-green-50 px-3 py-2 text-sm text-success">
+          Saved! Your card is updated.
+        </div>
+      )}
+
+      {/* Personal */}
+      <Card className="space-y-4 p-5">
+        <h2 className="font-semibold">Your details</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ImageUpload
+            label="Profile photo"
+            folder="avatar"
+            value={p.state.avatarUrl || null}
+            onChange={(url) => p.set("avatarUrl", url)}
+          />
+          <ImageUpload
+            label="Cover image"
+            folder="cover"
+            value={p.state.coverUrl || null}
+            onChange={(url) => p.set("coverUrl", url)}
+          />
+        </div>
+        <Field label="Full name" value={p.state.fullName} onChange={(v) => p.set("fullName", v)} required />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Display name" value={p.state.displayName} onChange={(v) => p.set("displayName", v)} />
+          <Field label="Job title" value={p.state.jobTitle} onChange={(v) => p.set("jobTitle", v)} />
+        </div>
+        <Field label="Company" value={p.state.companyName} onChange={(v) => p.set("companyName", v)} />
+        <div>
+          <Label>Bio</Label>
+          <Textarea rows={3} value={p.state.bio} onChange={(e) => p.set("bio", e.target.value)} />
+        </div>
+      </Card>
+
+      {/* Contact + privacy */}
+      <Card className="space-y-4 p-5">
+        <h2 className="font-semibold">Contact</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Phone" value={p.state.phone} onChange={(v) => p.set("phone", v)} />
+          <Field label="WhatsApp" value={p.state.whatsapp} onChange={(v) => p.set("whatsapp", v)} />
+          <Field label="Email" type="email" value={p.state.email} onChange={(v) => p.set("email", v)} />
+          <Field label="Website" value={p.state.website} onChange={(v) => p.set("website", v)} placeholder="https://" />
+          <Field label="City" value={p.state.city} onChange={(v) => p.set("city", v)} />
+          <Field label="Country" value={p.state.country} onChange={(v) => p.set("country", v)} />
+        </div>
+        <Field label="Address" value={p.state.address} onChange={(v) => p.set("address", v)} />
+        <div className="grid grid-cols-2 gap-2 pt-1 text-sm">
+          {(
+            [
+              ["showPhone", "Show phone"],
+              ["showWhatsapp", "Show WhatsApp"],
+              ["showEmail", "Show email"],
+              ["showAddress", "Show address"],
+            ] as const
+          ).map(([key, label]) => (
+            <label key={key} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={p.state[key] as boolean}
+                onChange={(e) => p.set(key, e.target.checked)}
+                className="h-4 w-4 accent-[var(--primary)]"
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      </Card>
+
+      {/* Socials */}
+      <Card className="space-y-4 p-5">
+        <h2 className="font-semibold">Social links</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Instagram" value={p.state.instagram} onChange={(v) => p.set("instagram", v)} />
+          <Field label="Facebook" value={p.state.facebook} onChange={(v) => p.set("facebook", v)} />
+          <Field label="TikTok" value={p.state.tiktok} onChange={(v) => p.set("tiktok", v)} />
+          <Field label="LinkedIn" value={p.state.linkedin} onChange={(v) => p.set("linkedin", v)} />
+          <Field label="Telegram" value={p.state.telegram} onChange={(v) => p.set("telegram", v)} />
+          <Field label="X / Twitter" value={p.state.twitter} onChange={(v) => p.set("twitter", v)} />
+        </div>
+      </Card>
+
+      {/* Business */}
+      {isBusiness && (
+        <Card className="space-y-4 p-5">
+          <h2 className="font-semibold">Business profile</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ImageUpload
+              label="Business logo"
+              folder="logo"
+              value={b.state.logoUrl || null}
+              onChange={(url) => b.set("logoUrl", url)}
+            />
+            <ImageUpload
+              label="Business cover"
+              folder="business-cover"
+              value={b.state.coverUrl || null}
+              onChange={(url) => b.set("coverUrl", url)}
+            />
+          </div>
+          <Field label="Business name" value={b.state.name} onChange={(v) => b.set("name", v)} required />
+          <div>
+            <Label>Category</Label>
+            <select
+              value={b.state.categoryId}
+              onChange={(e) => b.set("categoryId", e.target.value)}
+              className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm"
+            >
+              <option value="">Select a category</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label>Description</Label>
+            <Textarea rows={3} value={b.state.description} onChange={(e) => b.set("description", e.target.value)} />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Phone" value={b.state.phone} onChange={(v) => b.set("phone", v)} />
+            <Field label="WhatsApp" value={b.state.whatsapp} onChange={(v) => b.set("whatsapp", v)} />
+            <Field label="Email" type="email" value={b.state.email} onChange={(v) => b.set("email", v)} />
+            <Field label="Website" value={b.state.website} onChange={(v) => b.set("website", v)} placeholder="https://" />
+            <Field label="City" value={b.state.city} onChange={(v) => b.set("city", v)} />
+            <Field label="Country" value={b.state.country} onChange={(v) => b.set("country", v)} />
+          </div>
+          <Field label="Address" value={b.state.address} onChange={(v) => b.set("address", v)} />
+          <Field label="Map link" value={b.state.mapUrl} onChange={(v) => b.set("mapUrl", v)} placeholder="https://maps.google.com/…" />
+        </Card>
+      )}
+
+      <div className="sticky bottom-16 z-10 md:bottom-0">
+        <Button type="submit" size="lg" className="w-full" disabled={saving}>
+          {saving ? "Saving…" : "Save changes"}
+        </Button>
+      </div>
+    </form>
+  );
+}

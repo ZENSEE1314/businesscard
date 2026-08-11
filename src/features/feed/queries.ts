@@ -13,8 +13,9 @@ export async function getFeedPosts(opts: {
   cursor?: FeedCursor | null;
   sort?: "latest" | "popular";
   viewerId?: string | null;
+  authorId?: string;
 }) {
-  const { cursor, sort = "latest", viewerId } = opts;
+  const { cursor, sort = "latest", viewerId, authorId } = opts;
 
   const orderBy =
     sort === "popular"
@@ -24,6 +25,7 @@ export async function getFeedPosts(opts: {
   const posts = await prisma.post.findMany({
     where: {
       status: "PUBLISHED",
+      ...(authorId ? { authorId } : {}),
       ...(cursor && sort === "latest"
         ? {
             OR: [
