@@ -71,9 +71,9 @@ export async function PublicCard({
         </div>
 
         <div className="px-5 pb-6">
-          {/* Avatar — the box fits the photo so the whole image shows,
-              edge to edge, with no crop and no empty bars. */}
-          <div className="-mt-12 mb-3">
+          {/* Avatar — centered in front of the cover; box fits the photo so the
+              whole image shows edge to edge, with no crop and no empty bars. */}
+          <div className="-mt-14 mb-3 flex justify-center">
             {card.avatarUrl ? (
               <div className="w-32 overflow-hidden rounded-2xl border-4 border-surface bg-surface-2 shadow-md">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -90,38 +90,42 @@ export async function PublicCard({
             )}
           </div>
 
-          {/* Identity */}
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold">{card.name}</h1>
-            {card.verified && (
-              <BadgeCheck className="h-5 w-5 text-blue-500" aria-label="Verified" />
+          {/* Identity — centered */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2">
+              <h1 className="text-xl font-bold">{card.name}</h1>
+              {card.verified && (
+                <BadgeCheck className="h-5 w-5 text-blue-500" aria-label="Verified" />
+              )}
+            </div>
+            {card.subtitle && <p className="text-sm text-muted">{card.subtitle}</p>}
+            {card.org && <p className="text-sm font-medium">{card.org}</p>}
+            <div className="mt-1.5 flex justify-center">
+              <span className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700">
+                {card.isBusiness ? "Business" : "Member"}
+              </span>
+            </div>
+
+            {/* Awards */}
+            {card.awards.length > 0 && (
+              <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+                {card.awards.map((a, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700"
+                  >
+                    <Trophy className="h-3.5 w-3.5" />
+                    {a.name}
+                    {a.year ? ` ${a.year}` : ""}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
-          {card.subtitle && <p className="text-sm text-muted">{card.subtitle}</p>}
-          {card.org && <p className="text-sm font-medium">{card.org}</p>}
-          <div className="mt-1.5">
-            <span className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700">
-              {card.isBusiness ? "Business" : "Member"}
-            </span>
-          </div>
 
-          {/* Awards */}
-          {card.awards.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {card.awards.map((a, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700"
-                >
-                  <Trophy className="h-3.5 w-3.5" />
-                  {a.name}
-                  {a.year ? ` ${a.year}` : ""}
-                </span>
-              ))}
-            </div>
+          {card.bio && (
+            <p className="mt-4 text-center text-sm leading-relaxed">{card.bio}</p>
           )}
-
-          {card.bio && <p className="mt-4 text-sm leading-relaxed">{card.bio}</p>}
 
           {/* Actions */}
           <div className="mt-5 space-y-2">

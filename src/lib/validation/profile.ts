@@ -3,13 +3,24 @@ import { z } from "zod";
 const optionalStr = (max = 200) =>
   z.string().trim().max(max).optional().or(z.literal(""));
 
-const optionalUrl = z
-  .string()
-  .trim()
-  .max(300)
-  .url("Enter a valid URL.")
-  .optional()
-  .or(z.literal(""));
+// Accepts a website with or without a protocol. Empty stays empty; a bare
+// domain like "rebornwave.group" gets "https://" prepended; validated with the
+// URL parser so any real domain/TLD is accepted. Returns "" or a full URL.
+function isParsableUrl(v: string): boolean {
+  if (v === "") return true;
+  try {
+    new URL(v);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const optionalUrl = z.preprocess((val) => {
+  const t = typeof val === "string" ? val.trim() : "";
+  if (!t) return "";
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+}, z.string().max(300).refine(isParsableUrl, "Enter a valid website (e.g. rebornwave.group)."));
 
 export const profileUpdateSchema = z.object({
   fullName: z.string().trim().min(2, "Enter your name.").max(80),
