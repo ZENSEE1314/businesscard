@@ -2,10 +2,7 @@ import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import { createSession, setSessionCookie } from "@/lib/auth/session";
-import {
-  generateUniqueUsername,
-  generateUniqueBusinessSlug,
-} from "@/lib/auth/provisioning";
+import { generateUniqueUsername } from "@/lib/auth/provisioning";
 import { registerSchema } from "@/lib/validation/auth";
 import { awardPoints, adjustPoints, PointEvents } from "@/lib/points/engine";
 import { handle, created, Errors, getClientIp } from "@/lib/api";
@@ -41,13 +38,12 @@ export async function POST(req: NextRequest) {
       input.fullName || input.email.split("@")[0]!,
     );
     const passwordHash = await hashPassword(input.password);
-    const isBusiness = input.accountType === "BUSINESS";
 
     const user = await prisma.user.create({
       data: {
         email: input.email,
         passwordHash,
-        role: isBusiness ? "BUSINESS" : "USER",
+        role: "USER",
         referredById,
         profile: {
           create: {
@@ -56,17 +52,6 @@ export async function POST(req: NextRequest) {
             email: input.email,
           },
         },
-        ...(isBusiness && input.businessName
-          ? {
-              businessProfile: {
-                create: {
-                  slug: await generateUniqueBusinessSlug(input.businessName),
-                  name: input.businessName,
-                  ownerName: input.fullName,
-                },
-              },
-            }
-          : {}),
       },
       select: { id: true, role: true },
     });

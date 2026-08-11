@@ -9,17 +9,12 @@ import { apiFetch } from "@/lib/client";
 function RegisterForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const initialType = params.get("type") === "business" ? "BUSINESS" : "USER";
 
-  const [accountType, setAccountType] = useState<"USER" | "BUSINESS">(
-    initialType,
-  );
   const [form, setForm] = useState({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    businessName: "",
     referralCode: params.get("ref") ?? "",
   });
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +32,7 @@ function RegisterForm() {
       "/api/auth/register",
       {
         method: "POST",
-        body: JSON.stringify({ ...form, accountType }),
+        body: JSON.stringify(form),
       },
     );
     setLoading(false);
@@ -53,26 +48,9 @@ function RegisterForm() {
     <Card className="p-6 sm:p-8">
       <h1 className="text-2xl font-bold">Create your account</h1>
       <p className="mt-1 text-sm text-muted">
-        Free forever. Your digital name card is created instantly.
+        Free forever. Your digital name card is created instantly. Upgrade to a
+        Member Club business membership anytime.
       </p>
-
-      {/* Account type toggle */}
-      <div className="mt-5 grid grid-cols-2 gap-2 rounded-lg bg-surface-2 p-1">
-        {(["USER", "BUSINESS"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setAccountType(t)}
-            className={`h-9 rounded-md text-sm font-medium transition-colors ${
-              accountType === t
-                ? "bg-surface text-foreground shadow-sm"
-                : "text-muted"
-            }`}
-          >
-            {t === "USER" ? "Personal" : "Business"}
-          </button>
-        ))}
-      </div>
 
       <form onSubmit={onSubmit} className="mt-5 space-y-4">
         {error && (
@@ -92,17 +70,6 @@ function RegisterForm() {
             onChange={(e) => update("fullName", e.target.value)}
           />
         </div>
-        {accountType === "BUSINESS" && (
-          <div>
-            <Label htmlFor="businessName">Business name</Label>
-            <Input
-              id="businessName"
-              required
-              value={form.businessName}
-              onChange={(e) => update("businessName", e.target.value)}
-            />
-          </div>
-        )}
         <div>
           <Label htmlFor="email">Email</Label>
           <Input

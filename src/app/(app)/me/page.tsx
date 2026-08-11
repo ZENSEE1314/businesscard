@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ExternalLink, Pencil } from "lucide-react";
+import { ExternalLink, Pencil, Crown } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { Card, ButtonLink, Badge } from "@/components/ui";
@@ -86,6 +86,29 @@ export default async function MyProfilePage() {
           <div className="text-xs text-muted">Redeemed</div>
         </Card>
       </div>
+
+      {user.role !== "BUSINESS" && (
+        <Link href="/membership" className="mt-4 block">
+          <Card className="flex items-center gap-3 bg-gradient-to-r from-brand-600 to-accent p-4 text-white">
+            <Crown className="h-6 w-6" />
+            <div>
+              <div className="font-semibold">Upgrade to Member Club</div>
+              <div className="text-sm text-white/80">
+                Become a business member — advertise, get featured, and network.
+              </div>
+            </div>
+          </Card>
+        </Link>
+      )}
+
+      {user.role === "ADMIN" && (
+        <Link
+          href="/admin"
+          className="mt-3 block text-sm font-medium text-primary"
+        >
+          Admin dashboard →
+        </Link>
+      )}
 
       <div className="mt-4">
         <Link href="/points" className="text-sm font-medium text-primary">

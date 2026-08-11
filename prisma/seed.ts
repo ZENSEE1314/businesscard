@@ -53,6 +53,11 @@ const SETTINGS: Record<string, unknown> = {
   supportEmail: "support@konnect.app",
   termsUrl: "/legal/terms",
   privacyUrl: "/legal/privacy",
+  membershipBank: {
+    bankName: "Bank BCA",
+    accountNumber: "1234567890",
+    accountHolder: "Member Club Indonesia",
+  },
 };
 
 function slugify(input: string): string {

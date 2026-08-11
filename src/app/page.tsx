@@ -66,12 +66,12 @@ export default function LandingPage() {
               Create my free profile <ArrowRight className="h-4 w-4" />
             </ButtonLink>
             <ButtonLink
-              href="/register?type=business"
+              href="/membership"
               variant="outline"
               size="lg"
               className="w-full sm:w-auto"
             >
-              Create business profile
+              Explore Member Club
             </ButtonLink>
           </div>
         </div>

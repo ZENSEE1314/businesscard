@@ -18,24 +18,20 @@ export const passwordSchema = z
   .regex(/[A-Za-z]/, "Password must contain a letter.")
   .regex(/[0-9]/, "Password must contain a number.");
 
+// Everyone registers as a free member. Business status is unlocked later via a
+// paid Member Club membership (approved by an admin), never at signup.
 export const registerSchema = z
   .object({
     email: z.string().trim().toLowerCase().email("Enter a valid email."),
     password: passwordSchema,
     confirmPassword: z.string(),
     fullName: z.string().trim().min(2, "Enter your name.").max(80),
-    accountType: z.enum(["USER", "BUSINESS"]),
-    businessName: z.string().trim().max(120).optional(),
     referralCode: z.string().trim().optional(),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Passwords do not match.",
     path: ["confirmPassword"],
-  })
-  .refine(
-    (d) => d.accountType !== "BUSINESS" || (d.businessName?.length ?? 0) >= 2,
-    { message: "Business name is required.", path: ["businessName"] },
-  );
+  });
 
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email."),

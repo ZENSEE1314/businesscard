@@ -26,6 +26,20 @@ enum AccountStatus {
   BANNED
 }
 
+enum MembershipTier {
+  BASIC
+  GOLD
+  DIAMOND
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  REJECTED
+  CANCELLED
+}
+
 enum VerificationStatus {
   NONE
   PENDING
@@ -129,6 +143,11 @@ model User {
   referredBy   User?   @relation("Referrals", fields: [referredById], references: [id])
   referrals    User[]  @relation("Referrals")
 
+  // Membership (Member Club). Business role is granted by an active membership.
+  membershipTier      MembershipTier?
+  membershipStatus    MembershipStatus?
+  membershipExpiresAt DateTime?
+
   lastLoginAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -155,6 +174,9 @@ model User {
 
   pointTransactions PointTransaction[]
   redemptions       RewardRedemption[]
+
+  memberships         Membership[]
+  approvedMemberships Membership[] @relation("MembershipApprover")
 
   notifications Notification[]
 
@@ -629,6 +651,38 @@ model RewardRedemption {
 
   @@index([userId])
   @@index([rewardId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Membership (Member Club)
+// ---------------------------------------------------------------------------
+
+model Membership {
+  id     String           @id @default(uuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier   MembershipTier
+  status MembershipStatus @default(PENDING)
+
+  priceIdr      Int
+  orderCode     String  @unique
+  paymentMethod String  @default("manual_transfer")
+  paymentProofUrl String?
+  paymentNote   String?
+
+  startedAt DateTime?
+  expiresAt DateTime?
+
+  approvedById   String?
+  approvedBy     User?     @relation("MembershipApprover", fields: [approvedById], references: [id])
+  approvedAt     DateTime?
+  rejectedReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
   @@index([status])
 }
 
