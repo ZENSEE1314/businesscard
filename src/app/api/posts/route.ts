@@ -18,13 +18,24 @@ export async function POST(req: NextRequest) {
     const input = postCreateSchema.parse(await req.json());
     const noneCta = input.ctaType === "NONE";
 
+    // A "Visit website" CTA carries its URL in ctaValue — normalise it (add
+    // https:// if missing) and also store it as the post's websiteUrl so the
+    // button links correctly.
+    const rawSite =
+      input.ctaType === "WEBSITE" ? (input.ctaValue ?? "").trim() : "";
+    const websiteFromCta = rawSite
+      ? /^https?:\/\//i.test(rawSite)
+        ? rawSite
+        : `https://${rawSite}`
+      : "";
+
     const post = await prisma.post.create({
       data: {
         authorId: user.id,
         body: input.body,
         status: input.status === "DRAFT" ? "DRAFT" : "PUBLISHED",
         location: input.location || null,
-        websiteUrl: input.websiteUrl || null,
+        websiteUrl: input.websiteUrl || websiteFromCta || null,
         videoUrl: input.videoUrl || null,
         ctaType: input.ctaType,
         ctaLabel: noneCta ? null : input.ctaLabel || null,

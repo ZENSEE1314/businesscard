@@ -69,11 +69,21 @@ export const businessUpdateSchema = z.object({
   twitter: optionalStr(120),
 });
 
+// Accept our relative upload paths ("/api/files/…") as well as absolute URLs.
+const mediaLink = z
+  .string()
+  .trim()
+  .max(500)
+  .refine(
+    (v) => v.startsWith("/") || /^https?:\/\//i.test(v),
+    "Invalid media link.",
+  );
+
 export const businessMediaSchema = z.object({
   section: z.enum(["PRODUCT", "INTRO"]),
   kind: z.enum(["IMAGE", "VIDEO"]),
-  url: z.string().url(),
-  thumbUrl: z.string().url().optional().or(z.literal("")),
+  url: mediaLink,
+  thumbUrl: mediaLink.optional().or(z.literal("")),
   caption: z.string().trim().max(200).optional().or(z.literal("")),
 });
 

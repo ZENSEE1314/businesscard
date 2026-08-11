@@ -1,8 +1,19 @@
 import { z } from "zod";
 
+// Uploaded media is served from our own domain as a relative path
+// (e.g. "/api/files/…"); external media may be an absolute URL. Accept both.
+export const mediaUrlSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .refine(
+    (v) => v.startsWith("/") || /^https?:\/\//i.test(v),
+    "Invalid media link.",
+  );
+
 const imageSchema = z.object({
-  url: z.string().url(),
-  thumbUrl: z.string().url().optional(),
+  url: mediaUrlSchema,
+  thumbUrl: mediaUrlSchema.optional(),
   width: z.number().int().positive().optional(),
   height: z.number().int().positive().optional(),
 });
@@ -15,7 +26,7 @@ export const postCreateSchema = z.object({
   ctaLabel: z.string().trim().max(40).optional().or(z.literal("")),
   ctaValue: z.string().trim().max(200).optional().or(z.literal("")),
   images: z.array(imageSchema).max(10).optional(),
-  videoUrl: z.string().url().optional().or(z.literal("")),
+  videoUrl: mediaUrlSchema.optional().or(z.literal("")),
   status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
 });
 
