@@ -5,8 +5,17 @@ import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { Card, ButtonLink, Badge } from "@/components/ui";
 import { LogoutButton } from "@/components/logout-button";
+import { getTierConfig } from "@/lib/membership";
 
 export const dynamic = "force-dynamic";
+
+function formatDate(d: Date): string {
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export default async function MyProfilePage() {
   const current = await getCurrentUser();
@@ -19,6 +28,11 @@ export default async function MyProfilePage() {
   if (!user?.profile) redirect("/onboarding");
 
   const { profile, businessProfile } = user;
+
+  const activeTier =
+    user.membershipStatus === "ACTIVE" ? user.membershipTier : null;
+  const tierLabel = activeTier ? getTierConfig(activeTier).label : null;
+  const isTopTier = activeTier === "DIAMOND";
 
   return (
     <div className="mx-auto max-w-2xl px-3 py-4 sm:px-4">
@@ -42,10 +56,11 @@ export default async function MyProfilePage() {
             {profile.jobTitle && (
               <p className="text-sm text-muted">{profile.jobTitle}</p>
             )}
-            <div className="mt-1 flex gap-2">
-              <Badge variant={user.role === "BUSINESS" ? "brand" : "default"}>
-                {user.role === "BUSINESS" ? "Business" : "Member"}
+            <div className="mt-1 flex flex-wrap gap-2">
+              <Badge variant={activeTier ? "brand" : "default"}>
+                {tierLabel ? `${tierLabel} member` : "Free member"}
               </Badge>
+              {user.role === "ADMIN" && <Badge variant="brand">Admin</Badge>}
               <Badge>{user.points} points</Badge>
             </div>
           </div>
@@ -90,18 +105,45 @@ export default async function MyProfilePage() {
         </Card>
       </div>
 
-      {user.role !== "BUSINESS" && (
-        <Link href="/membership" className="mt-4 block">
-          <Card className="flex items-center gap-3 bg-gradient-to-r from-brand-600 to-accent p-4 text-white">
-            <Crown className="h-6 w-6" />
+      {/* Membership status */}
+      <Card className="mt-4 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Crown className={`h-6 w-6 ${activeTier ? "text-amber-500" : "text-muted"}`} />
             <div>
-              <div className="font-semibold">Upgrade to Member Club</div>
-              <div className="text-sm text-white/80">
-                Become a business member — advertise, get featured, and network.
+              <div className="font-semibold">
+                {tierLabel ? `${tierLabel} membership` : "Free member"}
               </div>
+              {activeTier && user.membershipExpiresAt ? (
+                <div className="text-xs text-muted">
+                  Expires {formatDate(user.membershipExpiresAt)}
+                </div>
+              ) : (
+                <div className="text-xs text-muted">
+                  Upgrade to unlock business features
+                </div>
+              )}
             </div>
-          </Card>
-        </Link>
+          </div>
+          {/* Hide the upgrade CTA once at the highest tier. */}
+          {!isTopTier && (
+            <ButtonLink href="/membership" size="sm">
+              {activeTier ? "Upgrade" : "Join"}
+            </ButtonLink>
+          )}
+        </div>
+        {activeTier && (
+          <p className="mt-2 text-xs text-muted">
+            Yearly plan — it returns to the free plan when it expires. We’ll
+            remind you 1 month before.
+          </p>
+        )}
+      </Card>
+
+      {user.role === "BUSINESS" && !activeTier && (
+        <p className="mt-2 px-1 text-xs text-muted">
+          Your membership has ended — renew to restore business features.
+        </p>
       )}
 
       {user.role === "ADMIN" && (

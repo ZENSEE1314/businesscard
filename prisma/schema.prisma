@@ -188,6 +188,7 @@ model User {
 
   adminLogs       AdminLog[] @relation("AdminActor")
   grantedAwards   BusinessAward[] @relation("AwardGrantedBy")
+  receivedAwards  BusinessAward[] @relation("AwardRecipient")
 
   profileViewsMade     ProfileView[] @relation("Viewer")
   profileViewsReceived ProfileView[] @relation("ViewedUser")
@@ -553,19 +554,22 @@ model Award {
 }
 
 model BusinessAward {
-  id                String          @id @default(uuid())
+  id                String           @id @default(uuid())
   awardId           String
-  award             Award           @relation(fields: [awardId], references: [id], onDelete: Cascade)
-  businessProfileId String
-  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  award             Award            @relation(fields: [awardId], references: [id], onDelete: Cascade)
+  // A recipient is either a business or an individual member (or both).
+  businessProfileId String?
+  businessProfile   BusinessProfile? @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  userId            String?
+  user              User?            @relation("AwardRecipient", fields: [userId], references: [id], onDelete: Cascade)
 
   rank        Int?
   grantedById String?
   grantedBy   User?    @relation("AwardGrantedBy", fields: [grantedById], references: [id])
   createdAt   DateTime @default(now())
 
-  @@unique([awardId, businessProfileId])
   @@index([businessProfileId])
+  @@index([userId])
 }
 
 // ---------------------------------------------------------------------------
@@ -673,6 +677,9 @@ model Membership {
 
   startedAt DateTime?
   expiresAt DateTime?
+
+  // Set when the 30-day renewal reminder has been sent, to avoid duplicates.
+  reminderSentAt DateTime?
 
   approvedById   String?
   approvedBy     User?     @relation("MembershipApprover", fields: [approvedById], references: [id])

@@ -12,7 +12,11 @@ export interface AdminAward {
   year: number | null;
   category: string | null;
   featured: boolean;
-  recipients: { id: string; businessProfile: { name: string } | null }[];
+  recipients: {
+    id: string;
+    businessProfile: { name: string } | null;
+    user: { profile: { fullName: string } | null } | null;
+  }[];
 }
 
 export function AwardsAdmin({ awards }: { awards: AdminAward[] }) {
@@ -122,13 +126,13 @@ function AwardRow({
         <div className="mt-2 flex flex-wrap gap-1.5">
           {award.recipients.map((r) => (
             <span key={r.id} className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs">
-              🏆 {r.businessProfile?.name}
+              🏆 {r.businessProfile?.name ?? r.user?.profile?.fullName ?? "—"}
             </span>
           ))}
         </div>
       )}
       <div className="mt-3 flex flex-wrap items-end gap-2">
-        <Input className="h-9 w-40" placeholder="business slug" value={slug} onChange={(e) => setSlug(e.target.value)} />
+        <Input className="h-9 w-48" placeholder="business slug or @username" value={slug} onChange={(e) => setSlug(e.target.value)} />
         <Input className="h-9 w-20" placeholder="rank" value={rank} onChange={(e) => setRank(e.target.value)} />
         <Button size="sm" variant="outline" disabled={!slug} onClick={() => onAssign(award.id, slug, rank)}>
           Assign winner

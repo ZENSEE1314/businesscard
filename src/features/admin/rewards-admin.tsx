@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button, Card, Input, Label, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
 import { timeAgo } from "@/lib/utils";
@@ -43,11 +43,30 @@ export function RewardsAdmin({
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [rows, setRows] = useState(redemptions);
+  const [rewardList, setRewardList] = useState(rewards);
+
+  async function deleteReward(id: string, title: string) {
+    if (!window.confirm(`Delete reward "${title}"?`)) return;
+    const res = await apiFetch<{ deleted: boolean; archived: boolean }>(
+      `/api/admin/rewards/${id}`,
+      { method: "DELETE" },
+    );
+    if (res.ok) {
+      if (res.data?.archived) {
+        setRewardList((rs) =>
+          rs.map((r) => (r.id === id ? { ...r, active: false } : r)),
+        );
+        setMsg("Reward had redemptions, so it was archived (hidden from members).");
+      } else {
+        setRewardList((rs) => rs.filter((r) => r.id !== id));
+      }
+    }
+  }
 
   async function createReward() {
     if (!form.title.trim()) return;
     setBusy(true);
-    const res = await apiFetch("/api/admin/rewards", {
+    const res = await apiFetch<{ id: string }>("/api/admin/rewards", {
       method: "POST",
       body: JSON.stringify({
         title: form.title,
@@ -59,7 +78,17 @@ export function RewardsAdmin({
       }),
     });
     setBusy(false);
-    if (res.ok) {
+    if (res.ok && res.data) {
+      setRewardList((rs) => [
+        {
+          id: res.data!.id,
+          title: form.title,
+          pointsCost: Number(form.pointsCost),
+          stock: form.stock ? Number(form.stock) : null,
+          active: true,
+        },
+        ...rs,
+      ]);
       setForm({ ...form, title: "", description: "" });
       setMsg("Reward created.");
       router.refresh();
@@ -107,13 +136,28 @@ export function RewardsAdmin({
       </Card>
 
       <div>
-        <h2 className="mb-2 font-semibold">Rewards ({rewards.length})</h2>
-        <div className="flex flex-wrap gap-2">
-          {rewards.map((r) => (
-            <span key={r.id} className="rounded-full bg-surface-2 px-3 py-1 text-sm">
-              {r.title} · {r.pointsCost} pts{r.stock !== null ? ` · ${r.stock} left` : ""}
-              {!r.active ? " · paused" : ""}
-            </span>
+        <h2 className="mb-2 font-semibold">Rewards ({rewardList.length})</h2>
+        <div className="space-y-2">
+          {rewardList.map((r) => (
+            <Card key={r.id} className="flex items-center gap-3 p-3">
+              <div className="min-w-0 flex-1 text-sm">
+                <span className="font-medium">{r.title}</span>
+                <span className="text-muted">
+                  {" "}
+                  · {r.pointsCost} pts
+                  {r.stock !== null ? ` · ${r.stock} left` : ""}
+                  {!r.active ? " · archived" : ""}
+                </span>
+              </div>
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={() => deleteReward(r.id, r.title)}
+                aria-label="Delete reward"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </Card>
           ))}
         </div>
       </div>

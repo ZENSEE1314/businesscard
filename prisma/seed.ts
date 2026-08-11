@@ -303,20 +303,18 @@ async function seedDemo(categoryMap: Map<string, string>) {
     });
     const winner = businesses[i % businesses.length]!;
     if (winner.businessProfile) {
-      await prisma.businessAward.upsert({
-        where: {
-          awardId_businessProfileId: {
+      const existing = await prisma.businessAward.findFirst({
+        where: { awardId: award.id, businessProfileId: winner.businessProfile.id },
+      });
+      if (!existing) {
+        await prisma.businessAward.create({
+          data: {
             awardId: award.id,
             businessProfileId: winner.businessProfile.id,
+            rank: 1,
           },
-        },
-        update: {},
-        create: {
-          awardId: award.id,
-          businessProfileId: winner.businessProfile.id,
-          rank: 1,
-        },
-      });
+        });
+      }
     }
   }
 

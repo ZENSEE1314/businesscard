@@ -4,6 +4,7 @@ import { verifyPassword } from "@/lib/auth/password";
 import { createSession, setSessionCookie } from "@/lib/auth/session";
 import { loginSchema } from "@/lib/validation/auth";
 import { awardPoints, PointEvents } from "@/lib/points/engine";
+import { expireUserMembershipIfDue } from "@/features/membership/jobs";
 import { handle, ok, Errors, ApiError, getClientIp } from "@/lib/api";
 import { enforceRateLimit } from "@/lib/security/rate-limit";
 
@@ -44,6 +45,9 @@ export async function POST(req: NextRequest) {
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
+
+    // Downgrade to free if the yearly membership has lapsed.
+    await expireUserMembershipIfDue(user.id).catch(() => undefined);
 
     // Daily login bonus (rule enforces the cooldown so repeats are ignored).
     await awardPoints({

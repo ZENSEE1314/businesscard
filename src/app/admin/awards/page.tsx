@@ -8,7 +8,10 @@ export default async function AdminAwardsPage() {
     orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
     include: {
       recipients: {
-        include: { businessProfile: { select: { name: true } } },
+        include: {
+          businessProfile: { select: { name: true } },
+          user: { select: { profile: { select: { fullName: true } } } },
+        },
       },
     },
   });
@@ -18,7 +21,7 @@ export default async function AdminAwardsPage() {
     <div>
       <h1 className="mb-1 text-xl font-bold">Awards</h1>
       <p className="mb-4 text-sm text-muted">
-        Create awards and assign winning businesses by their slug.
+        Create awards and assign winners by business slug or member username.
       </p>
       <AwardsAdmin awards={awards} />
     </div>
