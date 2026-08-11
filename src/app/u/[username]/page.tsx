@@ -55,7 +55,11 @@ export default async function PersonalCardPage({
 
   return (
     <main className="min-h-dvh px-4 py-8 aurora">
-      <PublicCard card={card} isGuest={!viewer} />
+      <PublicCard
+        card={card}
+        isGuest={!viewer}
+        isOwner={viewer?.id === card.userId}
+      />
     </main>
   );
 }

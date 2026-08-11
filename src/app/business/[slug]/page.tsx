@@ -62,7 +62,11 @@ export default async function BusinessCardPage({
 
   return (
     <main className="min-h-dvh px-4 py-8 aurora">
-      <PublicCard card={card} isGuest={!viewer} />
+      <PublicCard
+        card={card}
+        isGuest={!viewer}
+        isOwner={viewer?.id === card.userId}
+      />
       {posts.length > 0 && (
         <div className="mx-auto mt-6 w-full max-w-md space-y-4">
           <h2 className="px-1 text-sm font-semibold text-muted">Recent posts</h2>

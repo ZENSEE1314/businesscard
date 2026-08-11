@@ -40,9 +40,11 @@ const socialLabel: Record<string, string> = {
 export async function PublicCard({
   card,
   isGuest,
+  isOwner = false,
 }: {
   card: CardView;
   isGuest: boolean;
+  isOwner?: boolean;
 }) {
   const links = cardLinks(card);
   const qr = await qrSvg(card.profileUrl);
@@ -72,8 +74,9 @@ export async function PublicCard({
 
         <div className="px-5 pb-6">
           {/* Avatar — centered in front of the cover; box fits the photo so the
-              whole image shows edge to edge, with no crop and no empty bars. */}
-          <div className="-mt-14 mb-3 flex justify-center">
+              whole image shows edge to edge, with no crop and no empty bars.
+              relative z-10 keeps it painted above the positioned cover. */}
+          <div className="relative z-10 -mt-14 mb-3 flex justify-center">
             {card.avatarUrl ? (
               <div className="w-32 overflow-hidden rounded-2xl border-4 border-surface bg-surface-2 shadow-md">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -137,6 +140,8 @@ export async function PublicCard({
               mailto={links.mailto}
               website={links.website}
               messageHref={messageHref}
+              isOwner={isOwner}
+              editHref="/me/edit"
             />
             <ShareButton targetId={card.userId} url={card.profileUrl} title={card.name} />
             <NfcButton cardUrl={card.profileUrl} vcardUrl={absoluteUrl(vcardUrl)} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Phone,
   Mail,
@@ -10,6 +11,7 @@ import {
   Share2,
   Check,
   Copy,
+  Pencil,
 } from "lucide-react";
 
 type TrackType =
@@ -52,6 +54,8 @@ export function ContactActions({
   mailto,
   website,
   messageHref,
+  isOwner = false,
+  editHref = "/me/edit",
 }: {
   targetId: string;
   vcardUrl: string;
@@ -60,17 +64,29 @@ export function ContactActions({
   mailto: string | null;
   website: string | null;
   messageHref: string;
+  isOwner?: boolean;
+  editHref?: string;
 }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <a
-        href={vcardUrl}
-        onClick={() => track("CONTACT_SAVE", targetId)}
-        className={`${actionBtn} !bg-primary !text-primary-fg !border-transparent`}
-      >
-        <Download className="h-5 w-5" />
-        Save contact
-      </a>
+      {isOwner ? (
+        <Link
+          href={editHref}
+          className={`${actionBtn} !bg-primary !text-primary-fg !border-transparent`}
+        >
+          <Pencil className="h-5 w-5" />
+          Edit
+        </Link>
+      ) : (
+        <a
+          href={vcardUrl}
+          onClick={() => track("CONTACT_SAVE", targetId)}
+          className={`${actionBtn} !bg-primary !text-primary-fg !border-transparent`}
+        >
+          <Download className="h-5 w-5" />
+          Save contact
+        </a>
+      )}
       {whatsapp && (
         <a
           href={whatsapp}
