@@ -80,3 +80,34 @@ export async function getFeedPosts(opts: {
 }
 
 export type FeedPost = Awaited<ReturnType<typeof getFeedPosts>>["items"][number];
+
+// Single post with the same shape as a feed item (for the detail page).
+export async function getPostById(id: string, viewerId?: string | null) {
+  const post = await prisma.post.findFirst({
+    where: { id, status: "PUBLISHED" },
+    include: {
+      images: { orderBy: { sortOrder: "asc" } },
+      author: {
+        select: {
+          id: true,
+          businessProfile: {
+            select: {
+              slug: true,
+              name: true,
+              logoUrl: true,
+              verification: true,
+              category: { select: { name: true } },
+            },
+          },
+        },
+      },
+      likes: viewerId
+        ? { where: { userId: viewerId }, select: { id: true } }
+        : false,
+      bookmarks: viewerId
+        ? { where: { userId: viewerId }, select: { id: true } }
+        : false,
+    },
+  });
+  return post;
+}

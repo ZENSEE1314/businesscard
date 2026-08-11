@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { BadgeCheck, Heart, MessageCircle, Bookmark, Share2 } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
 import { Card } from "@/components/ui";
-import { timeAgo, whatsappNumber } from "@/lib/utils";
+import { timeAgo, whatsappNumber, absoluteUrl } from "@/lib/utils";
+import { PostActions } from "@/features/feed/post-actions";
 import type { FeedPost } from "@/features/feed/queries";
 
 export function PostCard({ post }: { post: FeedPost }) {
@@ -94,22 +95,14 @@ export function PostCard({ post }: { post: FeedPost }) {
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-1 p-2 pt-3 text-sm text-muted">
-        <span className="inline-flex items-center gap-1.5 px-3 py-2">
-          <Heart className={`h-[18px] w-[18px] ${liked ? "fill-red-500 text-red-500" : ""}`} />
-          {post.likeCount}
-        </span>
-        <span className="inline-flex items-center gap-1.5 px-3 py-2">
-          <MessageCircle className="h-[18px] w-[18px]" />
-          {post.commentCount}
-        </span>
-        <span className="inline-flex items-center gap-1.5 px-3 py-2">
-          <Bookmark className={`h-[18px] w-[18px] ${bookmarked ? "fill-primary text-primary" : ""}`} />
-        </span>
-        <span className="ml-auto inline-flex items-center gap-1.5 px-3 py-2">
-          <Share2 className="h-[18px] w-[18px]" />
-        </span>
-      </div>
+      <PostActions
+        postId={post.id}
+        initialLiked={liked}
+        initialLikeCount={post.likeCount}
+        initialBookmarked={bookmarked}
+        commentCount={post.commentCount}
+        postUrl={absoluteUrl(`/post/${post.id}`)}
+      />
     </Card>
   );
 }
