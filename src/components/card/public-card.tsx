@@ -3,6 +3,7 @@ import { BadgeCheck, Trophy, MapPin } from "lucide-react";
 import { qrSvg } from "@/lib/qr";
 import { cardLinks, type CardView } from "@/features/cards/queries";
 import { ContactActions, ShareButton } from "@/components/card/card-actions";
+import { NfcButton } from "@/components/card/nfc-button";
 import { env } from "@/lib/env";
 
 function socialUrl(platform: string, value: string): string {
@@ -120,6 +121,7 @@ export async function PublicCard({
               messageHref={messageHref}
             />
             <ShareButton targetId={card.userId} url={card.profileUrl} title={card.name} />
+            <NfcButton url={card.profileUrl} />
           </div>
 
           {/* Contact details */}

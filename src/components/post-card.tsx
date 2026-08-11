@@ -10,24 +10,28 @@ export function PostCard({ post }: { post: FeedPost }) {
   const liked = Array.isArray(post.likes) && post.likes.length > 0;
   const bookmarked = Array.isArray(post.bookmarks) && post.bookmarks.length > 0;
   const wa = whatsappNumber(post.ctaValue);
+  const hasImages = post.images.length > 0;
 
   return (
     <Card className="overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4">
-        <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-50 text-sm font-bold text-brand-700">
+      <div className="flex items-center gap-3 p-3">
+        <Link
+          href={biz ? `/business/${biz.slug}` : "#"}
+          className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-50 text-sm font-bold text-brand-700"
+        >
           {biz?.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={biz.logoUrl} alt={biz.name} className="h-full w-full object-cover" />
           ) : (
             (biz?.name ?? "B").charAt(0)
           )}
-        </div>
+        </Link>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <Link
               href={biz ? `/business/${biz.slug}` : "#"}
-              className="truncate font-semibold hover:underline"
+              className="truncate text-sm font-semibold hover:underline"
             >
               {biz?.name ?? "Business"}
             </Link>
@@ -35,43 +39,74 @@ export function PostCard({ post }: { post: FeedPost }) {
               <BadgeCheck className="h-4 w-4 text-blue-500" aria-label="Verified business" />
             )}
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted">
+          <div className="flex items-center gap-1.5 text-xs text-muted">
             {biz?.category?.name && <span>{biz.category.name}</span>}
-            <span>·</span>
-            <time>{timeAgo(post.createdAt)}</time>
+            {post.location && <span>· {post.location}</span>}
           </div>
         </div>
       </div>
 
-      {/* Body */}
-      <div className="px-4 pb-3">
-        <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{post.body}</p>
-        {post.location && (
-          <p className="mt-2 text-sm text-muted">📍 {post.location}</p>
-        )}
-      </div>
-
-      {/* Images */}
-      {post.images.length > 0 && (
-        <div
-          className={`grid gap-0.5 ${post.images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
-        >
-          {post.images.slice(0, 4).map((img) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={img.id}
-              src={img.url}
-              alt=""
-              loading="lazy"
-              className="h-full max-h-96 w-full object-cover"
-            />
-          ))}
+      {/* Media — Instagram-style square, swipeable when multiple */}
+      {hasImages && (
+        <div className="relative">
+          <div className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto">
+            {post.images.map((img) => (
+              <Link
+                key={img.id}
+                href={`/post/${post.id}`}
+                className="relative aspect-square w-full shrink-0 snap-center"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={img.url}
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              </Link>
+            ))}
+          </div>
+          {post.images.length > 1 && (
+            <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">
+              1/{post.images.length}
+            </span>
+          )}
         </div>
       )}
 
+      {/* Actions */}
+      <PostActions
+        postId={post.id}
+        initialLiked={liked}
+        initialLikeCount={post.likeCount}
+        initialBookmarked={bookmarked}
+        commentCount={post.commentCount}
+        postUrl={absoluteUrl(`/post/${post.id}`)}
+      />
+
+      {/* Caption */}
+      <div className="px-4 pb-2">
+        <p className="whitespace-pre-wrap text-[15px] leading-relaxed">
+          {biz && (
+            <Link href={`/business/${biz.slug}`} className="mr-1.5 font-semibold hover:underline">
+              {biz.name}
+            </Link>
+          )}
+          {post.body}
+        </p>
+        {post.commentCount > 0 && (
+          <Link href={`/post/${post.id}`} className="mt-1 block text-sm text-muted">
+            View all {post.commentCount} comments
+          </Link>
+        )}
+        <time className="mt-1 block text-[11px] uppercase tracking-wide text-muted-2">
+          {timeAgo(post.createdAt)}
+        </time>
+      </div>
+
       {/* CTA */}
       {post.ctaType !== "NONE" && (
-        <div className="px-4 pt-3">
+        <div className="px-4 pb-4">
           {post.ctaType === "WHATSAPP" && wa ? (
             <a
               href={`https://wa.me/${wa}`}
@@ -93,16 +128,6 @@ export function PostCard({ post }: { post: FeedPost }) {
           ) : null}
         </div>
       )}
-
-      {/* Actions */}
-      <PostActions
-        postId={post.id}
-        initialLiked={liked}
-        initialLikeCount={post.likeCount}
-        initialBookmarked={bookmarked}
-        commentCount={post.commentCount}
-        postUrl={absoluteUrl(`/post/${post.id}`)}
-      />
     </Card>
   );
 }

@@ -6,6 +6,9 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 const NAV = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/memberships", label: "Memberships" },
+  { href: "/admin/feed", label: "Feed" },
+  { href: "/admin/awards", label: "Awards" },
+  { href: "/admin/rewards", label: "Rewards" },
 ];
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {

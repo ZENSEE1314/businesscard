@@ -108,25 +108,46 @@ async function main() {
   // Admin from env (do not hardcode credentials in the repo).
   const adminEmail = process.env.INITIAL_ADMIN_EMAIL;
   const adminPassword = process.env.INITIAL_ADMIN_PASSWORD;
+  const adminName = process.env.INITIAL_ADMIN_NAME || "Platform Admin";
+  const adminUsername = slugify(adminName).replace(/-/g, "") || "admin";
   if (adminEmail && adminPassword) {
-    console.log(`Seeding admin ${adminEmail}...`);
+    console.log(`Seeding admin ${adminEmail} (${adminName})...`);
     const hash = await bcrypt.hash(adminPassword, 12);
-    await prisma.user.upsert({
+    const existing = await prisma.user.findUnique({
       where: { email: adminEmail.toLowerCase() },
-      update: { role: "ADMIN", passwordHash: hash },
-      create: {
-        email: adminEmail.toLowerCase(),
-        passwordHash: hash,
-        role: "ADMIN",
-        emailVerified: new Date(),
-        profile: {
-          create: {
-            username: "admin",
-            fullName: "Platform Admin",
+      include: { profile: true },
+    });
+    if (existing) {
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: { role: "ADMIN", passwordHash: hash },
+      });
+      if (existing.profile) {
+        await prisma.profile.update({
+          where: { userId: existing.id },
+          data: { fullName: adminName },
+        });
+      }
+    } else {
+      // Ensure the admin username is free before creating.
+      const taken = await prisma.profile.findUnique({
+        where: { username: adminUsername },
+      });
+      await prisma.user.create({
+        data: {
+          email: adminEmail.toLowerCase(),
+          passwordHash: hash,
+          role: "ADMIN",
+          emailVerified: new Date(),
+          profile: {
+            create: {
+              username: taken ? `${adminUsername}${Date.now().toString().slice(-4)}` : adminUsername,
+              fullName: adminName,
+            },
           },
         },
-      },
-    });
+      });
+    }
   } else {
     console.warn("INITIAL_ADMIN_EMAIL / INITIAL_ADMIN_PASSWORD not set — skipping admin.");
   }
@@ -196,6 +217,8 @@ async function seedDemo(categoryMap: Map<string, string>) {
         profile: {
           create: { username: b.username, fullName: b.owner, jobTitle: "Owner" },
         },
+        membershipTier: "GOLD",
+        membershipStatus: "ACTIVE",
         businessProfile: {
           create: {
             slug: b.username,
@@ -209,6 +232,8 @@ async function seedDemo(categoryMap: Map<string, string>) {
             whatsapp: "+6591234567",
             email: `${b.username}@demo.konnect`,
             website: `https://${b.username}.example.com`,
+            logoUrl: `https://picsum.photos/seed/${b.username}-logo/240/240`,
+            coverUrl: `https://picsum.photos/seed/${b.username}-cover/1000/400`,
             verification: "VERIFIED",
             verifiedAt: new Date(),
           },
@@ -222,6 +247,7 @@ async function seedDemo(categoryMap: Map<string, string>) {
   console.log("Seeding demo posts & comments...");
   for (const biz of businesses) {
     for (let p = 1; p <= 4; p++) {
+      const imageCount = (p % 3) + 1;
       const post = await prisma.post.create({
         data: {
           authorId: biz.id,
@@ -230,6 +256,12 @@ async function seedDemo(categoryMap: Map<string, string>) {
           ctaType: "WHATSAPP",
           ctaLabel: "Message us",
           ctaValue: "+6591234567",
+          images: {
+            create: Array.from({ length: imageCount }, (_, i) => ({
+              url: `https://picsum.photos/seed/${biz.id}-${p}-${i}/900/900`,
+              sortOrder: i,
+            })),
+          },
         },
       });
       for (let c = 0; c < 2; c++) {

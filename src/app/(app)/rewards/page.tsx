@@ -2,6 +2,7 @@ import { Gift } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { Card } from "@/components/ui";
+import { RedeemButton } from "@/features/rewards/redeem-button";
 
 export const dynamic = "force-dynamic";
 
@@ -38,15 +39,20 @@ export default async function RewardsPage() {
                 {r.description && (
                   <p className="mt-1 text-sm text-muted">{r.description}</p>
                 )}
-                <div className="mt-auto flex items-center justify-between pt-4">
-                  <span className="font-bold text-brand-700">
-                    {r.pointsCost.toLocaleString()} pts
-                  </span>
-                  <span
-                    className={`text-xs ${affordable ? "text-success" : "text-muted"}`}
-                  >
-                    {affordable ? "Available" : "Need more points"}
-                  </span>
+                <div className="mt-auto pt-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="font-bold text-brand-700">
+                      {r.pointsCost.toLocaleString()} pts
+                    </span>
+                    {r.stock !== null && (
+                      <span className="text-xs text-muted">{r.stock} left</span>
+                    )}
+                  </div>
+                  <RedeemButton
+                    rewardId={r.id}
+                    pointsCost={r.pointsCost}
+                    affordable={affordable && (r.stock === null || r.stock > 0)}
+                  />
                 </div>
               </Card>
             );
