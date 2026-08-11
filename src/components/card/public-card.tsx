@@ -71,12 +71,16 @@ export async function PublicCard({
         </div>
 
         <div className="px-5 pb-6">
-          {/* Avatar */}
+          {/* Avatar — show the whole photo, never cropped */}
           <div className="-mt-12 mb-3 flex items-end justify-between">
-            <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-2xl border-4 border-surface bg-brand-50 text-2xl font-bold text-brand-700 shadow-md">
+            <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-2xl border-4 border-surface bg-surface-2 text-2xl font-bold text-brand-700 shadow-md">
               {card.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={card.avatarUrl} alt={card.name} className="h-full w-full object-cover" />
+                <img
+                  src={card.avatarUrl}
+                  alt={card.name}
+                  className="h-full w-full object-contain"
+                />
               ) : (
                 card.name.charAt(0)
               )}
