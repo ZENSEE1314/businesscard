@@ -1,10 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Search, BadgeCheck, X } from "lucide-react";
 import { Button, Card, Input, Label, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
+
+interface SearchResult {
+  userId: string;
+  username: string;
+  fullName: string;
+  avatarUrl: string | null;
+  jobTitle: string | null;
+  companyName: string | null;
+  membershipTier: string | null;
+  business: {
+    slug: string;
+    name: string;
+    logoUrl: string | null;
+    category: string | null;
+    verified: boolean;
+  } | null;
+  handle: string;
+}
 
 export interface AdminAward {
   id: string;
@@ -103,15 +121,60 @@ export function AwardsAdmin({ awards }: { awards: AdminAward[] }) {
   );
 }
 
+function Thumb({ url, fallback }: { url: string | null; fallback: string }) {
+  return (
+    <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-brand-50 text-sm font-bold text-brand-700">
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="" className="h-full w-full object-cover" />
+      ) : (
+        fallback.charAt(0)
+      )}
+    </div>
+  );
+}
+
 function AwardRow({
   award,
   onAssign,
 }: {
   award: AdminAward;
-  onAssign: (awardId: string, slug: string, rank: string) => void;
+  onAssign: (awardId: string, handle: string, rank: string) => void;
 }) {
-  const [slug, setSlug] = useState("");
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<SearchResult | null>(null);
   const [rank, setRank] = useState("");
+
+  useEffect(() => {
+    if (selected) return;
+    const q = query.trim();
+    const timer = setTimeout(async () => {
+      if (q.length < 1) {
+        setResults([]);
+        setOpen(false);
+        return;
+      }
+      const res = await apiFetch<{ results: SearchResult[] }>(
+        `/api/admin/users/search?q=${encodeURIComponent(q)}`,
+      );
+      if (res.ok && res.data) {
+        setResults(res.data.results);
+        setOpen(true);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query, selected]);
+
+  function assign() {
+    if (!selected) return;
+    onAssign(award.id, selected.handle, rank);
+    setSelected(null);
+    setRank("");
+    setQuery("");
+  }
+
   return (
     <Card className="p-4">
       <div className="flex items-center gap-2">
@@ -119,7 +182,9 @@ function AwardRow({
           {award.name} {award.year}
         </span>
         {award.featured && (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">Featured</span>
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
+            Featured
+          </span>
         )}
       </div>
       {award.recipients.length > 0 && (
@@ -131,13 +196,101 @@ function AwardRow({
           ))}
         </div>
       )}
-      <div className="mt-3 flex flex-wrap items-end gap-2">
-        <Input className="h-9 w-48" placeholder="business slug or @username" value={slug} onChange={(e) => setSlug(e.target.value)} />
-        <Input className="h-9 w-20" placeholder="rank" value={rank} onChange={(e) => setRank(e.target.value)} />
-        <Button size="sm" variant="outline" disabled={!slug} onClick={() => onAssign(award.id, slug, rank)}>
-          Assign winner
-        </Button>
-      </div>
+
+      {selected ? (
+        <div className="mt-3 rounded-xl border border-border p-3">
+          {/* Selected recipient — shows their company profile */}
+          <div className="flex items-center gap-3">
+            <Thumb
+              url={selected.business?.logoUrl ?? selected.avatarUrl}
+              fallback={selected.business?.name ?? selected.fullName}
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="truncate font-semibold">
+                  {selected.business?.name ?? selected.fullName}
+                </span>
+                {selected.business?.verified && (
+                  <BadgeCheck className="h-4 w-4 text-blue-500" />
+                )}
+              </div>
+              <div className="text-xs text-muted">
+                {selected.business
+                  ? [selected.business.category, `owner: ${selected.fullName}`]
+                      .filter(Boolean)
+                      .join(" · ")
+                  : [selected.jobTitle, selected.companyName, "personal member"]
+                      .filter(Boolean)
+                      .join(" · ")}
+              </div>
+              <div className="text-xs text-muted-2">@{selected.username}</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              className="text-muted hover:text-foreground"
+              aria-label="Clear"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <Input
+              className="h-9 w-24"
+              placeholder="rank"
+              value={rank}
+              onChange={(e) => setRank(e.target.value)}
+            />
+            <Button size="sm" onClick={assign}>
+              Assign winner
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="relative mt-3">
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3">
+            <Search className="h-4 w-4 text-muted" />
+            <input
+              className="h-10 w-full bg-transparent text-sm outline-none"
+              placeholder="Search a member or company…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => results.length > 0 && setOpen(true)}
+            />
+          </div>
+          {open && results.length > 0 && (
+            <div className="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-border bg-surface p-1 shadow-lg">
+              {results.map((r) => (
+                <button
+                  key={r.userId}
+                  type="button"
+                  onClick={() => {
+                    setSelected(r);
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-surface-2"
+                >
+                  <Thumb
+                    url={r.business?.logoUrl ?? r.avatarUrl}
+                    fallback={r.business?.name ?? r.fullName}
+                  />
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium">
+                      {r.business?.name ?? r.fullName}
+                    </div>
+                    <div className="truncate text-xs text-muted">
+                      {r.business
+                        ? `${r.business.category ?? "Business"} · ${r.fullName}`
+                        : `${r.jobTitle ?? "Member"}${r.companyName ? ` · ${r.companyName}` : ""}`}{" "}
+                      · @{r.username}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </Card>
   );
 }
