@@ -13,7 +13,7 @@ interface SendArgs {
 // sets SMTP_* env), it logs the message server-side so password-reset links can
 // still be retrieved from the deploy logs, and returns `false`.
 export async function sendEmail(args: SendArgs): Promise<boolean> {
-  if (!env.smtp.host || !env.smtp.user) {
+  if (!env.smtp.host || !env.smtp.user || !env.smtp.password) {
     console.log(
       `[email:not-configured] to=${args.to} subject="${args.subject}"\n${args.text}`,
     );
