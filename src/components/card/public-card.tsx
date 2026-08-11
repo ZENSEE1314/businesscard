@@ -71,20 +71,23 @@ export async function PublicCard({
         </div>
 
         <div className="px-5 pb-6">
-          {/* Avatar — show the whole photo, never cropped */}
-          <div className="-mt-12 mb-3 flex items-end justify-between">
-            <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-2xl border-4 border-surface bg-surface-2 text-2xl font-bold text-brand-700 shadow-md">
-              {card.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
+          {/* Avatar — the box fits the photo so the whole image shows,
+              edge to edge, with no crop and no empty bars. */}
+          <div className="-mt-12 mb-3">
+            {card.avatarUrl ? (
+              <div className="w-32 overflow-hidden rounded-2xl border-4 border-surface bg-surface-2 shadow-md">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={card.avatarUrl}
                   alt={card.name}
-                  className="h-full w-full object-contain"
+                  className="block h-auto w-full"
                 />
-              ) : (
-                card.name.charAt(0)
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="grid h-28 w-28 place-items-center rounded-2xl border-4 border-surface bg-brand-50 text-2xl font-bold text-brand-700 shadow-md">
+                {card.name.charAt(0)}
+              </div>
+            )}
           </div>
 
           {/* Identity */}
