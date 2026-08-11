@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens — semantic, with light/dark variants.
+   Primitive brand scale (indigo) + teal accent. Never hardcode raw values in
+   components; use these tokens via Tailwind utilities (bg-surface, text-muted…).
+--------------------------------------------------------------------------- */
+
+:root {
+  --brand-50: #eef2ff;
+  --brand-100: #e0e7ff;
+  --brand-200: #c7d2fe;
+  --brand-300: #a5b4fc;
+  --brand-400: #818cf8;
+  --brand-500: #6366f1;
+  --brand-600: #4f46e5;
+  --brand-700: #4338ca;
+  --brand-800: #3730a3;
+  --brand-900: #312e81;
+  --accent-500: #14b8a6;
+  --accent-600: #0d9488;
+
+  --background: #f7f8fb;
+  --surface: #ffffff;
+  --surface-2: #f1f3f9;
+  --border: #e5e7eb;
+  --foreground: #111827;
+  --muted: #6b7280;
+  --muted-2: #9ca3af;
+
+  --primary: var(--brand-600);
+  --primary-fg: #ffffff;
+  --accent: var(--accent-600);
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+
+  --radius: 0.75rem;
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
+  --shadow-md: 0 4px 12px rgba(17, 24, 39, 0.08);
+  --shadow-lg: 0 12px 32px rgba(17, 24, 39, 0.12);
+}
+
+:root[data-theme="dark"],
+.dark {
+  --background: #0b0d12;
+  --surface: #12151d;
+  --surface-2: #1a1e29;
+  --border: #262b38;
+  --foreground: #e8eaf0;
+  --muted: #9aa3b2;
+  --muted-2: #6b7280;
+  --primary: var(--brand-500);
+  --primary-fg: #ffffff;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #0b0d12;
+    --surface: #12151d;
+    --surface-2: #1a1e29;
+    --border: #262b38;
+    --foreground: #e8eaf0;
+    --muted: #9aa3b2;
+    --muted-2: #6b7280;
+    --primary: var(--brand-500);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --radius-lg: var(--radius);
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Utility: aurora gradient background for hero sections. */
+.aurora {
+  background:
+    radial-gradient(60% 60% at 20% 10%, rgba(99, 102, 241, 0.25), transparent 60%),
+    radial-gradient(50% 50% at 90% 20%, rgba(20, 184, 166, 0.22), transparent 60%),
+    radial-gradient(60% 60% at 50% 100%, rgba(79, 70, 229, 0.18), transparent 60%);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
