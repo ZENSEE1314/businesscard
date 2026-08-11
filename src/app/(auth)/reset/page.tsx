@@ -3,7 +3,8 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button, Card, Input, Label } from "@/components/ui";
+import { Button, Card, Label } from "@/components/ui";
+import { PasswordInput } from "@/components/ui/password-input";
 import { apiFetch } from "@/lib/client";
 
 function ResetForm() {
@@ -72,8 +73,7 @@ function ResetForm() {
           )}
           <div>
             <Label>New password</Label>
-            <Input
-              type="password"
+            <PasswordInput
               autoComplete="new-password"
               required
               value={password}
@@ -85,8 +85,7 @@ function ResetForm() {
           </div>
           <div>
             <Label>Confirm password</Label>
-            <Input
-              type="password"
+            <PasswordInput
               autoComplete="new-password"
               required
               value={confirm}

@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
+import { PasswordInput } from "@/components/ui/password-input";
 import { apiFetch } from "@/lib/client";
 
 function RegisterForm() {
@@ -83,9 +84,9 @@ function RegisterForm() {
         </div>
         <div>
           <Label htmlFor="password">Password</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
+            name="password"
             autoComplete="new-password"
             required
             value={form.password}
@@ -97,9 +98,8 @@ function RegisterForm() {
         </div>
         <div>
           <Label htmlFor="confirmPassword">Confirm password</Label>
-          <Input
+          <PasswordInput
             id="confirmPassword"
-            type="password"
             autoComplete="new-password"
             required
             value={form.confirmPassword}

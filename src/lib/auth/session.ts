@@ -40,14 +40,19 @@ export async function createSession(opts: CreateSessionOpts): Promise<string> {
   );
 }
 
-export async function setSessionCookie(token: string): Promise<void> {
+// When `remember` is true the cookie persists for the session TTL; otherwise it
+// is a session cookie that the browser clears when it closes.
+export async function setSessionCookie(
+  token: string,
+  remember = true,
+): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: env.isProd,
     sameSite: "lax",
     path: "/",
-    maxAge: SESSION_TTL_DAYS * 86_400,
+    ...(remember ? { maxAge: SESSION_TTL_DAYS * 86_400 } : {}),
   });
 }
 

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Input, Label } from "@/components/ui";
+import { Button, Card, Label } from "@/components/ui";
+import { PasswordInput } from "@/components/ui/password-input";
 import { apiFetch } from "@/lib/client";
 
 export default function ChangePasswordPage() {
@@ -54,7 +55,7 @@ export default function ChangePasswordPage() {
           )}
           <div>
             <Label>Current password</Label>
-            <Input
+            <PasswordInput
               type="password"
               autoComplete="current-password"
               required
@@ -64,7 +65,7 @@ export default function ChangePasswordPage() {
           </div>
           <div>
             <Label>New password</Label>
-            <Input
+            <PasswordInput
               type="password"
               autoComplete="new-password"
               required
@@ -77,7 +78,7 @@ export default function ChangePasswordPage() {
           </div>
           <div>
             <Label>Confirm new password</Label>
-            <Input
+            <PasswordInput
               type="password"
               autoComplete="new-password"
               required

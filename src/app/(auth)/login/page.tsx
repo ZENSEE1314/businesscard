@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
+import { PasswordInput } from "@/components/ui/password-input";
 import { apiFetch } from "@/lib/client";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +21,7 @@ export default function LoginPage() {
     setLoading(true);
     const res = await apiFetch("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, rememberMe }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -65,16 +67,24 @@ export default function LoginPage() {
               Forgot password?
             </Link>
           </div>
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             autoComplete="current-password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
+        <label className="flex cursor-pointer items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="h-4 w-4 accent-[var(--primary)]"
+          />
+          Remember me on this device
+        </label>
         <Button type="submit" className="w-full" size="lg" disabled={loading}>
           {loading ? "Logging in…" : "Log in"}
         </Button>

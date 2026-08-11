@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       userAgent: req.headers.get("user-agent"),
       ip,
     });
-    await setSessionCookie(token);
+    await setSessionCookie(token, input.rememberMe !== false);
 
     return ok({ id: user.id, role: user.role });
   });
