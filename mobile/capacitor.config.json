@@ -1,0 +1,10 @@
+{
+  "appId": "app.konnect.mobile",
+  "appName": "Konnect",
+  "webDir": "www",
+  "server": {
+    "url": "https://businesscard-app-production.up.railway.app",
+    "cleartext": false,
+    "androidScheme": "https"
+  }
+}
