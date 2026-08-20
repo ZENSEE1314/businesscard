@@ -48,3 +48,5 @@ next-env.d.ts
 
 # keep the template, ignore real envs
 !.env.example
+
+/_apk
