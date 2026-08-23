@@ -266,6 +266,11 @@ model Profile {
   jobTitle    String?
   companyName String?
 
+  // Business-networking identity (BridgeX): what I do + what I offer + what I want.
+  headline   String?
+  canHelp    String[] @default([])
+  lookingFor String[] @default([])
+
   phone     String?
   whatsapp  String?
   email     String?
@@ -306,6 +311,11 @@ model BusinessProfile {
   coverUrl     String?
   coverVideoUrl String?
   description  String?
+
+  // Business-networking identity (BridgeX).
+  headline   String?
+  canHelp    String[] @default([])
+  lookingFor String[] @default([])
 
   categoryId String?
   category   BusinessCategory? @relation(fields: [categoryId], references: [id])

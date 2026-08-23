@@ -22,9 +22,17 @@ const optionalUrl = z.preprocess((val) => {
   return /^https?:\/\//i.test(t) ? t : `https://${t}`;
 }, z.string().max(300).refine(isParsableUrl, "Enter a valid website (e.g. rebornwave.group)."));
 
+const tagList = z
+  .array(z.string().trim().min(1).max(40))
+  .max(12)
+  .optional();
+
 export const profileUpdateSchema = z.object({
   fullName: z.string().trim().min(2, "Enter your name.").max(80),
   displayName: optionalStr(80),
+  headline: optionalStr(160),
+  canHelp: tagList,
+  lookingFor: tagList,
   bio: optionalStr(500),
   jobTitle: optionalStr(120),
   companyName: optionalStr(120),
@@ -51,6 +59,9 @@ export const businessUpdateSchema = z.object({
   name: z.string().trim().min(2, "Enter your business name.").max(120),
   ownerName: optionalStr(80),
   showOwner: z.boolean(),
+  headline: optionalStr(160),
+  canHelp: tagList,
+  lookingFor: tagList,
   description: optionalStr(1000),
   categoryId: z.string().uuid().optional().or(z.literal("")),
   phone: optionalStr(40),

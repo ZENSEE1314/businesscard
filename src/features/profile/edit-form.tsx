@@ -197,6 +197,67 @@ function MediaManager({
   );
 }
 
+function TagInput({
+  label,
+  hint,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  hint?: string;
+  value: string[];
+  onChange: (v: string[]) => void;
+  placeholder?: string;
+}) {
+  const [draft, setDraft] = useState("");
+  function add(raw: string) {
+    const parts = raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0 && !value.includes(s));
+    if (parts.length) onChange([...value, ...parts].slice(0, 12));
+    setDraft("");
+  }
+  return (
+    <div>
+      <Label>{label}</Label>
+      {hint && <p className="-mt-1 mb-1.5 text-xs text-muted">{hint}</p>}
+      {value.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {value.map((t) => (
+            <span
+              key={t}
+              className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
+            >
+              {t}
+              <button
+                type="button"
+                onClick={() => onChange(value.filter((x) => x !== t))}
+                aria-label={`Remove ${t}`}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <Input
+        value={draft}
+        placeholder={placeholder ?? "Type and press Enter"}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            add(draft);
+          }
+        }}
+        onBlur={() => draft.trim() && add(draft)}
+      />
+    </div>
+  );
+}
+
 interface Props {
   role: string;
   profile: Dict;
@@ -216,6 +277,9 @@ export function ProfileEditForm({
   const p = useForm({
     fullName: (profile.fullName as string) ?? "",
     displayName: (profile.displayName as string) ?? "",
+    headline: (profile.headline as string) ?? "",
+    canHelp: (profile.canHelp as string[]) ?? [],
+    lookingFor: (profile.lookingFor as string[]) ?? [],
     jobTitle: (profile.jobTitle as string) ?? "",
     companyName: (profile.companyName as string) ?? "",
     bio: (profile.bio as string) ?? "",
@@ -245,6 +309,9 @@ export function ProfileEditForm({
     name: (business?.name as string) ?? "",
     ownerName: (business?.ownerName as string) ?? "",
     showOwner: (business?.showOwner as boolean) ?? true,
+    headline: (business?.headline as string) ?? "",
+    canHelp: (business?.canHelp as string[]) ?? [],
+    lookingFor: (business?.lookingFor as string[]) ?? [],
     description: (business?.description as string) ?? "",
     categoryId: (business?.categoryId as string) ?? "",
     phone: (business?.phone as string) ?? "",
@@ -348,6 +415,26 @@ export function ProfileEditForm({
           <Field label="Job title" value={p.state.jobTitle} onChange={(v) => p.set("jobTitle", v)} />
         </div>
         <Field label="Company" value={p.state.companyName} onChange={(v) => p.set("companyName", v)} />
+        <Field
+          label="What I do (headline)"
+          value={p.state.headline}
+          onChange={(v) => p.set("headline", v)}
+          placeholder="e.g. Professional crypto education & trading community"
+        />
+        <TagInput
+          label="I can help with"
+          hint="Add tags — press Enter or comma"
+          value={p.state.canHelp}
+          onChange={(v) => p.set("canHelp", v)}
+          placeholder="e.g. Marketing, Distribution, Investment"
+        />
+        <TagInput
+          label="I'm looking for"
+          hint="What do you want from your network?"
+          value={p.state.lookingFor}
+          onChange={(v) => p.set("lookingFor", v)}
+          placeholder="e.g. Investors, Distributors, Partners"
+        />
         <div>
           <Label>Bio</Label>
           <Textarea rows={3} value={p.state.bio} onChange={(e) => p.set("bio", e.target.value)} />
@@ -442,6 +529,24 @@ export function ProfileEditForm({
               ))}
             </select>
           </div>
+          <Field
+            label="What we do (headline)"
+            value={b.state.headline}
+            onChange={(v) => b.set("headline", v)}
+            placeholder="e.g. B2B logistics connecting SG & Indonesia"
+          />
+          <TagInput
+            label="We can help with"
+            value={b.state.canHelp}
+            onChange={(v) => b.set("canHelp", v)}
+            placeholder="e.g. Manufacturing, Packaging, Supply Chain"
+          />
+          <TagInput
+            label="We're looking for"
+            value={b.state.lookingFor}
+            onChange={(v) => b.set("lookingFor", v)}
+            placeholder="e.g. Distributors, Retailers, Partners"
+          />
           <div>
             <Label>Description</Label>
             <Textarea rows={3} value={b.state.description} onChange={(e) => b.set("description", e.target.value)} />

@@ -2,11 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Trophy, MessageSquare, Gift, User } from "lucide-react";
+import { Home, Compass, Trophy, MessageSquare, Gift, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Bottom bar keeps 5 primary destinations; the sidebar shows the full set.
 const items = [
-  { href: "/feed", label: "Feed", icon: Home },
+  { href: "/feed", label: "Home", icon: Home },
+  { href: "/discover", label: "Discover", icon: Compass },
+  { href: "/chat", label: "Chat", icon: MessageSquare },
+  { href: "/rewards", label: "Rewards", icon: Gift },
+  { href: "/me", label: "Profile", icon: User },
+];
+
+const sideItems = [
+  { href: "/feed", label: "Home", icon: Home },
+  { href: "/discover", label: "Discover", icon: Compass },
   { href: "/awards", label: "Awards", icon: Trophy },
   { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/rewards", label: "Rewards", icon: Gift },
@@ -43,7 +53,7 @@ export function SideNav() {
   const pathname = usePathname();
   return (
     <nav className="hidden w-56 shrink-0 flex-col gap-1 border-r border-border p-3 md:flex">
-      {items.map((item) => {
+      {sideItems.map((item) => {
         const active = pathname.startsWith(item.href);
         return (
           <Link

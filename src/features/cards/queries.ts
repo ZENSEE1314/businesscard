@@ -20,6 +20,9 @@ export interface CardView {
   name: string;
   subtitle?: string | null; // jobTitle or category
   org?: string | null;
+  headline?: string | null;
+  canHelp: string[];
+  lookingFor: string[];
   avatarUrl?: string | null;
   coverUrl?: string | null;
   coverVideoUrl?: string | null;
@@ -78,6 +81,9 @@ export async function getPersonalCard(username: string): Promise<CardView | null
     name: profile.displayName || profile.fullName,
     subtitle: profile.jobTitle,
     org: profile.companyName,
+    headline: profile.headline,
+    canHelp: profile.canHelp,
+    lookingFor: profile.lookingFor,
     avatarUrl: profile.avatarUrl,
     coverUrl: profile.coverUrl,
     coverVideoUrl: profile.coverVideoUrl,
@@ -122,6 +128,9 @@ export async function getBusinessCard(slug: string): Promise<CardView | null> {
     name: biz.name,
     subtitle: biz.category?.name,
     org: biz.showOwner ? biz.ownerName : null,
+    headline: biz.headline,
+    canHelp: biz.canHelp,
+    lookingFor: biz.lookingFor,
     avatarUrl: biz.logoUrl,
     coverUrl: biz.coverUrl,
     coverVideoUrl: biz.coverVideoUrl,

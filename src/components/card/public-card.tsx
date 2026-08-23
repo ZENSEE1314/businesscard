@@ -176,8 +176,53 @@ export async function PublicCard({
             )}
           </div>
 
+          {card.headline && (
+            <p className="mt-3 text-center text-sm font-medium">{card.headline}</p>
+          )}
+
           {card.bio && (
-            <p className="mt-4 text-center text-sm leading-relaxed">{card.bio}</p>
+            <p className="mt-3 text-center text-sm leading-relaxed text-muted">
+              {card.bio}
+            </p>
+          )}
+
+          {(card.canHelp.length > 0 || card.lookingFor.length > 0) && (
+            <div className="mt-4 space-y-3">
+              {card.canHelp.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    {card.isBusiness ? "We can help with" : "I can help with"}
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {card.canHelp.map((t) => (
+                      <span
+                        key={t}
+                        className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
+                      >
+                        ✓ {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {card.lookingFor.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    {card.isBusiness ? "We're looking for" : "I'm looking for"}
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {card.lookingFor.map((t) => (
+                      <span
+                        key={t}
+                        className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700"
+                      >
+                        🔍 {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Actions */}
