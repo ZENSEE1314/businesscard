@@ -10,7 +10,24 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { ButtonLink } from "@/components/ui";
+import { Logo } from "@/components/logo";
+import { InstallButton } from "@/components/install-button";
 import { env } from "@/lib/env";
+
+const leadership = [
+  { name: "Hihta Goh", role: "President" },
+  { name: "Dato Lee", role: "Vice President" },
+  { name: "Zen See", role: "CTO" },
+];
+
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
 
 const features = [
   { icon: Users, title: "Discover Businesses", desc: "Find trusted local businesses in a clean, social feed." },
@@ -29,9 +46,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-30 border-b border-border bg-surface/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-fg">
-              K
-            </span>
+            <Logo size={32} />
             {appName}
           </Link>
           <nav className="flex items-center gap-2">
@@ -74,6 +89,9 @@ export default function LandingPage() {
               Explore Member Club
             </ButtonLink>
           </div>
+          <div className="mt-4 flex justify-center">
+            <InstallButton label="Download app to Home Screen" />
+          </div>
         </div>
       </section>
 
@@ -90,6 +108,28 @@ export default function LandingPage() {
               </div>
               <h3 className="mt-4 font-semibold">{f.title}</h3>
               <p className="mt-1 text-sm text-muted">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Leadership */}
+      <section className="mx-auto max-w-4xl px-4 pb-8">
+        <h2 className="text-center text-2xl font-bold">Leadership</h2>
+        <p className="mt-1 text-center text-sm text-muted">
+          The team behind {appName}.
+        </p>
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          {leadership.map((p) => (
+            <div
+              key={p.name}
+              className="rounded-2xl border border-border bg-surface p-6 text-center shadow-sm"
+            >
+              <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-accent text-lg font-bold text-white">
+                {initials(p.name)}
+              </div>
+              <h3 className="mt-3 font-semibold">{p.name}</h3>
+              <p className="text-sm text-muted">{p.role}</p>
             </div>
           ))}
         </div>

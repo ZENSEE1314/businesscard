@@ -37,6 +37,7 @@ export interface CardView {
   awards: { name: string; year: number | null }[];
   media: MediaItem[];
   isBusiness: boolean;
+  referralCode: string;
 }
 
 export interface MediaItem {
@@ -62,7 +63,9 @@ function pickSocials(p: Social): Social {
 export async function getPersonalCard(username: string): Promise<CardView | null> {
   const profile = await prisma.profile.findUnique({
     where: { username: username.toLowerCase() },
-    include: { user: { select: { id: true, status: true, role: true } } },
+    include: {
+      user: { select: { id: true, status: true, role: true, referralCode: true } },
+    },
   });
   if (!profile || profile.user.status !== "ACTIVE") return null;
 
@@ -92,6 +95,7 @@ export async function getPersonalCard(username: string): Promise<CardView | null
     awards: [],
     media: [],
     isBusiness: profile.user.role === "BUSINESS",
+    referralCode: profile.user.referralCode,
   };
 }
 
@@ -99,7 +103,7 @@ export async function getBusinessCard(slug: string): Promise<CardView | null> {
   const biz = await prisma.businessProfile.findUnique({
     where: { slug: slug.toLowerCase() },
     include: {
-      user: { select: { id: true, status: true } },
+      user: { select: { id: true, status: true, referralCode: true } },
       category: { select: { name: true } },
       awards: {
         include: { award: { select: { name: true, year: true } } },
@@ -142,6 +146,7 @@ export async function getBusinessCard(slug: string): Promise<CardView | null> {
       caption: m.caption,
     })),
     isBusiness: true,
+    referralCode: biz.user.referralCode,
   };
 }
 

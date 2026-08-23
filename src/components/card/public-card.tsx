@@ -5,7 +5,7 @@ import { absoluteUrl } from "@/lib/utils";
 import { cardLinks, type CardView, type MediaItem } from "@/features/cards/queries";
 import { ContactActions, ShareButton } from "@/components/card/card-actions";
 import { NfcButton } from "@/components/card/nfc-button";
-import { env } from "@/lib/env";
+import { InstallButton } from "@/components/install-button";
 
 function socialUrl(platform: string, value: string): string {
   const v = value.trim().replace(/^@/, "");
@@ -86,7 +86,12 @@ export async function PublicCard({
   const links = cardLinks(card);
   const qr = await qrSvg(card.profileUrl);
   const vcardUrl = `/api/cards/vcard?type=${card.kind}&handle=${encodeURIComponent(card.handle)}`;
-  const messageHref = isGuest ? "/register" : "/chat";
+  // Sharing this card carries the owner's referral code, so anyone who joins
+  // from it is registered under them.
+  const registerHref = card.referralCode
+    ? `/register?ref=${encodeURIComponent(card.referralCode)}`
+    : "/register";
+  const messageHref = isGuest ? registerHref : "/chat";
 
   const socials = Object.entries(card.socials).filter(
     ([, v]) => v && v.trim().length > 0,
@@ -259,13 +264,18 @@ export async function PublicCard({
             Share your profile anywhere in one tap.
           </p>
           <Link
-            href="/register"
+            href={registerHref}
             className="mt-3 inline-flex h-10 items-center rounded-lg bg-white px-5 text-sm font-semibold text-brand-700"
           >
-            Join {env.appName}
+            Create your own free name card
           </Link>
         </div>
       )}
+
+      {/* Save this card to the phone's home screen */}
+      <div className="mt-4 flex justify-center">
+        <InstallButton label="Add this card to Home Screen" />
+      </div>
     </div>
   );
 }

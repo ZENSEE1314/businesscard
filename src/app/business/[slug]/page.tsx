@@ -35,6 +35,7 @@ export async function generateMetadata({
       images: card.avatarUrl ? [{ url: card.avatarUrl }] : undefined,
     },
     alternates: { canonical: card.profileUrl },
+    manifest: `/api/cards/manifest?type=business&handle=${encodeURIComponent(slug)}`,
   };
 }
 

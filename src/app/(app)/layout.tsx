@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { BottomNav, SideNav } from "@/components/app-nav";
+import { Logo } from "@/components/logo";
 import { env } from "@/lib/env";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -14,9 +15,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
           <Link href="/feed" className="flex items-center gap-2 font-bold">
-            <span className="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-fg text-sm">
-              K
-            </span>
+            <Logo size={28} />
             {env.appName}
           </Link>
           <div className="flex items-center gap-3 text-sm">
