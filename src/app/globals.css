@@ -7,18 +7,19 @@
 --------------------------------------------------------------------------- */
 
 :root {
-  --brand-50: #eef2ff;
-  --brand-100: #e0e7ff;
-  --brand-200: #c7d2fe;
-  --brand-300: #a5b4fc;
-  --brand-400: #818cf8;
-  --brand-500: #6366f1;
-  --brand-600: #4f46e5;
-  --brand-700: #4338ca;
-  --brand-800: #3730a3;
-  --brand-900: #312e81;
-  --accent-500: #14b8a6;
-  --accent-600: #0d9488;
+  /* BridgeX brand — blue → cyan */
+  --brand-50: #eff6ff;
+  --brand-100: #dbeafe;
+  --brand-200: #bfdbfe;
+  --brand-300: #93c5fd;
+  --brand-400: #60a5fa;
+  --brand-500: #3b82f6;
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --brand-800: #1e40af;
+  --brand-900: #1e3a8a;
+  --accent-500: #22d3ee;
+  --accent-600: #06b6d4;
 
   --background: #f7f8fb;
   --surface: #ffffff;
@@ -126,9 +127,9 @@ body {
 /* Utility: aurora gradient background for hero sections. */
 .aurora {
   background:
-    radial-gradient(60% 60% at 20% 10%, rgba(99, 102, 241, 0.25), transparent 60%),
-    radial-gradient(50% 50% at 90% 20%, rgba(20, 184, 166, 0.22), transparent 60%),
-    radial-gradient(60% 60% at 50% 100%, rgba(79, 70, 229, 0.18), transparent 60%);
+    radial-gradient(60% 60% at 20% 10%, rgba(37, 99, 235, 0.25), transparent 60%),
+    radial-gradient(50% 50% at 90% 20%, rgba(34, 211, 238, 0.22), transparent 60%),
+    radial-gradient(60% 60% at 50% 100%, rgba(29, 78, 216, 0.18), transparent 60%);
 }
 
 .no-scrollbar::-webkit-scrollbar {

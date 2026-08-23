@@ -156,7 +156,7 @@ export function cardLinks(card: CardView) {
   return {
     whatsapp: wa
       ? `https://wa.me/${wa}?text=${encodeURIComponent(
-          `Hi ${card.name}, I found your profile on Konnect.`,
+          `Hi ${card.name}, I found your profile on BridgeX.`,
         )}`
       : null,
     tel: card.phone ? `tel:${card.phone}` : null,

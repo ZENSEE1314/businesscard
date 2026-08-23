@@ -16,7 +16,7 @@ export const env = {
     process.env.APP_URL ??
     process.env.NEXT_PUBLIC_APP_URL ??
     "http://localhost:3000",
-  appName: process.env.NEXT_PUBLIC_APP_NAME ?? "Konnect",
+  appName: process.env.NEXT_PUBLIC_APP_NAME ?? "BridgeX",
   nodeEnv: process.env.NODE_ENV ?? "development",
   isProd: process.env.NODE_ENV === "production",
 
@@ -42,6 +42,6 @@ export const env = {
     port: Number(process.env.SMTP_PORT ?? "587"),
     user: process.env.SMTP_USER ?? "",
     password: process.env.SMTP_PASSWORD ?? "",
-    from: process.env.SMTP_FROM ?? "Konnect <no-reply@example.com>",
+    from: process.env.SMTP_FROM ?? "BridgeX <no-reply@example.com>",
   },
 };

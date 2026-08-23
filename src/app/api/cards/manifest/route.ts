@@ -38,13 +38,13 @@ export async function GET(req: NextRequest) {
   const manifest = {
     name: card.name,
     short_name: card.name.slice(0, 30),
-    description: card.subtitle ?? `${card.name} on Konnect`,
+    description: card.subtitle ?? `${card.name} on BridgeX`,
     start_url: card.path,
     scope: card.path,
     display: "standalone",
     orientation: "portrait",
     background_color: "#ffffff",
-    theme_color: "#4f46e5",
+    theme_color: "#2563eb",
     icons,
   };
 

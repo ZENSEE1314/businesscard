@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-// App logo mark (the Konnect icon). Replaces the old plain "K" square.
+// App logo mark (the BridgeX icon). Replaces the old plain "K" square.
 export function Logo({
   size = 32,
   className,
@@ -12,7 +12,7 @@ export function Logo({
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src="/icon-192.png"
-      alt="Konnect"
+      alt="BridgeX"
       width={size}
       height={size}
       className={cn("rounded-lg", className)}

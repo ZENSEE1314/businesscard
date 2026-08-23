@@ -41,7 +41,7 @@ const CATEGORIES = [
 ];
 
 const SETTINGS: Record<string, unknown> = {
-  platformName: "Konnect",
+  platformName: "BridgeX",
   registrationEnabled: true,
   businessRegistrationEnabled: true,
   businessApprovalRequired: false,
@@ -222,7 +222,7 @@ async function seedDemo(categoryMap: Map<string, string>) {
             slug: b.username,
             name: b.name,
             ownerName: b.owner,
-            description: `${b.name} — a trusted local business on Konnect.`,
+            description: `${b.name} — a trusted local business on BridgeX.`,
             categoryId: categoryMap.get(b.cat),
             city: "Singapore",
             country: "SG",

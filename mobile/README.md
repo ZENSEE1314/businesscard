@@ -1,4 +1,4 @@
-# Konnect mobile (Capacitor wrapper)
+# BridgeX mobile (Capacitor wrapper)
 
 A thin native shell that loads the live site
 (`https://businesscard-app-production.up.railway.app`). Because it loads the
