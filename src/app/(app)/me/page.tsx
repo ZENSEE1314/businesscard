@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { Card, ButtonLink, Badge } from "@/components/ui";
 import { LogoutButton } from "@/components/logout-button";
 import { getTierConfig } from "@/lib/membership";
+import { membershipDurationLabel } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,7 @@ export default async function MyProfilePage() {
               </Badge>
               {user.role === "ADMIN" && <Badge variant="brand">Admin</Badge>}
               <Badge>{user.points} points</Badge>
+              <Badge>{membershipDurationLabel(user.createdAt)}</Badge>
             </div>
           </div>
         </div>

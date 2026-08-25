@@ -28,7 +28,7 @@ export default function LoginPage() {
       setError(res.error ?? "Login failed.");
       return;
     }
-    router.push("/feed");
+    router.push("/dashboard");
     router.refresh();
   }
 

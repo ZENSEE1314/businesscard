@@ -26,8 +26,8 @@ export default async function OnboardingPage() {
           <ButtonLink href="/me/edit" size="lg">
             Complete my profile
           </ButtonLink>
-          <ButtonLink href="/feed" variant="ghost" size="lg">
-            Skip for now — go to feed
+          <ButtonLink href="/dashboard" variant="ghost" size="lg">
+            Skip for now — go to dashboard
           </ButtonLink>
         </div>
       </Card>
