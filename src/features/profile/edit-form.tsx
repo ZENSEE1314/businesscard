@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Loader2, ImagePlus, Video, X } from "lucide-react";
+import { Upload, Loader2, ImagePlus, Video, X, Sparkles } from "lucide-react";
 import { Button, Card, Input, Label, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
 
@@ -283,6 +283,9 @@ export function ProfileEditForm({
     jobTitle: (profile.jobTitle as string) ?? "",
     companyName: (profile.companyName as string) ?? "",
     bio: (profile.bio as string) ?? "",
+    whoIAm: (profile.whoIAm as string) ?? "",
+    whoIWantToFind: (profile.whoIWantToFind as string) ?? "",
+    whatICanOffer: (profile.whatICanOffer as string) ?? "",
     phone: (profile.phone as string) ?? "",
     whatsapp: (profile.whatsapp as string) ?? "",
     email: (profile.email as string) ?? "",
@@ -337,7 +340,58 @@ export function ProfileEditForm({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  // --- AI assistant state ---
+  const [aiLang, setAiLang] = useState<"en" | "id" | "zh">("en");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiConfirm, setAiConfirm] = useState(false);
+
   const isBusiness = role === "BUSINESS" && business;
+
+  const hasManualContent =
+    p.state.bio.trim() !== "" ||
+    p.state.whoIAm.trim() !== "" ||
+    p.state.whoIWantToFind.trim() !== "" ||
+    p.state.whatICanOffer.trim() !== "";
+
+  async function generateWithAI() {
+    setAiBusy(true);
+    setAiError(null);
+    const res = await apiFetch<{
+      bio: string;
+      whoIAm: string;
+      whoIWantToFind: string;
+      whatICanOffer: string;
+    }>("/api/ai/profile", {
+      method: "POST",
+      body: JSON.stringify({
+        fullName: p.state.fullName,
+        jobTitle: p.state.jobTitle,
+        company: p.state.companyName,
+        industry: undefined,
+        location: [p.state.city, p.state.country].filter(Boolean).join(", "),
+        businessDescription: p.state.headline,
+        products: [],
+        services: [],
+        expertise: p.state.canHelp,
+        businessGoals: undefined,
+        idealCustomers: [],
+        desiredPartners: p.state.lookingFor,
+        language: aiLang,
+      }),
+    });
+    setAiBusy(false);
+    if (!res.ok) {
+      setAiError(res.error ?? "AI generation failed. Please try again.");
+      return;
+    }
+    // Fill all four editable fields; the user can tweak or regenerate.
+    p.set("bio", res.data.bio);
+    p.set("whoIAm", res.data.whoIAm);
+    p.set("whoIWantToFind", res.data.whoIWantToFind);
+    p.set("whatICanOffer", res.data.whatICanOffer);
+    setAiConfirm(false);
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -435,9 +489,79 @@ export function ProfileEditForm({
           onChange={(v) => p.set("lookingFor", v)}
           placeholder="e.g. Investors, Distributors, Partners"
         />
+        {/* AI assistant */}
+        <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-4">
+          <h3 className="flex items-center gap-2 text-sm font-semibold">
+            <Sparkles className="h-4 w-4 text-brand-600" />
+            AI writing assistant
+          </h3>
+          <p className="mt-1 text-xs text-muted">
+            Generates your Bio, Who I Am, Who I Want to Find and What I Can Offer
+            from the details above — never inventing facts. Everything stays
+            editable.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <select
+              value={aiLang}
+              onChange={(e) => setAiLang(e.target.value as "en" | "id" | "zh")}
+              aria-label="Generation language"
+              className="h-9 rounded-lg border border-border bg-surface px-2 text-sm"
+            >
+              <option value="en">English</option>
+              <option value="id">Bahasa Indonesia</option>
+              <option value="zh">中文</option>
+            </select>
+            <Button
+              type="button"
+              size="sm"
+              disabled={aiBusy}
+              onClick={() => {
+                if (hasManualContent && !aiConfirm) {
+                  setAiConfirm(true);
+                  return;
+                }
+                generateWithAI();
+              }}
+            >
+              {aiBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {aiBusy ? "Generating…" : hasManualContent ? "Regenerate with AI" : "Generate with AI"}
+            </Button>
+          </div>
+          {aiConfirm && (
+            <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              This will replace your current Bio / Who I Am / Who I Want to Find /
+              What I Can Offer text.{" "}
+              <button type="button" onClick={generateWithAI} className="font-semibold underline">
+                Replace anyway
+              </button>{" "}
+              ·{" "}
+              <button type="button" onClick={() => setAiConfirm(false)} className="font-semibold underline">
+                Cancel
+              </button>
+            </p>
+          )}
+          {aiError && (
+            <p role="alert" className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-danger">
+              {aiError}
+            </p>
+          )}
+        </div>
+
         <div>
           <Label>Bio</Label>
           <Textarea rows={3} value={p.state.bio} onChange={(e) => p.set("bio", e.target.value)} />
+        </div>
+        <div>
+          <Label>Who I am</Label>
+          <Textarea rows={3} value={p.state.whoIAm} onChange={(e) => p.set("whoIAm", e.target.value)} />
+        </div>
+        <div>
+          <Label>Who I want to find</Label>
+          <Textarea rows={3} value={p.state.whoIWantToFind} onChange={(e) => p.set("whoIWantToFind", e.target.value)} />
+        </div>
+        <div>
+          <Label>What I can offer</Label>
+          <Textarea rows={3} value={p.state.whatICanOffer} onChange={(e) => p.set("whatICanOffer", e.target.value)} />
         </div>
       </Card>
 

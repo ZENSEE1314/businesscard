@@ -58,6 +58,27 @@ const SETTINGS: Record<string, unknown> = {
     accountNumber: "1234567890",
     accountHolder: "Member Club Indonesia",
   },
+  // Feature defaults (admin-editable in /admin/settings).
+  dailyCheckIn: {
+    enabled: true,
+    basePoints: 10,
+    autoCheckInOnLogin: false,
+    streakBonusEnabled: true,
+    milestones: [
+      { day: 7, bonus: 25 },
+      { day: 30, bonus: 100 },
+      { day: 100, bonus: 500 },
+    ],
+    maxDailyPoints: 600,
+  },
+  activityThresholds: { activeWithinDays: 7, inactiveWithinDays: 30 },
+  cardRanking: { enabled: true, method: "activity", maxConnections: 7 },
+  aiProfile: { enabled: true },
+  loginRateLimit: {
+    emailFailuresAllowed: 10,
+    ipFailuresAllowed: 50,
+    windowMinutes: 15,
+  },
 };
 
 function slugify(input: string): string {

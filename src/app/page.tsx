@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   Users,
   IdCard,
@@ -12,6 +13,7 @@ import {
 import { ButtonLink } from "@/components/ui";
 import { Logo } from "@/components/logo";
 import { InstallButton } from "@/components/install-button";
+import { getCurrentUser } from "@/lib/auth/current-user";
 import { env } from "@/lib/env";
 
 const leadership = [
@@ -38,7 +40,11 @@ const features = [
   { icon: QrCode, title: "QR & Save Contact", desc: "One tap to save a contact to your phone or scan a QR code." },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  // Signed-in users land on their dashboard, never on marketing pages.
+  const user = await getCurrentUser();
+  if (user) redirect("/dashboard");
+
   const appName = env.appName;
   return (
     <main className="flex-1">

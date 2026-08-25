@@ -5,8 +5,15 @@ import { createSession, setSessionCookie } from "@/lib/auth/session";
 import { loginSchema } from "@/lib/validation/auth";
 import { awardPoints, PointEvents } from "@/lib/points/engine";
 import { expireUserMembershipIfDue } from "@/features/membership/jobs";
+import { recordSuccessfulLogin } from "@/lib/activity";
+import { claimDailyCheckIn, getCheckInStatus } from "@/lib/checkin";
+import { getCheckinSettings, getRateLimitSettings } from "@/lib/settings";
 import { handle, ok, Errors, ApiError, getClientIp } from "@/lib/api";
-import { enforceRateLimit } from "@/lib/security/rate-limit";
+import {
+  recordFailure,
+  resetRateLimit,
+  normalizeIp,
+} from "@/lib/security/rate-limit";
 
 export async function POST(req: NextRequest) {
   return handle(async () => {
@@ -14,9 +21,39 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const input = loginSchema.parse(body);
 
-    // Throttle by IP and by email to blunt brute-force attempts.
-    enforceRateLimit(`login:ip:${ip}`, 20, 15 * 60 * 1000);
-    enforceRateLimit(`login:email:${input.email}`, 10, 15 * 60 * 1000);
+    // ------------------------------------------------------------------
+    // Brute-force throttling that does NOT punish shared networks.
+    //
+    // Only FAILED attempts consume budget:
+    //   - per-account (email): tight limit stops password spraying
+    //   - per-IP: generous limit catches distributed attacks on one IP
+    //     without blocking unrelated users behind carrier-grade NAT
+    //     (XL Axiata, Telkomsel, ...). Successful logins clear the email
+    //     counter so a few typos never lock a legitimate user out.
+    // ------------------------------------------------------------------
+    const rl = await getRateLimitSettings();
+    const windowMs = Math.max(1, rl.windowMinutes) * 60 * 1000;
+    const emailKey = `login:fail:email:${input.email.toLowerCase()}`;
+    const ipKey = `login:fail:ip:${normalizeIp(ip)}`;
+
+    const emailBucketFail = recordFailure(emailKey, rl.emailFailuresAllowed + 1, windowMs);
+    if (!emailBucketFail.allowed) {
+      throw Errors.tooMany(
+        `Too many failed attempts for this account. Try again in about ${Math.ceil(
+          emailBucketFail.retryAfterSec / 60,
+        )} minute(s).`,
+        emailBucketFail.retryAfterSec,
+      );
+    }
+    const ipBucketFail = recordFailure(ipKey, rl.ipFailuresAllowed + 1, windowMs);
+    if (!ipBucketFail.allowed) {
+      throw Errors.tooMany(
+        `Too many failed logins from your network. Try again in about ${Math.ceil(
+          ipBucketFail.retryAfterSec / 60,
+        )} minute(s).`,
+        ipBucketFail.retryAfterSec,
+      );
+    }
 
     const user = await prisma.user.findUnique({
       where: { email: input.email },
@@ -41,10 +78,11 @@ export async function POST(req: NextRequest) {
       throw Errors.forbidden("This account is suspended.");
     }
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
+    // SUCCESS — forgive past failures on this account immediately.
+    resetRateLimit(emailKey);
+
+    // Track successful login activity (distinct local days + streak).
+    await recordSuccessfulLogin(user.id).catch(() => undefined);
 
     // Downgrade to free if the yearly membership has lapsed.
     await expireUserMembershipIfDue(user.id).catch(() => undefined);
@@ -55,6 +93,17 @@ export async function POST(req: NextRequest) {
       eventKey: PointEvents.DAILY_LOGIN,
     }).catch(() => undefined);
 
+    // Optional automatic daily check-in on first login of the day.
+    let autoCheckIn = null;
+    try {
+      const cs = await getCheckinSettings();
+      if (cs.enabled && cs.autoCheckInOnLogin) {
+        autoCheckIn = await claimDailyCheckIn(user.id);
+      }
+    } catch {
+      /* non-fatal */
+    }
+
     const token = await createSession({
       userId: user.id,
       role: user.role,
@@ -63,6 +112,10 @@ export async function POST(req: NextRequest) {
     });
     await setSessionCookie(token, input.rememberMe !== false);
 
-    return ok({ id: user.id, role: user.role });
+    return ok({
+      id: user.id,
+      role: user.role,
+      ...(autoCheckIn?.awarded ? { checkIn: await getCheckInStatus(user.id) } : {}),
+    });
   });
 }

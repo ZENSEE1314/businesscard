@@ -13,6 +13,7 @@ import {
   Copy,
   Pencil,
 } from "lucide-react";
+import { SaveContactButton } from "@/components/card/save-contact-button";
 
 type TrackType =
   | "PROFILE_SHARE"
@@ -56,6 +57,7 @@ export function ContactActions({
   messageHref,
   isOwner = false,
   editHref = "/me/edit",
+  saveInApp = null,
 }: {
   targetId: string;
   vcardUrl: string;
@@ -66,6 +68,9 @@ export function ContactActions({
   messageHref: string;
   isOwner?: boolean;
   editHref?: string;
+  // When set (signed-in non-owner viewer), "Save contact" also stores the
+  // owner into the visitor's BridgeX contact list.
+  saveInApp?: { username: string; registerHref: string; source?: "QR_SCAN" | "SHARED_LINK" | "NFC_CARD" | "MANUAL" } | null;
 }) {
   return (
     <div className="flex flex-wrap gap-2">
@@ -77,6 +82,15 @@ export function ContactActions({
           <Pencil className="h-5 w-5" />
           Edit
         </Link>
+      ) : saveInApp ? (
+        <div className="w-full">
+          <SaveContactButton
+            username={saveInApp.username}
+            vcardUrl={vcardUrl}
+            registerHref={saveInApp.registerHref}
+            source={saveInApp.source}
+          />
+        </div>
       ) : (
         <a
           href={vcardUrl}

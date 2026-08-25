@@ -10,13 +10,16 @@ import { apiFetch } from "@/lib/client";
 function RegisterForm() {
   const router = useRouter();
   const params = useSearchParams();
+  const ref = params.get("ref") ?? "";
+  const viaCard = Boolean(ref && (params.get("src") || params.get("card")));
+  const referrerName = params.get("by") ?? "";
 
   const [form, setForm] = useState({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    referralCode: params.get("ref") ?? "",
+    referralCode: ref,
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,6 +63,15 @@ function RegisterForm() {
             className="rounded-lg bg-red-50 px-3 py-2 text-sm text-danger"
           >
             {error}
+          </div>
+        )}
+        {viaCard && (
+          <div className="rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-700">
+            You&rsquo;re joining through{" "}
+            {referrerName ? <strong>{referrerName}&rsquo;s</strong> : "a member&rsquo;s"}{" "}
+            digital card. After registering, they&rsquo;ll be saved to your contacts
+            and you&rsquo;ll appear in their network &mdash; that&rsquo;s how BridgeX connects
+            people. You can remove the connection anytime.
           </div>
         )}
         <div>

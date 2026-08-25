@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { BadgeCheck, Trophy, MapPin } from "lucide-react";
+import { BadgeCheck, Trophy, MapPin, Users } from "lucide-react";
 import { qrSvg } from "@/lib/qr";
 import { absoluteUrl } from "@/lib/utils";
 import { cardLinks, type CardView, type MediaItem } from "@/features/cards/queries";
+import type { PublicConnection } from "@/features/cards/connections";
 import { ContactActions, ShareButton } from "@/components/card/card-actions";
 import { NfcButton } from "@/components/card/nfc-button";
 import { InstallButton } from "@/components/install-button";
@@ -74,22 +75,86 @@ function MediaSection({ title, items }: { title: string; items: MediaItem[] }) {
   );
 }
 
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+/** Up to seven connections shown below a public card (privacy-filtered). */
+export function TopConnections({ connections }: { connections: PublicConnection[] }) {
+  if (connections.length === 0) return null;
+  return (
+    <section className="mt-4 rounded-2xl border border-border bg-surface p-5 shadow-sm">
+      <h2 className="flex items-center gap-2 text-sm font-semibold">
+        <Users className="h-4 w-4 text-brand-600" />
+        Business Network
+        <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-700">
+          Top {connections.length}
+        </span>
+      </h2>
+      <div className="mt-3 flex gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {connections.map((c) => (
+          <Link
+            key={c.userId}
+            href={`/u/${c.username}`}
+            className="w-24 shrink-0 rounded-xl border border-border bg-surface p-2 text-center transition-colors hover:bg-surface-2"
+          >
+            <div className="relative mx-auto h-14 w-14">
+              {c.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={c.avatarUrl}
+                  alt=""
+                  className="h-14 w-14 rounded-full object-cover"
+                />
+              ) : (
+                <div className="grid h-14 w-14 place-items-center rounded-full bg-brand-50 text-sm font-bold text-brand-700">
+                  {initials(c.name)}
+                </div>
+              )}
+              <span className="absolute -left-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-brand-600 text-[10px] font-bold text-white">
+                {c.rank}
+              </span>
+            </div>
+            <p className="mt-1.5 truncate text-xs font-semibold">{c.name}</p>
+            <p className="truncate text-[11px] text-muted">
+              {c.companyName ?? c.jobTitle ?? "Member"}
+            </p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export async function PublicCard({
   card,
   isGuest,
   isOwner = false,
+  viewerSignedIn = false,
+  connections = [],
+  memberDaysLabel = null,
 }: {
   card: CardView;
   isGuest: boolean;
   isOwner?: boolean;
+  viewerSignedIn?: boolean;
+  connections?: PublicConnection[];
+  memberDaysLabel?: string | null;
 }) {
   const links = cardLinks(card);
   const qr = await qrSvg(card.profileUrl);
   const vcardUrl = `/api/cards/vcard?type=${card.kind}&handle=${encodeURIComponent(card.handle)}`;
   // Sharing this card carries the owner's referral code, so anyone who joins
-  // from it is registered under them.
+  // from it is registered under them. src/card tell the register API how the
+  // visitor arrived (shared link, QR, NFC) so the contact relationship is
+  // created automatically after signup.
   const registerHref = card.referralCode
-    ? `/register?ref=${encodeURIComponent(card.referralCode)}`
+    ? `/register?ref=${encodeURIComponent(card.referralCode)}&src=link&card=${encodeURIComponent(card.handle)}`
     : "/register";
   const messageHref = isGuest ? registerHref : "/chat";
 
@@ -153,10 +218,15 @@ export async function PublicCard({
             </div>
             {card.subtitle && <p className="text-sm text-muted">{card.subtitle}</p>}
             {card.org && <p className="text-sm font-medium">{card.org}</p>}
-            <div className="mt-1.5 flex justify-center">
+            <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1.5">
               <span className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700">
                 {card.isBusiness ? "Business" : "Member"}
               </span>
+              {memberDaysLabel && (
+                <span className="inline-flex items-center rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-medium text-muted">
+                  {memberDaysLabel}
+                </span>
+              )}
             </div>
 
             {/* Awards */}
@@ -184,6 +254,29 @@ export async function PublicCard({
             <p className="mt-3 text-center text-sm leading-relaxed text-muted">
               {card.bio}
             </p>
+          )}
+
+          {(card.whoIAm || card.whoIWantToFind || card.whatICanOffer) && (
+            <div className="mt-4 space-y-3 border-t border-border pt-4 text-left">
+              {card.whoIAm && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">Who I am</p>
+                  <p className="mt-1 text-sm leading-relaxed">{card.whoIAm}</p>
+                </div>
+              )}
+              {card.whatICanOffer && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">What I can offer</p>
+                  <p className="mt-1 text-sm leading-relaxed">{card.whatICanOffer}</p>
+                </div>
+              )}
+              {card.whoIWantToFind && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">Who I want to find</p>
+                  <p className="mt-1 text-sm leading-relaxed">{card.whoIWantToFind}</p>
+                </div>
+              )}
+            </div>
           )}
 
           {(card.canHelp.length > 0 || card.lookingFor.length > 0) && (
@@ -237,6 +330,15 @@ export async function PublicCard({
               messageHref={messageHref}
               isOwner={isOwner}
               editHref="/me/edit"
+              saveInApp={
+                !isOwner && viewerSignedIn && card.kind === "personal"
+                  ? {
+                      username: card.handle,
+                      registerHref,
+                      source: "SHARED_LINK",
+                    }
+                  : null
+              }
             />
             <ShareButton targetId={card.userId} url={card.profileUrl} title={card.name} />
             <NfcButton cardUrl={card.profileUrl} vcardUrl={absoluteUrl(vcardUrl)} />
@@ -300,6 +402,9 @@ export async function PublicCard({
           </div>
         </div>
       </div>
+
+      {/* Business network below the card */}
+      {!isOwner && <TopConnections connections={connections} />}
 
       {/* Join CTA */}
       {isGuest && (

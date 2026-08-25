@@ -132,6 +132,28 @@ enum AnalyticsEventType {
   MESSAGE_START
 }
 
+// How a user entered the BridgeX network. Drives the referral tree and
+// contact-source labels. DIRECT = plain registration with no referrer.
+enum SignupSource {
+  DIRECT
+  REFERRAL_LINK
+  CARD_LINK
+  QR_SCAN
+  NFC_CARD
+  EVENT_INVITE
+}
+
+// Where a saved contact came from.
+enum ContactSource {
+  MANUAL
+  QR_SCAN
+  SHARED_LINK
+  NFC_CARD
+  EVENT
+  REFERRAL
+  CARD_SIGNUP
+}
+
 // ---------------------------------------------------------------------------
 // Core identity
 // ---------------------------------------------------------------------------
@@ -152,6 +174,16 @@ model User {
   referredById String?
   referredBy   User?   @relation("Referrals", fields: [referredById], references: [id])
   referrals    User[]  @relation("Referrals")
+
+  // How this user signed up (referral link, someone's card, QR, NFC, event).
+  signupSource      SignupSource?
+  signupCardHandle  String? // username or business slug of the card they came from
+  signupEventId     String?
+
+  // Login tracking (successful logins only).
+  totalLoginDays Int     @default(0) // distinct local days with >=1 successful login
+  loginStreak    Int     @default(0) // consecutive-day streak as of lastLoginDay
+  lastLoginDay   String? // Asia/Jakarta local date (YYYY-MM-DD) of last counted day
 
   // Membership (Member Club). Business role is granted by an active membership.
   membershipTier      MembershipTier?
@@ -203,6 +235,10 @@ model User {
   profileViewsMade     ProfileView[] @relation("Viewer")
   profileViewsReceived ProfileView[] @relation("ViewedUser")
   analyticsEvents      AnalyticsEvent[]
+
+  dailyCheckIns DailyCheckIn[]
+  contactsOwned Contact[] @relation("ContactOwner")
+  contactsSaved Contact[] @relation("ContactTarget")
 
   @@index([role])
   @@index([status])
@@ -285,6 +321,11 @@ model Profile {
   linkedin  String?
   telegram  String?
   twitter   String?
+
+  // AI-assisted networking sections (editable, never auto-overwritten silently).
+  whoIAm          String?
+  whoIWantToFind  String?
+  whatICanOffer   String?
 
   showPhone    Boolean @default(true)
   showEmail    Boolean @default(true)
@@ -823,6 +864,48 @@ model AdminLog {
   createdAt  DateTime @default(now())
 
   @@index([adminId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Engagement: daily check-in, contacts
+// ---------------------------------------------------------------------------
+
+// One row per user per LOCAL calendar day (Asia/Jakarta). The unique pair is
+// the database-level guarantee that points can never be double-claimed.
+model DailyCheckIn {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  localDate     String // YYYY-MM-DD in the check-in timezone
+  pointsAwarded Int
+  basePoints    Int
+  bonusPoints   Int      @default(0)
+  streakDay     Int // streak length including this check-in
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, localDate])
+  @@index([localDate])
+  @@index([userId, createdAt])
+}
+
+// An in-app business contact: owner saved target from a card, event, QR, etc.
+// Deleting removes only this relationship row — never a user account.
+model Contact {
+  id             String        @id @default(uuid())
+  ownerUserId    String
+  owner          User          @relation("ContactOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  contactUserId  String
+  contact        User          @relation("ContactTarget", fields: [contactUserId], references: [id], onDelete: Cascade)
+  source         ContactSource @default(MANUAL)
+  sourceCardId   String? // username/slug of the card it was saved from
+  eventId        String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([ownerUserId, contactUserId])
+  @@index([contactUserId])
+  @@index([ownerUserId, createdAt])
 }
 
 model SystemSetting {
