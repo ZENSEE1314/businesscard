@@ -43,6 +43,7 @@ const USER_MENU: MenuItem[] = [
   { href: "__CARD__", label: "Digital Name Card", icon: IdCard }, // replaced with the user's card path
   { href: "/chat", label: "Messages", icon: MessageSquare },
   { href: "/rewards", label: "Marketplace & Rewards", icon: Gift },
+  { href: "/points", label: "Point History", icon: Gift },
   { href: "/awards", label: "Awards & Events", icon: Trophy },
   { href: "/me", label: "Profile", icon: User },
   { href: "/me/edit", label: "Account Settings", icon: Settings },
