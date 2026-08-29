@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
-import { prisma } from "@/lib/db/prisma";
 import { requireAdmin } from "@/lib/permissions/guards";
 import { approveMembership } from "@/features/membership/service";
+import { recordCommissionForMembership } from "@/lib/referral-money";
+import { logAdminAction } from "@/lib/admin-log";
 import { getClientIp, handle, ok } from "@/lib/api";
 
 export async function POST(
@@ -14,16 +15,28 @@ export async function POST(
 
     const result = await approveMembership(id, admin.id);
 
-    await prisma.adminLog.create({
-      data: {
-        adminId: admin.id,
-        action: "membership.approve",
-        targetType: "membership",
-        targetId: id,
-        newValue: { tier: result.tier, status: result.status },
-        ip: getClientIp(req),
-      },
+    // Referral money: the referrer of the joining member earns 20% of the
+    // membership fee as a ledger entry (withdrawable after admin approval).
+    const earning = await recordCommissionForMembership(id);
+
+    await logAdminAction({
+      adminId: admin.id,
+      action: "membership.approve",
+      targetType: "membership",
+      targetId: id,
+      newValue: { tier: result.tier, status: result.status },
+      ip: getClientIp(req),
     });
+    if (earning) {
+      await logAdminAction({
+        adminId: admin.id,
+        action: "referral.commission",
+        targetType: "referral_earning",
+        targetId: earning.id,
+        newValue: { membershipId: id, tier: result.tier },
+        ip: getClientIp(req),
+      });
+    }
 
     return ok({ status: result.status, tier: result.tier });
   });

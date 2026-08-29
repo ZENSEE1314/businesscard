@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BadgeCheck, Trophy, MapPin, Users } from "lucide-react";
+import { BadgeCheck, Trophy, MapPin, Users, ArrowLeft } from "lucide-react";
 import { qrSvg } from "@/lib/qr";
 import { absoluteUrl } from "@/lib/utils";
 import { cardLinks, type CardView, type MediaItem } from "@/features/cards/queries";
@@ -166,6 +166,14 @@ export async function PublicCard({
 
   return (
     <div className="mx-auto w-full max-w-md">
+      {isOwner && (
+        <Link
+          href="/me"
+          className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to my profile
+        </Link>
+      )}
       <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-lg">
         {/* Cover — video if set, else the whole image (never cropped) */}
         <div className="relative flex items-center justify-center bg-surface-2">

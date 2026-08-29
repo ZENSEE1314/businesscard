@@ -81,6 +81,23 @@ export function getActivityThresholds() {
 }
 
 // ---------------------------------------------------------------------------
+// Referral commission (money, in IDR)
+// ---------------------------------------------------------------------------
+
+/** Referral commission in basis points (2000 bps = 20%). Admin-configurable. */
+export const DEFAULT_REFERRAL_COMMISSION_BPS = 2000;
+/** Minimum withdrawal amount in IDR. */
+export const DEFAULT_MIN_WITHDRAWAL_IDR = 100_000;
+
+export function getReferralCommissionBps() {
+  return getSetting<number>("referralCommissionBps", DEFAULT_REFERRAL_COMMISSION_BPS);
+}
+
+export function getMinWithdrawalIdr() {
+  return getSetting<number>("minWithdrawalIdr", DEFAULT_MIN_WITHDRAWAL_IDR);
+}
+
+// ---------------------------------------------------------------------------
 // Public card top-connections ranking
 // ---------------------------------------------------------------------------
 

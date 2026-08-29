@@ -142,6 +142,23 @@ enum SignupSource {
   EVENT_INVITE
 }
 
+enum EventVisibility {
+  PUBLIC
+  MEMBERS_ONLY
+}
+
+enum EventStatus {
+  PUBLISHED
+  CANCELLED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  PAID
+  REJECTED
+}
+
 // Where a saved contact came from.
 enum ContactSource {
   MANUAL
@@ -240,6 +257,13 @@ model User {
   contactsSaved Contact[] @relation("ContactTarget")
 
   marketplaceListings MarketplaceListing[]
+
+  hostedEvents         Event[]            @relation("EventHost")
+  eventAttendances     EventAttendee[]
+  referralEarnings     ReferralEarning[]  @relation("ReferralEarnedBy")
+  earningsGenerated    ReferralEarning[]  @relation("ReferralEarnedFrom")
+  withdrawals          Withdrawal[]
+  processedWithdrawals Withdrawal[]       @relation("WithdrawalProcessor")
 
   @@index([role])
   @@index([status])
@@ -853,18 +877,20 @@ model AnalyticsEvent {
 }
 
 model AdminLog {
-  id         String   @id @default(uuid())
-  adminId    String
-  admin      User     @relation("AdminActor", fields: [adminId], references: [id], onDelete: Cascade)
-  action     String
-  targetType String?
-  targetId   String?
-  oldValue   Json?
-  newValue   Json?
-  ip         String?
-  createdAt  DateTime @default(now())
+  id             String   @id @default(uuid())
+  adminId        String
+  admin          User     @relation("AdminActor", fields: [adminId], references: [id], onDelete: Cascade)
+  action         String
+  targetType     String?
+  targetId       String?
+  targetUsername String?
+  oldValue       Json?
+  newValue       Json?
+  ip             String?
+  createdAt      DateTime @default(now())
 
   @@index([adminId, createdAt])
+  @@index([createdAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -933,4 +959,92 @@ model SystemSetting {
   key       String   @id
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Events — paid members host gatherings; everyone can browse and RSVP.
+// Distinct from Awards (recognition). Shown with a calendar at /events.
+// ---------------------------------------------------------------------------
+
+model Event {
+  id          String          @id @default(uuid())
+  hostId      String
+  host        User            @relation("EventHost", fields: [hostId], references: [id], onDelete: Cascade)
+  title       String          @db.VarChar(140)
+  description String?         @db.VarChar(2000)
+  location    String?         @db.VarChar(160)
+  startsAt    DateTime
+  endsAt      DateTime?
+  capacity    Int?
+  visibility  EventVisibility @default(PUBLIC)
+  status      EventStatus     @default(PUBLISHED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attendees EventAttendee[]
+
+  @@index([status, startsAt])
+  @@index([hostId])
+}
+
+model EventAttendee {
+  id        String   @id @default(uuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, userId])
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Referral money — a referrer earns a share of every paid membership their
+// referred member buys. Withdrawals are requested in-app and paid out
+// manually after admin approval.
+// ---------------------------------------------------------------------------
+
+model ReferralEarning {
+  id             String         @id @default(uuid())
+  referrerId     String
+  referrer       User           @relation("ReferralEarnedBy", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUserId String
+  referredUser   User           @relation("ReferralEarnedFrom", fields: [referredUserId], references: [id], onDelete: Cascade)
+  membershipId   String?
+  tier           MembershipTier
+  amountIdr      Int
+  rateBps        Int            @default(2000) // 2000 bps = 20%
+
+  createdAt DateTime @default(now())
+
+  @@index([referrerId, createdAt])
+  @@index([referredUserId])
+}
+
+model Withdrawal {
+  id            String           @id @default(uuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountIdr     Int
+  status        WithdrawalStatus @default(PENDING)
+
+  // Payout destination captured at request time.
+  bankName      String? @db.VarChar(80)
+  accountNumber String? @db.VarChar(40)
+  accountHolder String? @db.VarChar(80)
+  note          String? @db.VarChar(300)
+
+  adminNote     String?  @db.VarChar(300)
+  processedById String?
+  processedBy   User?    @relation("WithdrawalProcessor", fields: [processedById], references: [id])
+  processedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }

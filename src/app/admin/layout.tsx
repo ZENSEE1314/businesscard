@@ -5,12 +5,15 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 
 const NAV = [
   { href: "/admin", label: "Overview" },
+  { href: "/admin/users", label: "Users" },
   { href: "/admin/users/activity", label: "Activity" },
   { href: "/admin/users/tree", label: "Network Tree" },
   { href: "/admin/memberships", label: "Memberships" },
+  { href: "/admin/withdrawals", label: "Withdrawals" },
   { href: "/admin/feed", label: "Feed" },
   { href: "/admin/awards", label: "Awards" },
   { href: "/admin/rewards", label: "Rewards" },
+  { href: "/admin/logs", label: "Logs" },
   { href: "/admin/settings", label: "Settings" },
 ];
 

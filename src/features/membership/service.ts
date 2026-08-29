@@ -4,6 +4,7 @@ import type { MembershipTier } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { getTierConfig, membershipExpiry } from "@/lib/membership";
 import { generateUniqueBusinessSlug } from "@/lib/auth/provisioning";
+import { getReferralCommissionBps } from "@/lib/settings";
 import { Errors } from "@/lib/api";
 
 function orderCode(): string {
@@ -113,6 +114,42 @@ export async function approveMembership(membershipId: string, adminId: string) {
         link: "/membership",
       },
     });
+
+    // Referral commission: when the new member was referred by someone, the
+    // referrer earns a configurable share (default 20%) of the membership
+    // fee as IDR credit. Stored as a ReferralEarning for manual payout.
+    const referrerId = await tx.user
+      .findUnique({
+        where: { id: user.id },
+        select: { referredById: true },
+      })
+      .then((u) => u?.referredById ?? null);
+
+    if (referrerId) {
+      const rateBps = await getReferralCommissionBps();
+      const amountIdr = Math.floor((membership.priceIdr * rateBps) / 10_000);
+      if (amountIdr > 0) {
+        await tx.referralEarning.create({
+          data: {
+            referrerId,
+            referredUserId: user.id,
+            membershipId: membership.id,
+            tier: membership.tier,
+            amountIdr,
+            rateBps,
+          },
+        });
+        await tx.notification.create({
+          data: {
+            userId: referrerId,
+            type: "SYSTEM",
+            title: "Referral commission earned!",
+            body: `You earned Rp ${amountIdr.toLocaleString("id-ID")} commission from a new ${getTierConfig(membership.tier).label} member. Request a withdrawal from the Refer & Earn page.`,
+            link: "/referrals",
+          },
+        });
+      }
+    }
 
     return updated;
   });

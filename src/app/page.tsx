@@ -43,7 +43,7 @@ const features = [
 export default async function LandingPage() {
   // Signed-in users land on their home hub, never on marketing pages.
   const user = await getCurrentUser();
-  if (user) redirect("/hub");
+  if (user) redirect("/dashboard");
 
   const appName = env.appName;
   return (

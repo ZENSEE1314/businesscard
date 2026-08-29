@@ -10,7 +10,8 @@ import {
   getRateLimitSettings,
 } from "@/lib/settings";
 import { checkOllamaHealth, isAiProfileGenerationEnabled, getOllamaConfig } from "@/lib/ai/ollama";
-import { handle, ok, Errors } from "@/lib/api";
+import { handle, ok, Errors, getClientIp } from "@/lib/api";
+import { logAdminAction } from "@/lib/admin-log";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,14 @@ export async function PUT(req: NextRequest) {
     if (input.cardRanking) await setSetting("cardRanking", input.cardRanking);
     if (input.aiProfile) await setSetting("aiProfile", input.aiProfile);
     if (input.loginRateLimit) await setSetting("loginRateLimit", input.loginRateLimit);
+
+    await logAdminAction({
+      adminId: user.id,
+      action: "settings.update",
+      targetType: "settings",
+      newValue: { updated: Object.keys(input) } as unknown as Parameters<typeof logAdminAction>[0]["newValue"],
+      ip: getClientIp(req),
+    });
 
     return ok({ updated: true });
   });

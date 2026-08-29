@@ -39,9 +39,28 @@ export function getOllamaConfig(): OllamaConfig | null {
   };
 }
 
+export interface OpenAIConfig {
+  baseUrl: string;
+  model: string;
+  apiKey: string;
+  timeoutMs: number;
+}
+
+/** OpenAI-compatible fallback (also works with any OpenAI-compatible endpoint). */
+export function getOpenAIConfig(): OpenAIConfig | null {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) return null;
+  return {
+    baseUrl: (process.env.OPENAI_BASE_URL?.trim() || "https://api.openai.com/v1").replace(/\/+$/, ""),
+    model: process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini",
+    apiKey,
+    timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS ?? "30000"),
+  };
+}
+
 export function isAiProfileGenerationEnabled(): boolean {
   if (process.env.AI_PROFILE_GENERATION_ENABLED === "false") return false;
-  return getOllamaConfig() !== null;
+  return getOllamaConfig() !== null || getOpenAIConfig() !== null;
 }
 
 // ---------------------------------------------------------------------------
@@ -191,6 +210,54 @@ async function ollamaChat(
   }
 }
 
+async function openaiChat(
+  config: OpenAIConfig,
+  messages: ChatMessage[],
+): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), config.timeoutMs);
+  try {
+    const res = await fetch(`${config.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.apiKey}`,
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: config.model,
+        messages,
+        response_format: { type: "json_object" },
+        temperature: 0.4,
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new OllamaError(
+        502,
+        `AI service error (${res.status}): ${text.slice(0, 300) || res.statusText}`,
+        "ai_error",
+      );
+    }
+    const data = (await res.json()) as {
+      choices?: { message?: { content?: string } }[];
+      error?: { message?: string };
+    };
+    if (data.error?.message) throw new OllamaError(502, `AI error: ${data.error.message}`, "ai_error");
+    const content = data.choices?.[0]?.message?.content ?? "";
+    if (!content.trim()) throw new OllamaError(502, "AI returned an empty response.", "empty_response");
+    return content;
+  } catch (err) {
+    if (err instanceof OllamaError) throw err;
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new OllamaError(504, "The AI service took too long to respond. Please try again.", "timeout");
+    }
+    throw new OllamaError(502, "Could not reach the AI service.", "unreachable");
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function extractJson(raw: string): unknown {
   // Models occasionally wrap JSON in prose or code fences — find the object.
   const trimmed = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
@@ -213,23 +280,12 @@ function extractJson(raw: string): unknown {
 export async function generateProfileContent(
   input: ProfileInput,
 ): Promise<ProfileContent> {
-  const config = getOllamaConfig();
-  if (!config) {
-    throw new OllamaError(
-      503,
-      "AI profile generation is not configured yet. Ask the administrator to set up the Ollama service.",
-      "not_configured",
-    );
-  }
+  const messages: ChatMessage[] = [
+    { role: "system", content: SYSTEM_PROMPT },
+    { role: "user", content: buildUserPrompt(input) },
+  ];
 
-  const raw = await ollamaChat(
-    config,
-    [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: buildUserPrompt(input) },
-    ],
-    true,
-  );
+  const raw = await runAiChat(messages);
 
   const parsed = profileContentSchema.safeParse(extractJson(raw));
   if (!parsed.success) {
@@ -240,6 +296,22 @@ export async function generateProfileContent(
     );
   }
   return parsed.data;
+}
+
+/** Dispatches to OpenAI-compatible API if a key is set, else Ollama. */
+async function runAiChat(messages: ChatMessage[]): Promise<string> {
+  const openai = getOpenAIConfig();
+  if (openai) return openaiChat(openai, messages);
+
+  const config = getOllamaConfig();
+  if (!config) {
+    throw new OllamaError(
+      503,
+      "AI generation is not configured yet. Ask the administrator to set OLLAMA_BASE_URL (or OPENAI_API_KEY for the built-in provider).",
+      "not_configured",
+    );
+  }
+  return ollamaChat(config, messages, true);
 }
 
 /** Lightweight reachability probe for admin status display. */

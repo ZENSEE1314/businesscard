@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, BadgeCheck, X } from "lucide-react";
+import { Plus, Search, BadgeCheck, X, Pencil, Trash2, Check } from "lucide-react";
 import { Button, Card, Input, Label, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
 
@@ -29,6 +29,8 @@ export interface AdminAward {
   name: string;
   year: number | null;
   category: string | null;
+  description?: string | null;
+  active?: boolean;
   featured: boolean;
   recipients: {
     id: string;
@@ -146,6 +148,17 @@ function AwardRow({
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<SearchResult | null>(null);
   const [rank, setRank] = useState("");
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
+  const [busyEdit, setBusyEdit] = useState(false);
+  const [editMsg, setEditMsg] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: award.name,
+    category: award.category ?? "",
+    year: award.year ? String(award.year) : "",
+    description: award.description ?? "",
+    featured: award.featured,
+  });
 
   useEffect(() => {
     if (selected) return;
@@ -175,6 +188,35 @@ function AwardRow({
     setQuery("");
   }
 
+  async function saveEdit() {
+    setBusyEdit(true);
+    setEditMsg(null);
+    const res = await apiFetch(`/api/admin/awards/${award.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        name: editForm.name,
+        category: editForm.category,
+        year: editForm.year ? Number(editForm.year) : null,
+        description: editForm.description,
+        featured: editForm.featured,
+      }),
+    });
+    setBusyEdit(false);
+    if (res.ok) {
+      setEditing(false);
+      router.refresh();
+    } else {
+      setEditMsg(res.error ?? "Failed.");
+    }
+  }
+
+  async function deleteAward() {
+    if (!confirm(`Delete award "${award.name}"? Winners will be removed too.`)) return;
+    const res = await apiFetch(`/api/admin/awards/${award.id}`, { method: "DELETE" });
+    if (res.ok) router.refresh();
+    else alert(res.error ?? "Failed to delete.");
+  }
+
   return (
     <Card className="p-4">
       <div className="flex items-center gap-2">
@@ -186,7 +228,55 @@ function AwardRow({
             Featured
           </span>
         )}
+        <div className="ml-auto flex gap-1">
+          <button
+            type="button"
+            onClick={() => setEditing((v) => !v)}
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-muted hover:bg-surface-2"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Edit
+          </button>
+          <button
+            type="button"
+            onClick={deleteAward}
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-danger hover:bg-red-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Delete
+          </button>
+        </div>
       </div>
+      {editing && (
+        <div className="mt-3 space-y-3 rounded-xl border border-border p-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label>Name</Label>
+              <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+            </div>
+            <div>
+              <Label>Category</Label>
+              <Input value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} />
+            </div>
+            <div>
+              <Label>Year</Label>
+              <Input value={editForm.year} onChange={(e) => setEditForm({ ...editForm, year: e.target.value })} />
+            </div>
+            <label className="flex items-end gap-2 pb-2 text-sm">
+              <input type="checkbox" checked={editForm.featured}
+                onChange={(e) => setEditForm({ ...editForm, featured: e.target.checked })} className="h-4 w-4 accent-[var(--primary)]" />
+              Featured
+            </label>
+          </div>
+          <Label>Description</Label>
+          <Textarea rows={2} value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
+          <div className="flex gap-2">
+            <Button size="sm" onClick={saveEdit} disabled={busyEdit}>
+              <Check className="h-4 w-4" /> Save
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
+            {editMsg && <span className="text-sm text-red-600">{editMsg}</span>}
+          </div>
+        </div>
+      )}
       {award.recipients.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {award.recipients.map((r) => (

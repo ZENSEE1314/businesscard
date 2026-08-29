@@ -147,6 +147,22 @@ async function main() {
           data: { role: "ADMIN" },
         });
       }
+      // The platform owner's admin account should carry the top package unless
+      // it already has its own membership (never override real orders).
+      if (
+        !existing.membershipTier &&
+        !existing.membershipStatus &&
+        process.env.ADMIN_MEMBERSHIP !== "false"
+      ) {
+        await prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            membershipTier: "BRIDGEMASTER",
+            membershipStatus: "ACTIVE",
+            membershipExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          },
+        });
+      }
     } else {
       // Ensure the admin username is free before creating.
       const taken = await prisma.profile.findUnique({
@@ -158,6 +174,12 @@ async function main() {
           passwordHash: hash,
           role: "ADMIN",
           emailVerified: new Date(),
+          membershipTier: process.env.ADMIN_MEMBERSHIP === "false" ? null : "BRIDGEMASTER",
+          membershipStatus: process.env.ADMIN_MEMBERSHIP === "false" ? null : "ACTIVE",
+          membershipExpiresAt:
+            process.env.ADMIN_MEMBERSHIP === "false"
+              ? null
+              : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
           profile: {
             create: {
               username: taken ? `${adminUsername}${Date.now().toString().slice(-4)}` : adminUsername,

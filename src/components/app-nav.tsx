@@ -24,6 +24,7 @@ import {
   Store,
   Crown,
   UserPlus,
+  Wallet,
 } from "lucide-react";
 import { apiFetch } from "@/lib/client";
 import { cn } from "@/lib/utils";
@@ -39,8 +40,8 @@ interface MenuItem {
 }
 
 const USER_MENU: MenuItem[] = [
-  { href: "/hub", label: "Home", icon: Home },
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/hub", label: "Hub", icon: LayoutDashboard },
   { href: "/matches", label: "Matches", icon: Compass },
   { href: "/contacts", label: "Contacts", icon: Users },
   { href: "__CARD__", label: "Digital Name Card", icon: IdCard }, // replaced with the user's card path
@@ -57,19 +58,20 @@ const USER_MENU: MenuItem[] = [
 
 const ADMIN_MENU: MenuItem[] = [
   { href: "/admin", label: "Admin Dashboard", icon: ShieldCheck },
-  { href: "/admin/users/activity", label: "User Management", icon: Users },
-  { href: "/admin/users/activity", label: "Activity Monitoring", icon: Network },
+  { href: "/admin/users", label: "User Management", icon: Users },
   { href: "/admin/users/tree", label: "User Network Tree", icon: Network },
+  { href: "/admin/withdrawals", label: "Withdrawals", icon: Wallet },
+  { href: "/admin/logs", label: "Admin Log", icon: Newspaper },
   { href: "/admin/settings", label: "Points & Platform Settings", icon: Settings },
   { href: "/admin/memberships", label: "Memberships", icon: IdCard },
   { href: "/admin/feed", label: "Feed Management", icon: Newspaper },
-  { href: "/admin/rewards", label: "Marketplace Management", icon: Gift },
+  { href: "/admin/awards", label: "Awards", icon: Trophy },
+  { href: "/admin/rewards", label: "Rewards & Marketplace", icon: Gift },
 ];
 
 function isActive(pathname: string, href: string): boolean {
-  // The hub is the app home; "/" redirects there for signed-in users.
-  if (href === "/hub") return pathname === "/hub" || pathname === "/";
-  if (href === "/dashboard") return pathname === "/dashboard";
+  // The dashboard is the app home; "/" redirects there for signed-in users.
+  if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/";
   return pathname.startsWith(href);
 }
 
@@ -248,7 +250,7 @@ export function HeaderNav({
 // ---------------------------------------------------------------------------
 
 const BOTTOM_ITEMS = [
-  { href: "/hub", label: "Home", icon: Home },
+  { href: "/dashboard", label: "Home", icon: Home },
   { href: "/marketplace", label: "Marketplace", icon: Store },
 ];
 

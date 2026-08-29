@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Gift, UserPlus, Users, Share2 } from "lucide-react";
+import { Gift, UserPlus, Users, Share2, Wallet } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { env } from "@/lib/env";
 import { Card } from "@/components/ui";
 import { ReferralShare } from "@/features/referrals/referral-share";
+import { ReferralMoney } from "@/features/referrals/referral-money";
 import { ChatAvatar } from "@/features/chat/chat-avatar";
+import { earningTotals, listEarnings, listWithdrawals } from "@/lib/referral-money";
+import { getMinWithdrawalIdr } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -34,8 +37,13 @@ const howItWorks = [
   },
   {
     icon: Gift,
-    title: "You earn points",
-    desc: "Points are credited to your balance for every member who joins through you.",
+    title: "You earn points + 20% commission",
+    desc: "Free signups earn you points. If they upgrade to a paid membership, you earn 20% of their fee as withdrawable money.",
+  },
+  {
+    icon: Wallet,
+    title: "Withdraw your earnings",
+    desc: "Request a payout any time — an admin verifies it and transfers to your bank.",
   },
 ];
 
@@ -43,7 +51,7 @@ export default async function ReferralsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const [me, referred, pointsAgg] = await Promise.all([
+  const [me, referred, pointsAgg, money, earnings, withdrawals, minIdr] = await Promise.all([
     prisma.user.findUnique({
       where: { id: user.id },
       select: { referralCode: true, _count: { select: { referrals: true } } },
@@ -72,6 +80,10 @@ export default async function ReferralsPage() {
       where: { userId: user.id, type: "REFERRAL" },
       _sum: { amount: true },
     }),
+    earningTotals(user.id),
+    listEarnings(user.id),
+    listWithdrawals(user.id),
+    getMinWithdrawalIdr(),
   ]);
 
   const referralCode = me?.referralCode ?? "";
@@ -118,6 +130,19 @@ export default async function ReferralsPage() {
       <Card className="p-5">
         <ReferralShare link={link} shareText={shareText} />
       </Card>
+
+      {/* Referral money — 20% commission + withdrawals */}
+      <ReferralMoney
+        data={{
+          total: money.total,
+          paid: money.paid,
+          pending: money.pending,
+          available: money.available,
+          minWithdrawalIdr: minIdr,
+          earnings,
+          withdrawals,
+        }}
+      />
 
       {/* How it works */}
       <Card className="p-5">
