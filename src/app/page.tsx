@@ -41,9 +41,9 @@ const features = [
 ];
 
 export default async function LandingPage() {
-  // Signed-in users land on their dashboard, never on marketing pages.
+  // Signed-in users land on their home hub, never on marketing pages.
   const user = await getCurrentUser();
-  if (user) redirect("/dashboard");
+  if (user) redirect("/hub");
 
   const appName = env.appName;
   return (

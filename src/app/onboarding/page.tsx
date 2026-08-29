@@ -18,16 +18,16 @@ export default async function OnboardingPage() {
         </div>
         <h1 className="mt-4 text-2xl font-bold">Welcome to {env.appName}!</h1>
         <p className="mt-2 text-muted">
-          Your account is ready and your digital name card is live. Complete your
-          profile to earn <strong>+100 points</strong> and make a great first
-          impression.
+          Your account is ready and your digital name card is live. Complete
+          your profile to earn <strong>+100 points</strong> and make a great
+          first impression.
         </p>
         <div className="mt-6 flex flex-col gap-2">
           <ButtonLink href="/me/edit" size="lg">
-            Complete my profile
+            Create my name card
           </ButtonLink>
-          <ButtonLink href="/dashboard" variant="ghost" size="lg">
-            Skip for now — go to dashboard
+          <ButtonLink href="/hub" variant="ghost" size="lg">
+            Skip for now &mdash; go to home
           </ButtonLink>
         </div>
       </Card>

@@ -16,7 +16,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <Link href="/dashboard" className="flex items-center gap-2 font-bold">
+          <Link href="/hub" className="flex items-center gap-2 font-bold">
             <Logo size={28} />
             {env.appName}
           </Link>

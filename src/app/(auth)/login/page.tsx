@@ -28,7 +28,7 @@ export default function LoginPage() {
       setError(res.error ?? "Login failed.");
       return;
     }
-    router.push("/dashboard");
+    router.push("/hub");
     router.refresh();
   }
 

@@ -289,6 +289,12 @@ export default async function DashboardPage() {
               ? "Share your card to invite your first referral and earn +100 points."
               : `${data.referralCount} member${data.referralCount === 1 ? "" : "s"} joined through your link or card.`}
           </p>
+          <Link
+            href="/referrals"
+            className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-semibold text-primary transition-colors hover:bg-surface-2"
+          >
+            Refer &amp; earn <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </Card>
       </section>
     </div>

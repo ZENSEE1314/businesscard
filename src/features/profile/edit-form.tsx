@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Loader2, ImagePlus, Video, X, Sparkles } from "lucide-react";
-import { Button, Card, Input, Label, Textarea } from "@/components/ui";
+import { Button, ButtonLink, Card, Input, Label, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
 
 type Dict = Record<string, unknown>;
@@ -337,6 +337,10 @@ export function ProfileEditForm({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  // Used by the post-save actions ("View my card").
+  const cardUsername =
+    typeof profile.username === "string" ? profile.username : "";
+
   // --- AI assistant state ---
   const [aiLang, setAiLang] = useState<"en" | "id" | "zh">("en");
   const [aiBusy, setAiBusy] = useState(false);
@@ -429,7 +433,17 @@ export function ProfileEditForm({
       )}
       {saved && (
         <div className="rounded-lg bg-green-50 px-3 py-2 text-sm text-success">
-          Saved! Your card is updated.
+          <p>Saved! Your card is updated.</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <ButtonLink href="/hub" size="sm">
+              Back to Home
+            </ButtonLink>
+            {cardUsername && (
+              <ButtonLink href={`/u/${cardUsername}`} variant="outline" size="sm">
+                View my card
+              </ButtonLink>
+            )}
+          </div>
         </div>
       )}
 

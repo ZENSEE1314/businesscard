@@ -156,7 +156,9 @@ export async function PublicCard({
   const registerHref = card.referralCode
     ? `/register?ref=${encodeURIComponent(card.referralCode)}&src=link&card=${encodeURIComponent(card.handle)}`
     : "/register";
-  const messageHref = isGuest ? registerHref : "/chat";
+  const messageHref = isGuest
+    ? registerHref
+    : `/chat?with=${encodeURIComponent(card.handle)}`;
 
   const socials = Object.entries(card.socials).filter(
     ([, v]) => v && v.trim().length > 0,

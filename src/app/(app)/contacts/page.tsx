@@ -173,15 +173,19 @@ export default async function ContactsPage({
                     href={`/u/${p?.username}`}
                     aria-label={`View ${name}'s digital card`}
                     title="Digital card"
-                    className="grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-surface-2"
+                    className="grid h-10 w-10 place-items-center rounded-lg border border-border hover:bg-surface-2"
                   >
                     <IdCard className="h-4 w-4" />
                   </Link>
                   <Link
-                    href="/chat"
+                    href={
+                      p?.username
+                        ? `/chat?with=${encodeURIComponent(p.username)}`
+                        : "/chat"
+                    }
                     aria-label={`Message ${name}`}
                     title="Message"
-                    className="grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-surface-2"
+                    className="grid h-10 w-10 place-items-center rounded-lg border border-border hover:bg-surface-2"
                   >
                     <MessageCircle className="h-4 w-4 text-primary" />
                   </Link>

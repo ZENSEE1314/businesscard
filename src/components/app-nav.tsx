@@ -23,6 +23,7 @@ import {
   Newspaper,
   Store,
   Crown,
+  UserPlus,
 } from "lucide-react";
 import { apiFetch } from "@/lib/client";
 import { cn } from "@/lib/utils";
@@ -38,11 +39,12 @@ interface MenuItem {
 }
 
 const USER_MENU: MenuItem[] = [
+  { href: "/hub", label: "Home", icon: Home },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/hub", label: "Hub", icon: Newspaper },
   { href: "/matches", label: "Matches", icon: Compass },
   { href: "/contacts", label: "Contacts", icon: Users },
   { href: "__CARD__", label: "Digital Name Card", icon: IdCard }, // replaced with the user's card path
+  { href: "/referrals", label: "Refer & Earn", icon: UserPlus },
   { href: "/marketplace", label: "Marketplace", icon: Store },
   { href: "/rewards", label: "Rewards", icon: Gift },
   { href: "/chat", label: "Messages", icon: MessageSquare },
@@ -65,7 +67,9 @@ const ADMIN_MENU: MenuItem[] = [
 ];
 
 function isActive(pathname: string, href: string): boolean {
-  if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/";
+  // The hub is the app home; "/" redirects there for signed-in users.
+  if (href === "/hub") return pathname === "/hub" || pathname === "/";
+  if (href === "/dashboard") return pathname === "/dashboard";
   return pathname.startsWith(href);
 }
 
@@ -244,8 +248,7 @@ export function HeaderNav({
 // ---------------------------------------------------------------------------
 
 const BOTTOM_ITEMS = [
-  { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-  { href: "/hub", label: "Hub", icon: Compass },
+  { href: "/hub", label: "Home", icon: Home },
   { href: "/marketplace", label: "Marketplace", icon: Store },
 ];
 
