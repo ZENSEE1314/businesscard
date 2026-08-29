@@ -256,29 +256,6 @@ export async function PublicCard({
             </p>
           )}
 
-          {(card.whoIAm || card.whoIWantToFind || card.whatICanOffer) && (
-            <div className="mt-4 space-y-3 border-t border-border pt-4 text-left">
-              {card.whoIAm && (
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">Who I am</p>
-                  <p className="mt-1 text-sm leading-relaxed">{card.whoIAm}</p>
-                </div>
-              )}
-              {card.whatICanOffer && (
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">What I can offer</p>
-                  <p className="mt-1 text-sm leading-relaxed">{card.whatICanOffer}</p>
-                </div>
-              )}
-              {card.whoIWantToFind && (
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">Who I want to find</p>
-                  <p className="mt-1 text-sm leading-relaxed">{card.whoIWantToFind}</p>
-                </div>
-              )}
-            </div>
-          )}
-
           {(card.canHelp.length > 0 || card.lookingFor.length > 0) && (
             <div className="mt-4 space-y-3">
               {card.canHelp.length > 0 && (

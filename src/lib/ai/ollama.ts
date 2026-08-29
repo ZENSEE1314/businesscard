@@ -49,10 +49,9 @@ export function isAiProfileGenerationEnabled(): boolean {
 // ---------------------------------------------------------------------------
 
 export const profileContentSchema = z.object({
-  bio: z.string().min(1).max(2000),
-  whoIAm: z.string().min(1).max(2000),
-  whoIWantToFind: z.string().min(1).max(2000),
-  whatICanOffer: z.string().min(1).max(2000),
+  headline: z.string().min(1).max(160),
+  canHelp: z.array(z.string().min(1).max(40)).min(1).max(12),
+  lookingFor: z.array(z.string().min(1).max(40)).min(1).max(12),
 });
 
 export type ProfileContent = z.infer<typeof profileContentSchema>;
@@ -64,9 +63,9 @@ export type ProfileContent = z.infer<typeof profileContentSchema>;
 export type AiLanguage = "en" | "id" | "zh";
 
 const LANGUAGE_INSTRUCTIONS: Record<AiLanguage, string> = {
-  en: "Write all four fields in English.",
-  id: "Tulis keempat bagian dalam Bahasa Indonesia yang profesional.",
-  zh: "用简体中文撰写全部四个部分，语气专业。",
+  en: "Write all fields in English.",
+  id: "Tulis semua bagian dalam Bahasa Indonesia yang profesional.",
+  zh: "用简体中文撰写全部内容，语气专业。",
 };
 
 const SYSTEM_PROMPT = [
@@ -76,7 +75,10 @@ const SYSTEM_PROMPT = [
   "- NEVER invent qualifications, awards, customers, funding, revenue, certifications, partnerships, or achievements.",
   "- If information is missing, write around it generically instead of fabricating specifics.",
   "- Keep the tone professional and business-focused.",
-  '- Respond with ONLY a valid JSON object with keys: "bio", "whoIAm", "whoIWantToFind", "whatICanOffer".',
+  "- headline: one concise sentence describing what the person does (max 160 chars).",
+  "- canHelp: up to 12 short tags of what they offer (from the input expertise/products/services).",
+  "- lookingFor: up to 12 short tags of what they want (from idealCustomers, desiredPartners, desiredInvestors, desiredDistributors, desiredSuppliers, businessGoals).",
+  '- Respond with ONLY a valid JSON object with keys: "headline", "canHelp", "lookingFor".',
 ].join(" ");
 
 export interface ProfileInput {

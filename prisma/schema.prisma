@@ -27,9 +27,8 @@ enum AccountStatus {
 }
 
 enum MembershipTier {
-  BASIC
-  GOLD
-  DIAMOND
+  BRIDGEMAKER
+  BRIDGEMASTER
 }
 
 enum MembershipStatus {
@@ -239,6 +238,8 @@ model User {
   dailyCheckIns DailyCheckIn[]
   contactsOwned Contact[] @relation("ContactOwner")
   contactsSaved Contact[] @relation("ContactTarget")
+
+  marketplaceListings MarketplaceListing[]
 
   @@index([role])
   @@index([status])
@@ -906,6 +907,26 @@ model Contact {
   @@unique([ownerUserId, contactUserId])
   @@index([contactUserId])
   @@index([ownerUserId, createdAt])
+}
+
+// Marketplace: paid members post products/services; all members can browse
+// and message the seller. Rewards (points redemption) is a separate page.
+model MarketplaceListing {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String   @db.VarChar(120)
+  description String?  @db.VarChar(2000)
+  category    String?  @db.VarChar(60)
+  priceNote   String?  @db.VarChar(80) // free-form price label, e.g. "Rp 250.000" or "Negotiable"
+  imageUrl    String?
+  whatsapp    String?  @db.VarChar(40)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active, createdAt])
+  @@index([userId])
 }
 
 model SystemSetting {

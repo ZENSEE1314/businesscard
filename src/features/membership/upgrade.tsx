@@ -5,9 +5,17 @@ import Link from "next/link";
 import { Check, Crown, Loader2 } from "lucide-react";
 import { Button, Card, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
+import { getTierConfig } from "@/lib/membership";
+
+function getTierLabel(tier: string): string {
+  if (tier === "BRIDGEMAKER" || tier === "BRIDGEMASTER") {
+    return getTierConfig(tier).label;
+  }
+  return tier;
+}
 
 export interface TierView {
-  tier: "BASIC" | "GOLD" | "DIAMOND";
+  tier: "BRIDGEMAKER" | "BRIDGEMASTER";
   label: string;
   priceLabel: string;
   tagline: string;
@@ -73,15 +81,16 @@ export function MembershipUpgrade({
 
   // Active member — no upgrade needed.
   if (currentTier) {
+    const label = getTierLabel(currentTier);
     return (
       <Card className="p-6 text-center">
         <Crown className="mx-auto h-8 w-8 text-amber-500" />
         <h2 className="mt-2 text-lg font-bold">
-          You’re a {currentTier} member 🎉
+          You&rsquo;re a {label} member 🎉
         </h2>
         <p className="mt-1 text-sm text-muted">
           Your business membership is active. Manage your business profile and
-          post to the feed anytime.
+          post to the Hub anytime.
         </p>
         <div className="mt-4 flex justify-center gap-2">
           <Link

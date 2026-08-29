@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Member Club — Membership",
   description:
-    "Join the Member Club. Basic, Gold and Diamond business memberships with ads, magazine features, networking and gala dinners.",
+    "Join the Member Club. BridgeMaker and BridgeMaster business memberships with ads, magazine features, networking and gala dinners.",
 };
 
 export default async function MembershipPage() {

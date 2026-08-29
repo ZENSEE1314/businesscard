@@ -40,9 +40,8 @@ export default async function AdminTreePage({
         </select>
         <select name="tier" defaultValue={sp.tier ?? ""} aria-label="Filter by tier" className="h-10 rounded-xl border border-border bg-surface px-3 text-sm">
           <option value="">All tiers</option>
-          <option value="BASIC">Basic</option>
-          <option value="GOLD">Gold</option>
-          <option value="DIAMOND">Diamond</option>
+          <option value="BRIDGEMAKER">BridgeMaker</option>
+          <option value="BRIDGEMASTER">BridgeMaster</option>
         </select>
         <select name="source" defaultValue={sp.source ?? ""} aria-label="Filter by signup source" className="h-10 rounded-xl border border-border bg-surface px-3 text-sm">
           <option value="">All sources</option>

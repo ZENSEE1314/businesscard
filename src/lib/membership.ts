@@ -17,73 +17,62 @@ export interface TierConfig {
   highlighted?: boolean;
 }
 
-// Member Club tiers. Annual fee in Indonesian Rupiah. Benefits mirror the
-// Member Club program (name card, TikTok/web ads, magazine, networking, gala).
+// BridgeX membership program.
+//
+//   Free            → no membership row (membershipTier = null)  "BridgeX Member"
+//   BRIDGEMAKER     → second tier (first paid tier)              "BridgeMaker"
+//   BRIDGEMASTER    → advanced tier                              "BridgeMaster"
+//
+// Annual fee in Indonesian Rupiah. Benefits mirror the Member Club program
+// (name card, TikTok/web ads, magazine, networking, gala) plus marketplace
+// posting for paid members.
 export const MEMBERSHIP_TIERS: Record<Tier, TierConfig> = {
-  BASIC: {
-    tier: "BASIC",
-    label: "Basic",
+  BRIDGEMAKER: {
+    tier: "BRIDGEMAKER",
+    label: "BridgeMaker",
     priceIdr: 5_000_000,
     tagline: "Get your business online and seen.",
-    tiktokAds: 1,
-    webAds: 3,
+    tiktokAds: 3,
+    webAds: 10,
     magazine: "none",
     networkingFree: false,
     galaMonthlyFree: false,
     grandGalaTable: false,
     benefits: [
       "Free digital name card",
-      "1× TikTok ad feature",
-      "3× website ad placements",
-      "Business profile & feed posting",
-    ],
-  },
-  GOLD: {
-    tier: "GOLD",
-    label: "Gold",
-    priceIdr: 25_000_000,
-    tagline: "Grow your reach and network.",
-    tiktokAds: 5,
-    webAds: 10,
-    magazine: "small",
-    networkingFree: true,
-    galaMonthlyFree: false,
-    grandGalaTable: false,
-    highlighted: true,
-    benefits: [
-      "Free digital name card",
-      "5× TikTok ad features",
+      "3× TikTok ad features",
       "10× website ad placements",
-      "Magazine — small page",
-      "Free weekly business networking",
-      "Business profile & feed posting",
+      "Marketplace listing — post products & services",
+      "Business profile & Hub posting",
     ],
   },
-  DIAMOND: {
-    tier: "DIAMOND",
-    label: "Diamond",
-    priceIdr: 100_000_000,
+  BRIDGEMASTER: {
+    tier: "BRIDGEMASTER",
+    label: "BridgeMaster",
+    priceIdr: 25_000_000,
     tagline: "The full Member Club experience.",
     tiktokAds: 5,
-    webAds: 10,
+    webAds: 20,
     magazine: "full",
     networkingFree: true,
     galaMonthlyFree: true,
-    grandGalaTable: true,
+    grandGalaTable: false,
+    highlighted: true,
     benefits: [
+      "Everything in BridgeMaker",
       "Free digital name card",
       "5× TikTok ad features",
-      "10× website ad placements",
+      "20× website ad placements",
       "Magazine — full page",
       "Free weekly business networking",
       "Free monthly members gala dinner",
-      "Grand gala dinner — 1 free table (10 pax)",
-      "Business profile & feed posting",
+      "Priority marketplace placement",
+      "Business profile & Hub posting",
     ],
   },
 };
 
-export const TIER_ORDER: Tier[] = ["BASIC", "GOLD", "DIAMOND"];
+export const TIER_ORDER: Tier[] = ["BRIDGEMAKER", "BRIDGEMASTER"];
 
 export function getTierConfig(tier: Tier): TierConfig {
   return MEMBERSHIP_TIERS[tier];

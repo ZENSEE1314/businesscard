@@ -283,9 +283,6 @@ export function ProfileEditForm({
     jobTitle: (profile.jobTitle as string) ?? "",
     companyName: (profile.companyName as string) ?? "",
     bio: (profile.bio as string) ?? "",
-    whoIAm: (profile.whoIAm as string) ?? "",
-    whoIWantToFind: (profile.whoIWantToFind as string) ?? "",
-    whatICanOffer: (profile.whatICanOffer as string) ?? "",
     phone: (profile.phone as string) ?? "",
     whatsapp: (profile.whatsapp as string) ?? "",
     email: (profile.email as string) ?? "",
@@ -349,19 +346,17 @@ export function ProfileEditForm({
   const isBusiness = role === "BUSINESS" && business;
 
   const hasManualContent =
-    p.state.bio.trim() !== "" ||
-    p.state.whoIAm.trim() !== "" ||
-    p.state.whoIWantToFind.trim() !== "" ||
-    p.state.whatICanOffer.trim() !== "";
+    p.state.headline.trim() !== "" ||
+    p.state.canHelp.length > 0 ||
+    p.state.lookingFor.length > 0;
 
   async function generateWithAI() {
     setAiBusy(true);
     setAiError(null);
     const res = await apiFetch<{
-      bio: string;
-      whoIAm: string;
-      whoIWantToFind: string;
-      whatICanOffer: string;
+      headline: string;
+      canHelp: string[];
+      lookingFor: string[];
     }>("/api/ai/profile", {
       method: "POST",
       body: JSON.stringify({
@@ -370,12 +365,12 @@ export function ProfileEditForm({
         company: p.state.companyName,
         industry: undefined,
         location: [p.state.city, p.state.country].filter(Boolean).join(", "),
-        businessDescription: p.state.headline,
+        businessDescription: p.state.bio || p.state.headline,
         products: [],
         services: [],
         expertise: p.state.canHelp,
         businessGoals: undefined,
-        idealCustomers: [],
+        idealCustomers: p.state.lookingFor,
         desiredPartners: p.state.lookingFor,
         language: aiLang,
       }),
@@ -385,11 +380,10 @@ export function ProfileEditForm({
       setAiError(res.error ?? "AI generation failed. Please try again.");
       return;
     }
-    // Fill all four editable fields; the user can tweak or regenerate.
-    p.set("bio", res.data.bio);
-    p.set("whoIAm", res.data.whoIAm);
-    p.set("whoIWantToFind", res.data.whoIWantToFind);
-    p.set("whatICanOffer", res.data.whatICanOffer);
+    // Fill the three editable fields; the user can tweak or regenerate.
+    p.set("headline", res.data.headline);
+    p.set("canHelp", res.data.canHelp);
+    p.set("lookingFor", res.data.lookingFor);
     setAiConfirm(false);
   }
 
@@ -496,9 +490,9 @@ export function ProfileEditForm({
             AI writing assistant
           </h3>
           <p className="mt-1 text-xs text-muted">
-            Generates your Bio, Who I Am, Who I Want to Find and What I Can Offer
-            from the details above — never inventing facts. Everything stays
-            editable.
+            Generates your &ldquo;What I do&rdquo; headline, &ldquo;I can help with&rdquo; and
+            &ldquo;I&rsquo;m looking for&rdquo; tags from the details above &mdash; never inventing
+            facts. Everything stays editable.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <select
@@ -529,8 +523,8 @@ export function ProfileEditForm({
           </div>
           {aiConfirm && (
             <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              This will replace your current Bio / Who I Am / Who I Want to Find /
-              What I Can Offer text.{" "}
+              This will replace your current headline, &ldquo;I can help with&rdquo; and
+              &ldquo;I&rsquo;m looking for&rdquo; text.{" "}
               <button type="button" onClick={generateWithAI} className="font-semibold underline">
                 Replace anyway
               </button>{" "}
@@ -550,18 +544,6 @@ export function ProfileEditForm({
         <div>
           <Label>Bio</Label>
           <Textarea rows={3} value={p.state.bio} onChange={(e) => p.set("bio", e.target.value)} />
-        </div>
-        <div>
-          <Label>Who I am</Label>
-          <Textarea rows={3} value={p.state.whoIAm} onChange={(e) => p.set("whoIAm", e.target.value)} />
-        </div>
-        <div>
-          <Label>Who I want to find</Label>
-          <Textarea rows={3} value={p.state.whoIWantToFind} onChange={(e) => p.set("whoIWantToFind", e.target.value)} />
-        </div>
-        <div>
-          <Label>What I can offer</Label>
-          <Textarea rows={3} value={p.state.whatICanOffer} onChange={(e) => p.set("whatICanOffer", e.target.value)} />
         </div>
       </Card>
 

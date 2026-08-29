@@ -236,7 +236,7 @@ async function seedDemo(categoryMap: Map<string, string>) {
         profile: {
           create: { username: b.username, fullName: b.owner, jobTitle: "Owner" },
         },
-        membershipTier: "GOLD",
+        membershipTier: "BRIDGEMAKER",
         membershipStatus: "ACTIVE",
         businessProfile: {
           create: {

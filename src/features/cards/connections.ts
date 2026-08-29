@@ -39,7 +39,7 @@ interface ScoredRow {
   contactCount: number;
 }
 
-const TIER_RANK: Record<string, number> = { DIAMOND: 3, GOLD: 2, BASIC: 1 };
+const TIER_RANK: Record<string, number> = { BRIDGEMASTER: 2, BRIDGEMAKER: 1 };
 
 /**
  * Pure scoring so ranking is unit-testable. Higher score = higher rank.

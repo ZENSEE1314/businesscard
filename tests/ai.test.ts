@@ -60,22 +60,20 @@ describe("prompt building", () => {
 describe("response validation", () => {
   it("accepts a well-formed payload", () => {
     const parsed = profileContentSchema.safeParse({
-      bio: "Professional summary.",
-      whoIAm: "I build things.",
-      whoIWantToFind: "Partners.",
-      whatICanOffer: "Networking.",
+      headline: "Professional networking",
+      canHelp: ["introductions", "events"],
+      lookingFor: ["investors", "partners"],
     });
     expect(parsed.success).toBe(true);
   });
 
   it("rejects payloads with missing or oversized fields", () => {
-    expect(profileContentSchema.safeParse({ bio: "" }).success).toBe(false);
+    expect(profileContentSchema.safeParse({ headline: "" }).success).toBe(false);
     expect(
       profileContentSchema.safeParse({
-        bio: "x".repeat(2001),
-        whoIAm: "a",
-        whoIWantToFind: "b",
-        whatICanOffer: "c",
+        headline: "",
+        canHelp: [],
+        lookingFor: [],
       }).success,
     ).toBe(false);
   });
@@ -99,15 +97,14 @@ describe("generateProfileContent against a mocked Ollama server", () => {
     mockFetchOnce({
       message: {
         content: JSON.stringify({
-          bio: "Entrepreneur focused on business networking.",
-          whoIAm: "I am building BridgeX.",
-          whoIWantToFind: "Investors and partners.",
-          whatICanOffer: "Introductions and visibility.",
+          headline: "Entrepreneur focused on business networking.",
+          canHelp: ["introductions", "digital visibility"],
+          lookingFor: ["investors", "partners"],
         }),
       },
     });
     const result = await generateProfileContent({ fullName: "Zen See", language: "en" });
-    expect(result.bio).toContain("networking");
+    expect(result.headline).toContain("networking");
 
     // Verify request shape sent to Ollama.
     const fetchMock = vi.mocked(fetch);
@@ -126,11 +123,11 @@ describe("generateProfileContent against a mocked Ollama server", () => {
     mockFetchOnce({
       message: {
         content:
-          '```json\n{"bio":"B","whoIAm":"W","whoIWantToFind":"F","whatICanOffer":"O"}\n```',
+          '```json\n{"headline":"H","canHelp":["A"],"lookingFor":["B"]}\n```',
       },
     });
     const result = await generateProfileContent({});
-    expect(result.whoIAm).toBe("W");
+    expect(result.headline).toBe("H");
   });
 
   it("throws not_configured without OLLAMA_BASE_URL", async () => {

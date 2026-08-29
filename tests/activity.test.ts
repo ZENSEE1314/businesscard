@@ -1,9 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { classifyActivityWithThresholds } from "@/lib/activity";
 import { computeStreak, computeBonus, DEFAULT_CHECKIN_SETTINGS } from "@/lib/checkin";
+import { localDateKey } from "@/lib/time";
 
 const T = { activeWithinDays: 7, inactiveWithinDays: 30 };
-const NOW = new Date("2026-08-26T10:00:00Z"); // 17:00 Jakarta
+// Reference "now" is the real local today (Asia/Jakarta) so the thresholds are
+// exercised against the actual current date, not a frozen timestamp.
+const NOW = new Date(`${localDateKey()}T10:00:00Z`);
 
 function daysAgo(n: number): Date {
   return new Date(NOW.getTime() - n * 86_400_000);

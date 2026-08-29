@@ -23,9 +23,6 @@ export interface CardView {
   headline?: string | null;
   canHelp: string[];
   lookingFor: string[];
-  whoIAm?: string | null;
-  whoIWantToFind?: string | null;
-  whatICanOffer?: string | null;
   avatarUrl?: string | null;
   coverUrl?: string | null;
   coverVideoUrl?: string | null;
@@ -87,9 +84,6 @@ export async function getPersonalCard(username: string): Promise<CardView | null
     headline: profile.headline,
     canHelp: profile.canHelp,
     lookingFor: profile.lookingFor,
-    whoIAm: profile.whoIAm,
-    whoIWantToFind: profile.whoIWantToFind,
-    whatICanOffer: profile.whatICanOffer,
     avatarUrl: profile.avatarUrl,
     coverUrl: profile.coverUrl,
     coverVideoUrl: profile.coverVideoUrl,

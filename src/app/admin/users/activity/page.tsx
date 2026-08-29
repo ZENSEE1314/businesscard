@@ -35,7 +35,7 @@ export default async function AdminActivityPage({
   const filters = {
     search: sp.q ?? "",
     status: (sp.status ?? "") as "" | "ACTIVE" | "INACTIVE" | "DORMANT" | "NEW",
-    tier: (sp.tier ?? "") as "" | "BASIC" | "GOLD" | "DIAMOND",
+    tier: (sp.tier ?? "") as "" | "BRIDGEMAKER" | "BRIDGEMASTER",
     joinedWithinDays: sp.joined ? Number(sp.joined) : undefined,
     loginRecencyDays: sp.loginRecency !== undefined && sp.loginRecency !== "" ? Number(sp.loginRecency) : undefined,
     sort: (sp.sort ?? "recent_login") as
@@ -120,9 +120,8 @@ export default async function AdminActivityPage({
         </select>
         <select name="tier" defaultValue={filters.tier} aria-label="Filter by tier" className="h-10 rounded-xl border border-border bg-surface px-3 text-sm">
           <option value="">All tiers</option>
-          <option value="BASIC">Basic</option>
-          <option value="GOLD">Gold</option>
-          <option value="DIAMOND">Diamond</option>
+          <option value="BRIDGEMAKER">BridgeMaker</option>
+          <option value="BRIDGEMASTER">BridgeMaster</option>
         </select>
         <select name="sort" defaultValue={filters.sort} aria-label="Sort" className="h-10 rounded-xl border border-border bg-surface px-3 text-sm">
           <option value="recent_login">Most recent login</option>

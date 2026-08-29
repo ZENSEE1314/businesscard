@@ -7,7 +7,7 @@ import { formatIdr } from "@/lib/membership";
 import { handle, created, getClientIp } from "@/lib/api";
 import { enforceRateLimit } from "@/lib/security/rate-limit";
 
-const schema = z.object({ tier: z.enum(["BASIC", "GOLD", "DIAMOND"]) });
+const schema = z.object({ tier: z.enum(["BRIDGEMAKER", "BRIDGEMASTER"]) });
 
 export async function POST(req: NextRequest) {
   return handle(async () => {

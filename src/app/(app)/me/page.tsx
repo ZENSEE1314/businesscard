@@ -33,7 +33,7 @@ export default async function MyProfilePage() {
   const activeTier =
     user.membershipStatus === "ACTIVE" ? user.membershipTier : null;
   const tierLabel = activeTier ? getTierConfig(activeTier).label : null;
-  const isTopTier = activeTier === "DIAMOND";
+  const isTopTier = activeTier === "BRIDGEMASTER";
 
   return (
     <div className="mx-auto max-w-2xl px-3 py-4 sm:px-4">

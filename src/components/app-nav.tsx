@@ -21,6 +21,8 @@ import {
   Network,
   ShieldCheck,
   Newspaper,
+  Store,
+  Crown,
 } from "lucide-react";
 import { apiFetch } from "@/lib/client";
 import { cn } from "@/lib/utils";
@@ -37,16 +39,18 @@ interface MenuItem {
 
 const USER_MENU: MenuItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/discover", label: "Business Hub", icon: Compass },
-  { href: "/feed", label: "Feed", icon: Newspaper },
+  { href: "/hub", label: "Hub", icon: Newspaper },
+  { href: "/matches", label: "Matches", icon: Compass },
   { href: "/contacts", label: "Contacts", icon: Users },
   { href: "__CARD__", label: "Digital Name Card", icon: IdCard }, // replaced with the user's card path
+  { href: "/marketplace", label: "Marketplace", icon: Store },
+  { href: "/rewards", label: "Rewards", icon: Gift },
   { href: "/chat", label: "Messages", icon: MessageSquare },
-  { href: "/rewards", label: "Marketplace & Rewards", icon: Gift },
-  { href: "/points", label: "Point History", icon: Gift },
+  { href: "/membership", label: "Membership", icon: Crown },
   { href: "/awards", label: "Awards & Events", icon: Trophy },
   { href: "/me", label: "Profile", icon: User },
   { href: "/me/edit", label: "Account Settings", icon: Settings },
+  { href: "/points", label: "Point History", icon: Gift },
 ];
 
 const ADMIN_MENU: MenuItem[] = [
@@ -241,8 +245,8 @@ export function HeaderNav({
 
 const BOTTOM_ITEMS = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-  { href: "/discover", label: "Hub", icon: Compass },
-  { href: "/chat", label: "Chat", icon: MessageSquare },
+  { href: "/hub", label: "Hub", icon: Compass },
+  { href: "/marketplace", label: "Marketplace", icon: Store },
 ];
 
 export function BottomNav({
@@ -274,7 +278,7 @@ export function BottomNav({
   }, [open]);
 
   const moreActive =
-    !BOTTOM_ITEMS.some((i) => isActive(pathname, i.href)) && pathname !== "/feed";
+    !BOTTOM_ITEMS.some((i) => isActive(pathname, i.href)) && pathname !== "/feed" && pathname !== "/hub";
 
   return (
     <>
@@ -301,15 +305,15 @@ export function BottomNav({
             );
           })}
           <Link
-            href="/feed"
-            aria-current={pathname.startsWith("/feed") ? "page" : undefined}
+            href="/chat"
+            aria-current={pathname.startsWith("/chat") ? "page" : undefined}
             className={cn(
               "flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium",
-              pathname.startsWith("/feed") ? "text-primary" : "text-muted",
+              pathname.startsWith("/chat") ? "text-primary" : "text-muted",
             )}
           >
-            <Newspaper className="h-5 w-5" />
-            Feed
+            <MessageSquare className="h-5 w-5" />
+            Chat
           </Link>
           <button
             onClick={() => setOpen(true)}
