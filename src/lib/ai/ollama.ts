@@ -360,7 +360,7 @@ async function runAiChat(
   if (lastError) throw lastError;
   throw new OllamaError(
     503,
-    "AI generation is not configured yet. Ask the administrator to set OLLAMA_BASE_URL (or OPENAI_API_KEY for the built-in provider).",
+    "AI is not configured yet. Ask the administrator to set OLLAMA_BASE_URL.",
     "not_configured",
   );
 }

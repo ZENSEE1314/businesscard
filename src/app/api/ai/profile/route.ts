@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
         503,
         !aiSetting.enabled
           ? "AI profile generation is turned off in admin settings."
-          : "AI generation is not configured yet. The administrator needs to set OPENAI_API_KEY (TokenRa) in the service variables.",
+          : "AI generation is not configured yet. The administrator needs to configure the Ollama service.",
         "ai_disabled",
       );
     }
