@@ -8,6 +8,7 @@ import { EventForm } from "@/features/events/event-form";
 import { RsvpButton } from "@/features/events/rsvp-button";
 import { Card } from "@/components/ui";
 import { TranslateButton } from "@/components/translate-button";
+import { getLocale, tt } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function EventsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
+  const locale = await getLocale();
   const [events, isPaid] = await Promise.all([
     listUpcomingEvents(user.id),
     isPaidMember(user.id),
@@ -35,9 +37,9 @@ export default async function EventsPage() {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-4 py-4">
       <div className="px-1">
-        <h1 className="text-xl font-bold">Events</h1>
+        <h1 className="text-xl font-bold">{tt(locale, "events.title")}</h1>
         <p className="mt-1 text-sm text-muted">
-          Meet the community in person. Paid members host their own events here.
+          {tt(locale, "events.subtitle")}
         </p>
       </div>
 
@@ -48,7 +50,7 @@ export default async function EventsPage() {
       <div className="space-y-3">
         {events.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted">
-            No upcoming events yet.
+            {tt(locale, "events.empty")}
           </p>
         ) : (
           events.map((e) => (
@@ -104,7 +106,7 @@ export default async function EventsPage() {
         </div>
       ) : (
         <Card className="border-dashed p-5 text-center">
-          <p className="text-sm font-semibold">Want to host your own event?</p>
+          <p className="text-sm font-semibold">{tt(locale, "events.hostQuestion")}</p>
           <p className="mt-1 text-sm text-muted">
             Event hosting is a paid member benefit (BridgeMaker / BridgeMaster).
           </p>

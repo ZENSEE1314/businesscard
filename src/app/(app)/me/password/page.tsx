@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { Button, Card, Label } from "@/components/ui";
 import { PasswordInput } from "@/components/ui/password-input";
 import { apiFetch } from "@/lib/client";
+import { useT } from "@/lib/i18n/client";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
+  const t = useT();
   const [currentPassword, setCurrent] = useState("");
   const [newPassword, setNew] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -40,11 +42,11 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="mx-auto max-w-md py-4">
-      <h1 className="px-1 pb-3 text-xl font-bold">Change password</h1>
+      <h1 className="px-1 pb-3 text-xl font-bold">{t("pw.title")}</h1>
       <Card className="p-5">
         {done && (
           <div className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-success">
-            Password changed. Other devices have been signed out.
+            {t("pw.success")}
           </div>
         )}
         <form onSubmit={submit} className="space-y-4">
@@ -54,7 +56,7 @@ export default function ChangePasswordPage() {
             </div>
           )}
           <div>
-            <Label>Current password</Label>
+            <Label>{t("pw.current")}</Label>
             <PasswordInput
               type="password"
               autoComplete="current-password"
@@ -64,7 +66,7 @@ export default function ChangePasswordPage() {
             />
           </div>
           <div>
-            <Label>New password</Label>
+            <Label>{t("pw.new")}</Label>
             <PasswordInput
               type="password"
               autoComplete="new-password"
@@ -77,7 +79,7 @@ export default function ChangePasswordPage() {
             </p>
           </div>
           <div>
-            <Label>Confirm new password</Label>
+            <Label>{t("pw.confirm")}</Label>
             <PasswordInput
               type="password"
               autoComplete="new-password"
@@ -88,10 +90,10 @@ export default function ChangePasswordPage() {
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={busy}>
-              {busy ? "Saving…" : "Change password"}
+              {busy ? t("pw.saving") : t("pw.save")}
             </Button>
             <Button type="button" variant="ghost" onClick={() => router.push("/me")}>
-              Back
+              {t("common.back")}
             </Button>
           </div>
         </form>

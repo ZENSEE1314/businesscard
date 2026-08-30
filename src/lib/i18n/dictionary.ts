@@ -32,6 +32,7 @@ export const dict: Record<string, Record<Locale, string>> = {
   "common.points": { en: "pts", zh: "积分", id: "poin" },
   "common.save": { en: "Save", zh: "保存", id: "Simpan" },
   "common.cancel": { en: "Cancel", zh: "取消", id: "Batal" },
+  "common.back": { en: "Back", zh: "返回", id: "Kembali" },
 
   // Theme / language
   "settings.title": { en: "Settings", zh: "设置", id: "Pengaturan" },
@@ -47,6 +48,92 @@ export const dict: Record<string, Record<Locale, string>> = {
     zh: "选择浅色、深色，或跟随设备设置。",
     id: "Pilih terang, gelap, atau ikuti perangkat.",
   },
+  "settings.changePassword": { en: "Change password", zh: "修改密码", id: "Ubah kata sandi" },
+  "settings.changePasswordHint": {
+    en: "Update the password you use to log in.",
+    zh: "更新您用于登录的密码。",
+    id: "Perbarui kata sandi yang Anda gunakan untuk masuk.",
+  },
+
+  // Change-password page
+  "pw.title": { en: "Change password", zh: "修改密码", id: "Ubah kata sandi" },
+  "pw.current": { en: "Current password", zh: "当前密码", id: "Kata sandi saat ini" },
+  "pw.new": { en: "New password", zh: "新密码", id: "Kata sandi baru" },
+  "pw.confirm": { en: "Confirm new password", zh: "确认新密码", id: "Konfirmasi kata sandi baru" },
+  "pw.save": { en: "Update password", zh: "更新密码", id: "Perbarui kata sandi" },
+  "pw.saving": { en: "Updating…", zh: "正在更新…", id: "Memperbarui…" },
+  "pw.success": { en: "Password updated.", zh: "密码已更新。", id: "Kata sandi diperbarui." },
+
+  // Common actions / states (reused across pages)
+  "act.save": { en: "Save", zh: "保存", id: "Simpan" },
+  "act.saving": { en: "Saving…", zh: "正在保存…", id: "Menyimpan…" },
+  "act.saved": { en: "Saved.", zh: "已保存。", id: "Tersimpan." },
+  "act.post": { en: "Post", zh: "发布", id: "Kirim" },
+  "act.posting": { en: "Posting…", zh: "正在发布…", id: "Mengirim…" },
+  "act.send": { en: "Send", zh: "发送", id: "Kirim" },
+  "act.edit": { en: "Edit", zh: "编辑", id: "Ubah" },
+  "act.delete": { en: "Delete", zh: "删除", id: "Hapus" },
+  "act.loading": { en: "Loading…", zh: "加载中…", id: "Memuat…" },
+  "act.viewProfile": { en: "View profile", zh: "查看资料", id: "Lihat profil" },
+
+  // Hub / feed
+  "hub.title": { en: "Business Hub", zh: "商业社区", id: "Hub Bisnis" },
+  "hub.empty": { en: "No posts yet. Be the first to share something.", zh: "还没有帖子。来发布第一条吧。", id: "Belum ada postingan. Jadilah yang pertama berbagi." },
+  "hub.composerPlaceholder": { en: "Share an update, offer or opportunity…", zh: "分享动态、优惠或商机…", id: "Bagikan kabar, penawaran, atau peluang…" },
+  "hub.viewComments": { en: "View all {n} comments", zh: "查看全部 {n} 条评论", id: "Lihat semua {n} komentar" },
+  "hub.addComment": { en: "Add a comment…", zh: "添加评论…", id: "Tambahkan komentar…" },
+  "hub.comment": { en: "Comment", zh: "评论", id: "Komentar" },
+  "hub.beFirstComment": { en: "Be the first to comment.", zh: "来发表第一条评论。", id: "Jadilah yang pertama berkomentar." },
+  "hub.comments": { en: "Comments ({n})", zh: "评论（{n}）", id: "Komentar ({n})" },
+  "hub.loginToComment": { en: "Log in to join the conversation.", zh: "登录以参与讨论。", id: "Masuk untuk ikut berdiskusi." },
+  "hub.subtitle": { en: "Connect. Exchange cards. Do business.", zh: "连接人脉，交换名片，达成合作。", id: "Terhubung. Tukar kartu. Berbisnis." },
+  "hub.findMatches": { en: "Find matches", zh: "寻找匹配", id: "Cari kecocokan" },
+  "hub.awards": { en: "Awards", zh: "奖项", id: "Penghargaan" },
+  "hub.myCard": { en: "My card", zh: "我的名片", id: "Kartu saya" },
+  "hub.checkBack": { en: "No posts yet. Check back soon.", zh: "还没有帖子，请稍后再来。", id: "Belum ada postingan. Cek lagi nanti." },
+
+  // Rewards
+  "rewards.title": { en: "Rewards", zh: "奖励", id: "Hadiah" },
+  "rewards.yourPoints": { en: "Your points", zh: "您的积分", id: "Poin Anda" },
+  "rewards.redeem": { en: "Redeem", zh: "兑换", id: "Tukar" },
+  "rewards.redeeming": { en: "Redeeming…", zh: "正在兑换…", id: "Menukar…" },
+  "rewards.notEnough": { en: "Not enough points", zh: "积分不足", id: "Poin tidak cukup" },
+  "rewards.empty": { en: "No rewards available yet.", zh: "暂无可用奖励。", id: "Belum ada hadiah tersedia." },
+  "rewards.points": { en: "{n} pts", zh: "{n} 积分", id: "{n} poin" },
+
+  // Marketplace
+  "market.title": { en: "Marketplace", zh: "市场", id: "Marketplace" },
+  "market.empty": { en: "No listings yet.", zh: "暂无商品。", id: "Belum ada daftar." },
+  "market.contactSeller": { en: "Message seller", zh: "联系卖家", id: "Hubungi penjual" },
+  "market.postListing": { en: "Post a listing", zh: "发布商品", id: "Pasang daftar" },
+  "market.subtitle": {
+    en: "Products and services from our paid members. Browse, then message the seller directly.",
+    zh: "来自付费会员的产品与服务。浏览后可直接联系卖家。",
+    id: "Produk dan layanan dari anggota berbayar. Telusuri, lalu hubungi penjual.",
+  },
+
+  // Events
+  "events.title": { en: "Events", zh: "活动", id: "Acara" },
+  "events.empty": { en: "No upcoming events.", zh: "暂无即将举行的活动。", id: "Tidak ada acara mendatang." },
+  "events.rsvp": { en: "RSVP", zh: "报名", id: "RSVP" },
+  "events.attending": { en: "Attending", zh: "已报名", id: "Hadir" },
+  "events.hostQuestion": { en: "Want to host your own event?", zh: "想举办自己的活动吗？", id: "Ingin mengadakan acara sendiri?" },
+  "events.subtitle": {
+    en: "Meet the community in person. Paid members host their own events here.",
+    zh: "与社区成员面对面交流。付费会员可在此举办活动。",
+    id: "Temui komunitas secara langsung. Anggota berbayar mengadakan acara di sini.",
+  },
+
+  // Membership
+  "membership.title": { en: "Membership", zh: "会员", id: "Keanggotaan" },
+  "membership.currentPlan": { en: "Your plan", zh: "您的方案", id: "Paket Anda" },
+  "membership.upgrade": { en: "Upgrade", zh: "升级", id: "Tingkatkan" },
+
+  // Profile view (me)
+  "me.editProfile": { en: "Edit profile", zh: "编辑资料", id: "Ubah profil" },
+  "me.myCard": { en: "My name card", zh: "我的名片", id: "Kartu nama saya" },
+  "me.shareCard": { en: "Share card", zh: "分享名片", id: "Bagikan kartu" },
+  "me.viewPublicCard": { en: "View public card", zh: "查看公开名片", id: "Lihat kartu publik" },
 
   // Auth
   "auth.welcomeBack": { en: "Welcome back", zh: "欢迎回来", id: "Selamat datang kembali" },

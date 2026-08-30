@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
+import { useT } from "@/lib/i18n/client";
 
 export function RedeemButton({
   rewardId,
@@ -15,6 +16,7 @@ export function RedeemButton({
   affordable: boolean;
 }) {
   const router = useRouter();
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [code, setCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export function RedeemButton({
         disabled={busy || !affordable}
         onClick={redeem}
       >
-        {busy ? "Redeeming…" : affordable ? "Redeem" : "Not enough points"}
+        {busy ? t("rewards.redeeming") : affordable ? t("rewards.redeem") : t("rewards.notEnough")}
       </Button>
       {error && <p className="mt-1 text-xs text-danger">{error}</p>}
     </div>

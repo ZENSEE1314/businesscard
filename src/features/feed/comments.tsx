@@ -6,6 +6,7 @@ import { Button, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
 import { timeAgo } from "@/lib/utils";
 import { TranslateButton } from "@/components/translate-button";
+import { useT } from "@/lib/i18n/client";
 
 interface CommentAuthor {
   id: string;
@@ -84,6 +85,7 @@ export function Comments({
   currentUserId: string | null;
   canComment: boolean;
 }) {
+  const t = useT();
   const [comments, setComments] = useState<CommentNode[]>(initialComments);
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
@@ -119,7 +121,7 @@ export function Comments({
 
   return (
     <div className="space-y-4">
-      <h2 className="font-semibold">Comments ({comments.length})</h2>
+      <h2 className="font-semibold">{t("hub.comments", { n: comments.length })}</h2>
 
       {canComment ? (
         <form onSubmit={submit} className="space-y-2">
@@ -129,23 +131,23 @@ export function Comments({
           )}
           <Textarea
             rows={2}
-            placeholder="Add a comment…"
+            placeholder={t("hub.addComment")}
             value={body}
             onChange={(e) => setBody(e.target.value)}
           />
           <div className="flex justify-end">
             <Button type="submit" size="sm" disabled={busy}>
-              {busy ? "Posting…" : "Comment"}
+              {busy ? t("act.posting") : t("hub.comment")}
             </Button>
           </div>
         </form>
       ) : (
-        <p className="text-sm text-muted">Log in to join the conversation.</p>
+        <p className="text-sm text-muted">{t("hub.loginToComment")}</p>
       )}
 
       <div className="space-y-4">
         {comments.length === 0 ? (
-          <p className="text-sm text-muted">Be the first to comment.</p>
+          <p className="text-sm text-muted">{t("hub.beFirstComment")}</p>
         ) : (
           comments.map((c) => (
             <CommentItem

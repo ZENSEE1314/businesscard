@@ -7,6 +7,7 @@ import { Card, ButtonLink, Badge } from "@/components/ui";
 import { LogoutButton } from "@/components/logout-button";
 import { getTierConfig, FREE_TIER_LABEL } from "@/lib/membership";
 import { membershipDurationLabel } from "@/lib/time";
+import { getLocale, tt } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function MyProfilePage() {
     include: { profile: true, businessProfile: true },
   });
   if (!user?.profile) redirect("/onboarding");
+  const locale = await getLocale();
 
   const { profile, businessProfile } = user;
 
@@ -38,7 +40,7 @@ export default async function MyProfilePage() {
   return (
     <div className="mx-auto max-w-2xl py-4">
       <div className="flex items-center justify-between px-1 pb-3">
-        <h1 className="text-xl font-bold">Profile</h1>
+        <h1 className="text-xl font-bold">{tt(locale, "nav.profile")}</h1>
         <LogoutButton />
       </div>
 
@@ -72,13 +74,13 @@ export default async function MyProfilePage() {
 
         <div className="mt-5 flex flex-wrap gap-2">
           <ButtonLink href={`/u/${profile.username}`} variant="outline" size="sm">
-            <ExternalLink className="h-4 w-4" /> View public card
+            <ExternalLink className="h-4 w-4" /> {tt(locale, "me.viewPublicCard")}
           </ButtonLink>
           <ButtonLink href="/me/edit" variant="outline" size="sm">
-            <Pencil className="h-4 w-4" /> Edit profile
+            <Pencil className="h-4 w-4" /> {tt(locale, "me.editProfile")}
           </ButtonLink>
           <ButtonLink href="/me/password" variant="outline" size="sm">
-            <Lock className="h-4 w-4" /> Change password
+            <Lock className="h-4 w-4" /> {tt(locale, "settings.changePassword")}
           </ButtonLink>
           {businessProfile && (
             <ButtonLink

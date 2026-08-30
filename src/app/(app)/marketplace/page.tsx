@@ -8,6 +8,7 @@ import { isPaidMember } from "@/features/events/queries";
 import { Card } from "@/components/ui";
 import { MarketplaceForm } from "@/features/marketplace/marketplace-form";
 import { TranslateButton } from "@/components/translate-button";
+import { getLocale, tt } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Marketplace" };
@@ -15,6 +16,7 @@ export const metadata: Metadata = { title: "Marketplace" };
 export default async function MarketplacePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  const locale = await getLocale();
 
   const [listings, paid] = await Promise.all([
     prisma.marketplaceListing.findMany({
@@ -47,17 +49,16 @@ export default async function MarketplacePage() {
     <div className="mx-auto w-full max-w-2xl space-y-4 py-4">
       <div className="px-1">
         <h1 className="flex items-center gap-2 text-xl font-bold">
-          <Store className="h-5 w-5 text-brand-600" /> Marketplace
+          <Store className="h-5 w-5 text-brand-600" /> {tt(locale, "market.title")}
         </h1>
         <p className="mt-1 text-sm text-muted">
-          Products and services from our paid members. Browse, then message the
-          seller directly.
+          {tt(locale, "market.subtitle")}
         </p>
       </div>
 
       {paid && (
         <div>
-          <h2 className="mb-2 px-1 font-semibold">Post a listing</h2>
+          <h2 className="mb-2 px-1 font-semibold">{tt(locale, "market.postListing")}</h2>
           <MarketplaceForm />
         </div>
       )}
@@ -65,10 +66,7 @@ export default async function MarketplacePage() {
       <div className="space-y-3">
         {listings.length === 0 ? (
           <Card className="p-8 text-center text-sm text-muted">
-            No listings yet.
-            {paid
-              ? " Post the first one!"
-              : " Paid members (BridgeMaker / BridgeMaster) can post listings."}
+            {tt(locale, "market.empty")}
           </Card>
         ) : (
           listings.map((l) => {
