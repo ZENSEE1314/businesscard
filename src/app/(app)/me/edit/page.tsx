@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { ProfileEditForm } from "@/features/profile/edit-form";
+import { ProjectsManager } from "@/features/profile/projects-manager";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,9 @@ export default async function EditProfilePage() {
             : []
         }
       />
+      <div className="mt-4">
+        <ProjectsManager />
+      </div>
     </div>
   );
 }

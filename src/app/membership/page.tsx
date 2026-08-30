@@ -1,27 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  Compass,
-  Gift,
-  Home,
-  LayoutDashboard,
-  MessageSquare,
-  Newspaper,
-  Store,
-  Trophy,
-  User,
-  UserPlus,
-  Users,
-} from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getMembershipBank } from "@/lib/settings";
 import {
   MEMBERSHIP_TIERS,
   TIER_ORDER,
+  FREE_TIER_LABEL,
+  FREE_TIER_BENEFITS,
   formatIdr,
 } from "@/lib/membership";
 import { MembershipUpgrade, type TierView } from "@/features/membership/upgrade";
+import { BottomNav } from "@/components/app-nav";
+import { getLocale, tt } from "@/lib/i18n/server";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -35,8 +26,9 @@ export const metadata: Metadata = {
 export default async function MembershipPage() {
   const user = await getCurrentUser();
   const bank = await getMembershipBank();
+  const locale = await getLocale();
 
-  const tiers: TierView[] = TIER_ORDER.map((t) => {
+  const paidTiers: TierView[] = TIER_ORDER.map((t) => {
     const c = MEMBERSHIP_TIERS[t];
     return {
       tier: c.tier,
@@ -48,7 +40,20 @@ export default async function MembershipPage() {
     };
   });
 
+  // Free "Bridge Member" tier shown first, then the two paid tiers.
+  const tiers: TierView[] = [
+    {
+      tier: "FREE",
+      label: FREE_TIER_LABEL,
+      priceLabel: tt(locale, "membership.free"),
+      tagline: tt(locale, "membership.freeTagline"),
+      benefits: FREE_TIER_BENEFITS,
+    },
+    ...paidTiers,
+  ];
+
   let currentTier: string | null = null;
+  let currentExpiry: string | null = null;
   let pending: {
     id: string;
     tier: string;
@@ -59,10 +64,21 @@ export default async function MembershipPage() {
   if (user) {
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { membershipTier: true, membershipStatus: true },
+      select: {
+        membershipTier: true,
+        membershipStatus: true,
+        membershipExpiresAt: true,
+      },
     });
     if (dbUser?.membershipStatus === "ACTIVE" && dbUser.membershipTier) {
       currentTier = dbUser.membershipTier;
+      currentExpiry = dbUser.membershipExpiresAt
+        ? new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : locale === "id" ? "id-ID" : "en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          }).format(dbUser.membershipExpiresAt)
+        : null;
     } else {
       const p = await prisma.membership.findFirst({
         where: { userId: user.id, status: "PENDING" },
@@ -128,13 +144,11 @@ export default async function MembershipPage() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-5xl px-4 py-10">
+      <div className="mx-auto max-w-5xl px-4 py-10 pb-24">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-extrabold">Member Club</h1>
+          <h1 className="text-3xl font-extrabold">{tt(locale, "membership.title")}</h1>
           <p className="mx-auto mt-2 max-w-xl text-muted">
-            Everyone joins free with a digital name card. Upgrade to a business
-            membership to advertise, get featured, and access networking and
-            gala events.
+            {tt(locale, "membership.intro")}
           </p>
         </div>
 
@@ -143,74 +157,15 @@ export default async function MembershipPage() {
           bank={bank}
           isGuest={!user}
           currentTier={currentTier}
+          currentExpiry={currentExpiry}
           pending={pending}
         />
-
-        <div className="mt-10 grid gap-4 sm:grid-cols-3 text-sm">
-          <InfoCard title="Networking" body="Weekly business networking at member restaurants ($15/pax). Free for BridgeMaster members." />
-          <InfoCard title="Awards" body="Business awards with certificate, magazine feature, app posting and a grand gala table." />
-          <InfoCard title="Gala dinners" body="Monthly members gala and an annual grand gala — BridgeMaster members get a free table." />
-        </div>
-
-        {/* Quick links — the rest of the app, one tap away */}
-        {user ? (
-          <div className="mt-12 border-t border-border pt-8">
-            <h2 className="text-center text-lg font-bold">Explore the app</h2>
-            <p className="mt-1 text-center text-sm text-muted">
-              Everything {env.appName} offers, one tap away.
-            </p>
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {QUICK_LINKS.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface p-4 text-sm font-medium transition-colors hover:bg-surface-2"
-                >
-                  <l.icon className="h-4 w-4 shrink-0 text-brand-600" />
-                  {l.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="mt-12 rounded-3xl bg-primary px-6 py-10 text-center text-primary-fg">
-            <h2 className="text-xl font-bold">Join free today</h2>
-            <p className="mx-auto mt-2 max-w-md text-primary-fg/80">
-              Create your digital name card in minutes and unlock the whole
-              network.
-            </p>
-            <Link
-              href="/register"
-              className="mt-5 inline-flex h-11 items-center rounded-xl bg-white px-5 text-sm font-semibold text-brand-700"
-            >
-              Get started free
-            </Link>
-          </div>
-        )}
       </div>
+
+      {/* App bottom navigation for signed-in members. */}
+      {user && (
+        <BottomNav isAdmin={user.role === "ADMIN"} cardPath={user.username ? `/u/${user.username}` : null} />
+      )}
     </main>
-  );
-}
-
-const QUICK_LINKS = [
-  { href: "/hub", label: "Home", icon: Home },
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/feed", label: "Feed", icon: Newspaper },
-  { href: "/discover", label: "Discover", icon: Compass },
-  { href: "/contacts", label: "Contacts", icon: Users },
-  { href: "/chat", label: "Messages", icon: MessageSquare },
-  { href: "/marketplace", label: "Marketplace", icon: Store },
-  { href: "/rewards", label: "Rewards", icon: Gift },
-  { href: "/awards", label: "Awards & Events", icon: Trophy },
-  { href: "/referrals", label: "Refer & Earn", icon: UserPlus },
-  { href: "/me", label: "Profile", icon: User },
-];
-
-function InfoCard({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="rounded-2xl border border-border bg-surface p-5">
-      <h3 className="font-semibold">{title}</h3>
-      <p className="mt-1 text-muted">{body}</p>
-    </div>
   );
 }

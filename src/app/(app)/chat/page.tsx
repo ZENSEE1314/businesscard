@@ -8,6 +8,7 @@ import {
 } from "@/lib/chat";
 import { Card } from "@/components/ui";
 import { ChatAvatar } from "@/features/chat/chat-avatar";
+import { getLocale, tt } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export default async function ChatPage({
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  const locale = await getLocale();
 
   // /chat?with=<username> opens (or creates) the direct conversation with
   // that member — used by contact list, cards and anywhere "Message" is shown.
@@ -53,7 +55,7 @@ export default async function ChatPage({
   return (
     <div className="mx-auto w-full max-w-2xl py-4">
       <div className="flex items-center justify-between px-1 pb-3">
-        <h1 className="text-xl font-bold">Messages</h1>
+        <h1 className="text-xl font-bold">{tt(locale, "chat.title")}</h1>
         <span className="text-sm text-muted">
           {conversations.length} conversation
           {conversations.length === 1 ? "" : "s"}
@@ -75,7 +77,7 @@ export default async function ChatPage({
           <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-50 text-brand-600">
             <MessageSquare className="h-6 w-6" />
           </div>
-          <h2 className="mt-3 font-semibold">No messages yet</h2>
+          <h2 className="mt-3 font-semibold">{tt(locale, "chat.empty")}</h2>
           <p className="mt-1 text-sm text-muted">
             Open a contact and tap the message icon to start a conversation.
           </p>
@@ -110,7 +112,7 @@ export default async function ChatPage({
                     <p className="truncate text-sm text-muted">
                       {c.lastMessage && c.lastMessage.body
                         ? `${c.lastMessage.senderId === user.id ? "You: " : ""}${c.lastMessage.body}`
-                        : "No messages yet — say hello!"}
+                        : tt(locale, "chat.sayHello")}
                     </p>
                     {c.unread > 0 && (
                       <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-brand-600 px-1.5 text-[11px] font-bold text-white">

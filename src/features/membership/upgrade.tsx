@@ -5,17 +5,17 @@ import Link from "next/link";
 import { Check, Crown, Loader2 } from "lucide-react";
 import { Button, Card, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
-import { getTierConfig } from "@/lib/membership";
+import { getTierConfig, FREE_TIER_LABEL } from "@/lib/membership";
 
 function getTierLabel(tier: string): string {
   if (tier === "BRIDGEMAKER" || tier === "BRIDGEMASTER") {
     return getTierConfig(tier).label;
   }
-  return tier;
+  return FREE_TIER_LABEL;
 }
 
 export interface TierView {
-  tier: "BRIDGEMAKER" | "BRIDGEMASTER";
+  tier: "FREE" | "BRIDGEMAKER" | "BRIDGEMASTER";
   label: string;
   priceLabel: string;
   tagline: string;
@@ -41,12 +41,14 @@ export function MembershipUpgrade({
   bank,
   isGuest,
   currentTier,
+  currentExpiry,
   pending,
 }: {
   tiers: TierView[];
   bank: Bank;
   isGuest: boolean;
   currentTier: string | null;
+  currentExpiry?: string | null;
   pending: PendingOrder | null;
 }) {
   const [order, setOrder] = useState<PendingOrder | null>(pending);
@@ -77,31 +79,6 @@ export function MembershipUpgrade({
       body: JSON.stringify({ paymentNote: note }),
     });
     setProofSent(true);
-  }
-
-  // Active member — no upgrade needed.
-  if (currentTier) {
-    const label = getTierLabel(currentTier);
-    return (
-      <Card className="p-6 text-center">
-        <Crown className="mx-auto h-8 w-8 text-amber-500" />
-        <h2 className="mt-2 text-lg font-bold">
-          You&rsquo;re a {label} member 🎉
-        </h2>
-        <p className="mt-1 text-sm text-muted">
-          Your business membership is active. Manage your business profile and
-          post to the Hub anytime.
-        </p>
-        <div className="mt-4 flex justify-center gap-2">
-          <Link
-            href="/me/edit"
-            className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-fg"
-          >
-            Edit business profile
-          </Link>
-        </div>
-      </Card>
-    );
   }
 
   // Pending order — show payment instructions.
@@ -150,64 +127,125 @@ export function MembershipUpgrade({
     );
   }
 
-  // Pricing grid.
+  // Which tier the viewer is on right now (paid tier, else free).
+  const activeTier = currentTier ?? "FREE";
+
+  // Pricing grid + current-package banner.
   return (
     <div>
+      {/* Current package + expiry */}
+      {!isGuest && (
+        <Card className="mb-6 flex flex-wrap items-center justify-between gap-3 p-5">
+          <div className="flex items-center gap-3">
+            <Crown className="h-7 w-7 text-amber-500" />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                Current package
+              </p>
+              <p className="text-lg font-bold">{getTierLabel(activeTier)}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            {currentTier && currentExpiry ? (
+              <>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  Expires
+                </p>
+                <p className="text-sm font-medium">{currentExpiry}</p>
+              </>
+            ) : (
+              <p className="text-sm text-muted">Free forever</p>
+            )}
+          </div>
+        </Card>
+      )}
+
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-danger">
           {error}
         </div>
       )}
+
       <div className="grid gap-4 md:grid-cols-3">
-        {tiers.map((t) => (
-          <Card
-            key={t.tier}
-            className={`flex flex-col p-5 ${t.highlighted ? "ring-2 ring-primary" : ""}`}
-          >
-            {t.highlighted && (
-              <span className="mb-2 inline-flex w-fit rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700">
-                Most popular
-              </span>
-            )}
-            <h3 className="text-lg font-bold">{t.label}</h3>
-            <p className="text-sm text-muted">{t.tagline}</p>
-            <div className="mt-3">
-              <span className="text-2xl font-extrabold">{t.priceLabel}</span>
-              <span className="text-sm text-muted"> / year</span>
-            </div>
-            <ul className="mt-4 flex-1 space-y-2 text-sm">
-              {t.benefits.map((b) => (
-                <li key={b} className="flex items-start gap-2">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                  {b}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-5">
-              {isGuest ? (
-                <Link
-                  href="/register"
-                  className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary text-sm font-medium text-primary-fg"
-                >
-                  Join to choose
-                </Link>
-              ) : (
-                <Button
-                  className="w-full"
-                  variant={t.highlighted ? "primary" : "outline"}
-                  disabled={busyTier !== null}
-                  onClick={() => choose(t.tier)}
-                >
-                  {busyTier === t.tier ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+        {tiers.map((t) => {
+          const isCurrent = activeTier === t.tier;
+          const isFree = t.tier === "FREE";
+          return (
+            <Card
+              key={t.tier}
+              className={`flex flex-col p-5 ${
+                isCurrent ? "ring-2 ring-primary" : t.highlighted ? "ring-2 ring-amber-300" : ""
+              }`}
+            >
+              <div className="mb-2 flex items-center gap-2">
+                {isCurrent && (
+                  <span className="inline-flex w-fit rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-fg">
+                    Current plan
+                  </span>
+                )}
+                {!isCurrent && t.highlighted && (
+                  <span className="inline-flex w-fit rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700">
+                    Most popular
+                  </span>
+                )}
+              </div>
+              <h3 className="text-lg font-bold">{t.label}</h3>
+              <p className="text-sm text-muted">{t.tagline}</p>
+              <div className="mt-3">
+                <span className="text-2xl font-extrabold">{t.priceLabel}</span>
+                {!isFree && <span className="text-sm text-muted"> / year</span>}
+              </div>
+              <ul className="mt-4 flex-1 space-y-2 text-sm">
+                {t.benefits.map((b) => (
+                  <li key={b} className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                    {b}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5">
+                {isCurrent ? (
+                  <Button className="w-full" variant="outline" disabled>
+                    Current plan
+                  </Button>
+                ) : isFree ? (
+                  isGuest ? (
+                    <Link
+                      href="/register"
+                      className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary text-sm font-medium text-primary-fg"
+                    >
+                      Join free
+                    </Link>
                   ) : (
-                    `Choose ${t.label}`
-                  )}
-                </Button>
-              )}
-            </div>
-          </Card>
-        ))}
+                    <Button className="w-full" variant="outline" disabled>
+                      Included
+                    </Button>
+                  )
+                ) : isGuest ? (
+                  <Link
+                    href="/register"
+                    className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary text-sm font-medium text-primary-fg"
+                  >
+                    Join to choose
+                  </Link>
+                ) : (
+                  <Button
+                    className="w-full"
+                    variant={t.highlighted ? "primary" : "outline"}
+                    disabled={busyTier !== null}
+                    onClick={() => choose(t.tier)}
+                  >
+                    {busyTier === t.tier ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      `Choose ${t.label}`
+                    )}
+                  </Button>
+                )}
+              </div>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

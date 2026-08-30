@@ -128,12 +128,59 @@ export const dict: Record<string, Record<Locale, string>> = {
   "membership.title": { en: "Membership", zh: "会员", id: "Keanggotaan" },
   "membership.currentPlan": { en: "Your plan", zh: "您的方案", id: "Paket Anda" },
   "membership.upgrade": { en: "Upgrade", zh: "升级", id: "Tingkatkan" },
+  "membership.free": { en: "Free", zh: "免费", id: "Gratis" },
+  "membership.freeTagline": {
+    en: "Everything you need to start networking.",
+    zh: "开始建立人脉所需的一切。",
+    id: "Semua yang Anda butuhkan untuk mulai membangun jaringan.",
+  },
+  "membership.intro": {
+    en: "Choose the package that fits you. Everyone starts free as a Bridge Member; upgrade anytime to unlock more.",
+    zh: "选择适合您的套餐。所有人都以免费的 Bridge Member 起步，随时可升级解锁更多功能。",
+    id: "Pilih paket yang cocok untuk Anda. Semua mulai gratis sebagai Bridge Member; tingkatkan kapan saja.",
+  },
 
   // Profile view (me)
   "me.editProfile": { en: "Edit profile", zh: "编辑资料", id: "Ubah profil" },
   "me.myCard": { en: "My name card", zh: "我的名片", id: "Kartu nama saya" },
   "me.shareCard": { en: "Share card", zh: "分享名片", id: "Bagikan kartu" },
   "me.viewPublicCard": { en: "View public card", zh: "查看公开名片", id: "Lihat kartu publik" },
+
+  // Chat / messages
+  "chat.title": { en: "Messages", zh: "消息", id: "Pesan" },
+  "chat.empty": { en: "No messages yet", zh: "还没有消息", id: "Belum ada pesan" },
+  "chat.emptyHint": {
+    en: "Open a card and tap Message to start a conversation.",
+    zh: "打开名片并点击“发消息”开始对话。",
+    id: "Buka kartu dan ketuk Pesan untuk memulai percakapan.",
+  },
+  "chat.sayHello": { en: "No messages yet — say hello!", zh: "还没有消息 — 打个招呼吧！", id: "Belum ada pesan — sapa dulu!" },
+
+  // Matches
+  "matches.title": { en: "Matches", zh: "匹配", id: "Kecocokan" },
+  "matches.subtitle": {
+    en: "We pair what you offer with what people need — and who can help with what you’re looking for.",
+    zh: "我们将您能提供的与他人的需求配对 — 并找到能帮您实现目标的人。",
+    id: "Kami memasangkan yang Anda tawarkan dengan kebutuhan orang — dan siapa yang bisa membantu.",
+  },
+  "matches.empty": {
+    en: "No matches yet. Add what you offer and what you’re looking for to your profile.",
+    zh: "还没有匹配。请在资料中填写您能提供的和正在寻找的内容。",
+    id: "Belum ada kecocokan. Tambahkan yang Anda tawarkan dan cari ke profil Anda.",
+  },
+
+  // Referrals
+  "referrals.title": { en: "Refer & Earn", zh: "推荐赚积分", id: "Referal & Hadiah" },
+  "referrals.howItWorks": { en: "How it works", zh: "运作方式", id: "Cara kerja" },
+  "referrals.empty": {
+    en: "No referrals yet. Share your link above to invite your first member.",
+    zh: "还没有推荐。分享上方链接，邀请您的第一位会员。",
+    id: "Belum ada referal. Bagikan tautan di atas untuk mengundang anggota pertama.",
+  },
+
+  // Points
+  "points.title": { en: "Point history", zh: "积分记录", id: "Riwayat poin" },
+  "points.empty": { en: "No transactions yet", zh: "还没有交易记录", id: "Belum ada transaksi" },
 
   // Auth
   "auth.welcomeBack": { en: "Welcome back", zh: "欢迎回来", id: "Selamat datang kembali" },

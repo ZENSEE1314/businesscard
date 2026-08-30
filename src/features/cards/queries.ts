@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { absoluteUrl, normalizePhone, whatsappNumber } from "@/lib/utils";
+import { listProjectsForCard, type ProjectCard } from "@/lib/projects";
 
 export interface Social {
   instagram?: string | null;
@@ -47,6 +48,7 @@ export interface CardView {
   referralCode: string;
   reviews: ReviewItem[];
   reviewSummary: { count: number; average: number };
+  projects: ProjectCard[];
 }
 
 export interface ReviewItem {
@@ -125,6 +127,7 @@ export async function getPersonalCard(username: string): Promise<CardView | null
   if (!profile || profile.user.status !== "ACTIVE") return null;
 
   const rev = await fetchReviews(profile.userId);
+  const projects = await listProjectsForCard(profile.userId);
 
   return {
     kind: "personal",
@@ -161,6 +164,7 @@ export async function getPersonalCard(username: string): Promise<CardView | null
     referralCode: profile.user.referralCode,
     reviews: rev.reviews,
     reviewSummary: rev.reviewSummary,
+    projects,
   };
 }
 
@@ -186,6 +190,7 @@ export async function getBusinessCard(slug: string): Promise<CardView | null> {
   if (!biz || biz.user.status !== "ACTIVE") return null;
 
   const rev = await fetchReviews(biz.userId);
+  const projects = await listProjectsForCard(biz.userId);
 
   return {
     kind: "business",
@@ -227,6 +232,7 @@ export async function getBusinessCard(slug: string): Promise<CardView | null> {
     referralCode: biz.user.referralCode,
     reviews: rev.reviews,
     reviewSummary: rev.reviewSummary,
+    projects,
   };
 }
 

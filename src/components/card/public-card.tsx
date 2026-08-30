@@ -10,6 +10,7 @@ import { NfcButton } from "@/components/card/nfc-button";
 import { InstallButton } from "@/components/install-button";
 import { WhatsAppCommunityButton } from "@/components/whatsapp-community-button";
 import { ReviewForm } from "@/components/card/review-form";
+import { ProjectRateForm } from "@/components/card/project-rate-form";
 
 function socialUrl(platform: string, value: string): string {
   const v = value.trim().replace(/^@/, "");
@@ -410,6 +411,66 @@ export async function PublicCard({
               </>
             );
           })()}
+
+          {/* Projects — portfolio with per-project ratings */}
+          {card.projects.length > 0 && (
+            <div className="mt-5 border-t border-border pt-4">
+              <h3 className="text-sm font-semibold">Projects</h3>
+              <div className="mt-3 space-y-4">
+                {card.projects.map((p) => (
+                  <div key={p.id} className="rounded-xl border border-border p-3">
+                    {p.imageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={p.imageUrl}
+                        alt=""
+                        className="mb-2 max-h-48 w-full rounded-lg object-cover"
+                      />
+                    )}
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-medium">
+                        {p.link ? (
+                          <a
+                            href={p.link.startsWith("http") ? p.link : `https://${p.link}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-primary hover:underline"
+                          >
+                            {p.title}
+                          </a>
+                        ) : (
+                          p.title
+                        )}
+                      </p>
+                      {p.count > 0 && (
+                        <span className="inline-flex shrink-0 items-center gap-1 text-xs text-muted">
+                          <Stars value={p.average} /> {p.average} ({p.count})
+                        </span>
+                      )}
+                    </div>
+                    {p.description && (
+                      <p className="mt-1 text-sm text-muted">{p.description}</p>
+                    )}
+                    {p.ratings.filter((r) => r.comment).length > 0 && (
+                      <ul className="mt-2 space-y-1.5">
+                        {p.ratings
+                          .filter((r) => r.comment)
+                          .slice(0, 5)
+                          .map((r) => (
+                            <li key={r.id} className="text-xs">
+                              <span className="font-medium">{r.authorName}</span>{" "}
+                              <Stars value={r.rating} className="align-middle" />
+                              <span className="text-muted"> — {r.comment}</span>
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                    {!isGuest && !isOwner && <ProjectRateForm projectId={p.id} />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Who I have helped — reviews */}
           <div className="mt-5 border-t border-border pt-4">

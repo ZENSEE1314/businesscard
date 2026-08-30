@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { env } from "@/lib/env";
 import { Card } from "@/components/ui";
+import { getLocale, tt } from "@/lib/i18n/server";
 import { ReferralShare } from "@/features/referrals/referral-share";
 import { ReferralMoney } from "@/features/referrals/referral-money";
 import { ChatAvatar } from "@/features/chat/chat-avatar";
@@ -50,6 +51,7 @@ const howItWorks = [
 export default async function ReferralsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  const locale = await getLocale();
 
   const [me, referred, pointsAgg, money, earnings, withdrawals, minIdr] = await Promise.all([
     prisma.user.findUnique({
@@ -95,7 +97,7 @@ export default async function ReferralsPage() {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-4 py-4">
       <div className="px-1">
-        <h1 className="text-xl font-bold">Refer &amp; Earn</h1>
+        <h1 className="text-xl font-bold">{tt(locale, "referrals.title")}</h1>
         <p className="mt-1 text-sm text-muted">
           Grow the BridgeX network and earn points for every member you bring
           in.
@@ -146,7 +148,7 @@ export default async function ReferralsPage() {
 
       {/* How it works */}
       <Card className="p-5">
-        <h2 className="font-semibold">How it works</h2>
+        <h2 className="font-semibold">{tt(locale, "referrals.howItWorks")}</h2>
         <ol className="mt-3 space-y-3">
           {howItWorks.map((step, i) => (
             <li key={step.title} className="flex gap-3">

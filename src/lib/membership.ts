@@ -31,6 +31,16 @@ export interface TierConfig {
 // BridgeMaster) are separate tiers layered on top.
 export const FREE_TIER_LABEL = "Bridge Member";
 
+// Free tier ("Bridge Member") — what every account gets at no cost.
+export const FREE_TIER_BENEFITS: string[] = [
+  "Free digital name card",
+  "Business Hub — browse posts",
+  "Save & manage contacts",
+  "Direct messaging",
+  "Daily check-in & points rewards",
+  "Refer & earn",
+];
+
 export const MEMBERSHIP_TIERS: Record<Tier, TierConfig> = {
   BRIDGEMAKER: {
     tier: "BRIDGEMAKER",

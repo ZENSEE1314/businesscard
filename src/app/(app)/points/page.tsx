@@ -3,6 +3,7 @@ import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { Card } from "@/components/ui";
+import { getLocale, tt } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ const TYPE_STYLES: Record<string, string> = {
 export default async function PointsHistoryPage() {
   const current = await getCurrentUser();
   if (!current) redirect("/login");
+  const locale = await getLocale();
 
   const [user, transactions] = await Promise.all([
     prisma.user.findUnique({
@@ -44,7 +46,7 @@ export default async function PointsHistoryPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between px-1">
-        <h1 className="text-xl font-bold">Point history</h1>
+        <h1 className="text-xl font-bold">{tt(locale, "points.title")}</h1>
       </div>
 
       <div className="grid grid-cols-3 gap-3 text-center">
@@ -64,7 +66,7 @@ export default async function PointsHistoryPage() {
 
       {transactions.length === 0 ? (
         <Card className="p-8 text-center">
-          <p className="font-medium">No transactions yet</p>
+          <p className="font-medium">{tt(locale, "points.empty")}</p>
           <p className="mt-1 text-sm text-muted">
             Check in daily on your dashboard to start earning points.
           </p>

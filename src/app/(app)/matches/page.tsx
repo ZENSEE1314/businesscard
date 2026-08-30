@@ -5,6 +5,7 @@ import { Sparkles, MessageCircle } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { Card } from "@/components/ui";
+import { getLocale, tt } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Matches" };
@@ -24,6 +25,7 @@ interface MatchRow {
 export default async function MatchesPage() {
   const viewer = await getCurrentUser();
   if (!viewer) redirect("/login");
+  const locale = await getLocale();
 
   const viewerProfile = await prisma.profile.findUnique({
     where: { userId: viewer.id },
@@ -112,18 +114,16 @@ export default async function MatchesPage() {
     <div className="mx-auto w-full max-w-2xl space-y-4 py-4">
       <div className="px-1">
         <h1 className="flex items-center gap-2 text-xl font-bold">
-          <Sparkles className="h-5 w-5 text-brand-600" /> Matches
+          <Sparkles className="h-5 w-5 text-brand-600" /> {tt(locale, "matches.title")}
         </h1>
         <p className="mt-1 text-sm text-muted">
-          We pair what you offer with what people need — and who can help with
-          what you&apos;re looking for.
+          {tt(locale, "matches.subtitle")}
         </p>
       </div>
 
       {matchSets.length === 0 ? (
         <Card className="p-8 text-center text-sm text-muted">
-          No matches yet. Add what you offer and what you&apos;re looking for to
-          your profile to unlock suggestions.
+          {tt(locale, "matches.empty")}
         </Card>
       ) : (
         matchSets.map((m) => (
