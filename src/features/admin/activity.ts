@@ -251,7 +251,7 @@ const CSV_COLUMNS: { header: string; pick: (r: ActivityRow) => string | number }
   { header: "Username", pick: (r) => r.username },
   { header: "Email", pick: (r) => r.email },
   { header: "Company", pick: (r) => r.companyName ?? "" },
-  { header: "Membership", pick: (r) => r.membershipTier ?? "" },
+  { header: "Membership", pick: (r) => (r.membershipTier === "BRIDGEMAKER" ? "BridgeMaker" : r.membershipTier === "BRIDGEMASTER" ? "BridgeMaster" : "Bridge Member") },
   { header: "Join date", pick: (r) => r.createdAt.toISOString().slice(0, 10) },
   { header: "Member days", pick: (r) => r.memberDays },
   { header: "Last login", pick: (r) => r.lastLoginAt?.toISOString() ?? "" },

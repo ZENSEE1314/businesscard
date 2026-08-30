@@ -147,9 +147,9 @@ export default async function MembershipPage() {
         />
 
         <div className="mt-10 grid gap-4 sm:grid-cols-3 text-sm">
-          <InfoCard title="Networking" body="Weekly business networking at member restaurants ($15/pax). Free for Gold & Diamond." />
+          <InfoCard title="Networking" body="Weekly business networking at member restaurants ($15/pax). Free for BridgeMaster members." />
           <InfoCard title="Awards" body="Business awards with certificate, magazine feature, app posting and a grand gala table." />
-          <InfoCard title="Gala dinners" body="Monthly members gala and an annual grand gala — Diamond members get a free table." />
+          <InfoCard title="Gala dinners" body="Monthly members gala and an annual grand gala — BridgeMaster members get a free table." />
         </div>
 
         {/* Quick links — the rest of the app, one tap away */}

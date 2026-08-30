@@ -19,13 +19,18 @@ export interface TierConfig {
 
 // BridgeX membership program.
 //
-//   Free            → no membership row (membershipTier = null)  "BridgeX Member"
+//   Free            → no membership row (membershipTier = null)  "Bridge Member"
 //   BRIDGEMAKER     → second tier (first paid tier)              "BridgeMaker"
 //   BRIDGEMASTER    → advanced tier                              "BridgeMaster"
 //
 // Annual fee in Indonesian Rupiah. Benefits mirror the Member Club program
 // (name card, TikTok/web ads, magazine, networking, gala) plus marketplace
 // posting for paid members.
+//
+// Every free account is a "Bridge Member". The paid packages (BridgeMaker,
+// BridgeMaster) are separate tiers layered on top.
+export const FREE_TIER_LABEL = "Bridge Member";
+
 export const MEMBERSHIP_TIERS: Record<Tier, TierConfig> = {
   BRIDGEMAKER: {
     tier: "BRIDGEMAKER",

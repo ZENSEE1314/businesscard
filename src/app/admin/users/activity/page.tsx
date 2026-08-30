@@ -15,6 +15,13 @@ const STATUS_STYLES: Record<string, string> = {
   NEW: "bg-blue-100 text-blue-700",
 };
 
+/** Friendly package name. Free accounts are always "Bridge Member". */
+function tierName(t: string | null): string {
+  if (t === "BRIDGEMAKER") return "BridgeMaker";
+  if (t === "BRIDGEMASTER") return "BridgeMaster";
+  return "Bridge Member";
+}
+
 function initials(name: string): string {
   return name
     .split(" ")
@@ -172,7 +179,7 @@ export default async function AdminActivityPage({
                   </div>
                 </td>
                 <td className="px-3 py-2.5">{r.companyName ?? "—"}</td>
-                <td className="px-3 py-2.5">{r.membershipTier ?? "Free"}</td>
+                <td className="px-3 py-2.5">{tierName(r.membershipTier)}</td>
                 <td className="px-3 py-2.5" title={r.createdAt.toISOString()}>
                   {r.memberDays}d ago
                 </td>

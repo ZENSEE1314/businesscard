@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { Card, ButtonLink, Badge } from "@/components/ui";
 import { LogoutButton } from "@/components/logout-button";
-import { getTierConfig } from "@/lib/membership";
+import { getTierConfig, FREE_TIER_LABEL } from "@/lib/membership";
 import { membershipDurationLabel } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
@@ -59,7 +59,7 @@ export default async function MyProfilePage() {
             )}
             <div className="mt-1 flex flex-wrap gap-2">
               <Badge variant={activeTier ? "brand" : "default"}>
-                {tierLabel ? `${tierLabel} member` : "Free member"}
+                {tierLabel ? `${tierLabel} member` : FREE_TIER_LABEL}
               </Badge>
               {user.role === "ADMIN" && <Badge variant="brand">Admin</Badge>}
               <Badge>{user.points} points</Badge>
@@ -114,7 +114,7 @@ export default async function MyProfilePage() {
             <Crown className={`h-6 w-6 ${activeTier ? "text-amber-500" : "text-muted"}`} />
             <div>
               <div className="font-semibold">
-                {tierLabel ? `${tierLabel} membership` : "Free member"}
+                {tierLabel ? `${tierLabel} membership` : FREE_TIER_LABEL}
               </div>
               {activeTier && user.membershipExpiresAt ? (
                 <div className="text-xs text-muted">

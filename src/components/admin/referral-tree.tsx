@@ -13,6 +13,16 @@ const STATUS_STYLES: Record<string, string> = {
   NEW: "bg-blue-100 text-blue-700",
 };
 
+const TIER_LABEL: Record<string, string> = {
+  BRIDGEMAKER: "BridgeMaker",
+  BRIDGEMASTER: "BridgeMaster",
+};
+
+/** Friendly package label — free accounts are always "Bridge Member". */
+function tierLabel(tier: string | null): string {
+  return tier ? (TIER_LABEL[tier] ?? tier) : "Bridge Member";
+}
+
 function initials(name: string): string {
   return name
     .split(" ")
@@ -69,7 +79,7 @@ function NodeRow({
       <div className="min-w-[180px]">
         <p className="text-sm font-medium leading-tight">{node.name}</p>
         <p className="text-xs text-muted">
-          {[node.companyName, node.membershipTier].filter(Boolean).join(" · ") || "—"}
+          {[node.companyName, tierLabel(node.membershipTier)].filter(Boolean).join(" · ") || "—"}
         </p>
       </div>
 

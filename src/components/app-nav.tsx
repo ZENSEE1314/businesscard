@@ -253,7 +253,7 @@ export function HeaderNav({
 
 const BOTTOM_ITEMS = [
   { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/marketplace", label: "Marketplace", icon: Store },
+  { href: "/contacts", label: "Contacts", icon: Users },
 ];
 
 export function BottomNav({

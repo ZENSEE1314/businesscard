@@ -5,8 +5,13 @@ import { useRouter } from "next/navigation";
 import { Search, Pencil, Trash2 } from "lucide-react";
 import { Button, Card, Input, Label } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
+import { FREE_TIER_LABEL } from "@/lib/membership";
 
-const TIER_LABEL: Record<string, string> = { BRIDGEMAKER: "BridgeMaker", BRIDGEMASTER: "BridgeMaster", FREE: "Free" };
+const TIER_LABEL: Record<string, string> = {
+  BRIDGEMAKER: "BridgeMaker",
+  BRIDGEMASTER: "BridgeMaster",
+  FREE: FREE_TIER_LABEL,
+};
 
 interface SearchRow {
   userId: string;
@@ -119,7 +124,7 @@ export function UsersAdmin() {
                   <p className="truncate text-xs text-muted">
                     @{r.username}
                     {r.companyName ? ` · ${r.companyName}` : ""}
-                    {r.membershipTier ? ` · ${TIER_LABEL[r.membershipTier] ?? r.membershipTier}` : ""}
+                    {` · ${TIER_LABEL[r.membershipTier ?? "FREE"]}`}
                   </p>
                 </div>
                 <Button size="sm" variant="outline" onClick={() => open(r.userId)}>
@@ -162,7 +167,7 @@ export function UsersAdmin() {
               <Label htmlFor="u-tier">Package</Label>
               <select id="u-tier" value={detail.membershipTier ?? "FREE"} onChange={(e) => set("membershipTier", e.target.value)}
                 className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm">
-                <option value="FREE">Free</option>
+                <option value="FREE">{FREE_TIER_LABEL}</option>
                 <option value="BRIDGEMAKER">BridgeMaker</option>
                 <option value="BRIDGEMASTER">BridgeMaster</option>
               </select>
