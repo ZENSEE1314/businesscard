@@ -147,12 +147,13 @@ async function main() {
           data: { role: "ADMIN" },
         });
       }
-      // The platform owner's admin account should carry the top package unless
-      // it already has its own membership (never override real orders).
+      // The platform owner's admin account should always carry the top
+      // package (BridgeMaster). Grant it when they have none, and repair the
+      // wrong-tier case where a previous deploy left them on BridgeMaker.
+      // Real paying customers are never touched — only the INITIAL_ADMIN account.
       if (
-        !existing.membershipTier &&
-        !existing.membershipStatus &&
-        process.env.ADMIN_MEMBERSHIP !== "false"
+        process.env.ADMIN_MEMBERSHIP !== "false" &&
+        (existing.membershipTier !== "BRIDGEMASTER" || existing.membershipStatus !== "ACTIVE")
       ) {
         await prisma.user.update({
           where: { id: existing.id },
@@ -162,6 +163,7 @@ async function main() {
             membershipExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
           },
         });
+        console.log("Admin membership set to BridgeMaster.");
       }
     } else {
       // Ensure the admin username is free before creating.

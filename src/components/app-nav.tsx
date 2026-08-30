@@ -25,6 +25,7 @@ import {
   Crown,
   UserPlus,
   Wallet,
+  Calendar,
 } from "lucide-react";
 import { apiFetch } from "@/lib/client";
 import { cn } from "@/lib/utils";
@@ -40,9 +41,10 @@ interface MenuItem {
 }
 
 const USER_MENU: MenuItem[] = [
-  { href: "/dashboard", label: "Home", icon: Home },
+    { href: "/dashboard", label: "Home", icon: Home },
   { href: "/hub", label: "Hub", icon: LayoutDashboard },
   { href: "/matches", label: "Matches", icon: Compass },
+  { href: "/events", label: "Events", icon: Calendar },
   { href: "/contacts", label: "Contacts", icon: Users },
   { href: "__CARD__", label: "Digital Name Card", icon: IdCard }, // replaced with the user's card path
   { href: "/referrals", label: "Refer & Earn", icon: UserPlus },
@@ -283,7 +285,7 @@ export function BottomNav({
   }, [open]);
 
   const moreActive =
-    !BOTTOM_ITEMS.some((i) => isActive(pathname, i.href)) && pathname !== "/feed" && pathname !== "/hub";
+    !BOTTOM_ITEMS.some((i) => isActive(pathname, i.href)) && pathname !== "/feed";
 
   return (
     <>

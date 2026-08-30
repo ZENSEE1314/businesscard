@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronRight, ChevronDown, Loader2, Search } from "lucide-react";
 import { apiFetch } from "@/lib/client";
 import type { TreeNode } from "@/features/admin/tree";
@@ -86,11 +87,96 @@ function NodeRow({
       </span>
       <span className="text-xs text-muted">{node.points} pts</span>
       <span className="text-xs text-muted">{node.contactCount} contacts</span>
-      <span className="text-xs text-muted">
+            <span className="text-xs text-muted">
         {node.directReferrals} direct
         {node.totalDescendants !== null ? ` · ${node.totalDescendants} total` : ""}
       </span>
+      <ReassignButton nodeId={node.id} nodeName={node.name} />
     </div>
+  );
+}
+
+function ReassignButton({ nodeId, nodeName }: { nodeId: string; nodeName: string }) {
+  const [open, setOpen] = useState(false);
+  const [parent, setParent] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const router = useRouter();
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setMsg(null);
+    const res = await apiFetch("/api/admin/users/tree", {
+      method: "POST",
+            body: JSON.stringify({ targetId: nodeId, newParentUsername: parent.trim() || null }),
+    });
+    setBusy(false);
+    if (res.ok) {
+      setOpen(false);
+      setParent("");
+      router.refresh();
+    } else {
+      setMsg(res.error ?? "Failed to reassign.");
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="text-xs font-medium text-brand-700 hover:underline"
+      >
+        Reassign referrer
+      </button>
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setOpen(false)}
+        >
+          <form
+            onSubmit={submit}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-xl border border-border bg-surface p-5 shadow-xl"
+          >
+                        <h3 className="font-semibold">Reassign {nodeName}&apos;s referrer</h3>
+            <p className="mt-1 text-xs text-muted">
+              Enter the username of the new referrer. Leave empty to detach
+              (move to a root).
+            </p>
+            <div className="my-3">
+              <label className="block text-xs font-medium text-muted">
+                New referrer username
+              </label>
+              <input
+                value={parent}
+                onChange={(e) => setParent(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-brand-500"
+                placeholder="e.g. johndoe"
+              />
+            </div>
+            {msg && <p className="text-sm text-red-600">{msg}</p>}
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="px-3 py-1.5 text-sm hover:bg-surface-2 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={busy}
+                className="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-fg disabled:opacity-60"
+              >
+                {busy ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </>
   );
 }
 

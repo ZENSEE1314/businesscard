@@ -120,6 +120,48 @@ export async function getChildren(parentId: string): Promise<TreeNode[]> {
   return Promise.all(rows.map((r) => toTreeNode(r as NodeRow)));
 }
 
+/**
+ * Admin-only: reassign a user's referrer (move them to a different branch of
+ * the network tree). Cycle-safe: refuses to set a descendant as the new parent.
+ */
+export async function reassignReferrer(
+  targetId: string,
+  newParentId: string | null,
+): Promise<void> {
+    // Prevent cycles: the new parent must not be the target or a descendant of it.
+  if (newParentId) {
+    if (newParentId === targetId) {
+      throw new Error("Cannot assign a user as their own referrer.");
+    }
+    // Quick BFS: the new parent must not be a descendant of the target — that
+    // would close a referral loop.
+    const visited = new Set<string>([targetId]);
+    const queue: string[] = [targetId];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const kids = await prisma.user.findMany({
+        where: { referredById: current },
+        select: { id: true },
+      });
+      for (const k of kids) {
+        if (k.id === newParentId) {
+          throw new Error("Cannot set a descendant as the new referrer.");
+        }
+        if (!visited.has(k.id)) {
+          visited.add(k.id);
+          queue.push(k.id);
+        }
+      }
+    }
+  }
+  // null explicitly detaches the member (becomes a root). Prisma needs the
+  // field present with null — `undefined` would skip the update entirely.
+  await prisma.user.update({
+    where: { id: targetId },
+    data: { referredById: newParentId },
+  });
+}
+
 /** Count all descendants of a user iteratively (no recursion blowups). */
 export async function countDescendants(rootId: string): Promise<number> {
   let count = 0;

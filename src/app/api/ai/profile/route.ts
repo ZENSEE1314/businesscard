@@ -47,7 +47,9 @@ export async function POST(req: NextRequest) {
     if (!isAiProfileGenerationEnabled() || !aiSetting.enabled) {
       throw new ApiError(
         503,
-        "AI profile generation is currently unavailable.",
+        !aiSetting.enabled
+          ? "AI profile generation is turned off in admin settings."
+          : "AI generation is not configured yet. The administrator needs to set OLLAMA_BASE_URL (Railway → Variables) or deploy the Ollama service.",
         "ai_disabled",
       );
     }

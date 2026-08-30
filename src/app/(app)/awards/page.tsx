@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Trophy, BadgeCheck, ChevronRight } from "lucide-react";
+import { Trophy, BadgeCheck, ChevronRight, CalendarDays } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { Card } from "@/components/ui";
 
@@ -80,11 +80,18 @@ export default async function AwardsPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-3 py-4 sm:px-4">
-      <div className="mb-4 px-1">
+            <div className="mb-4 px-1">
         <h1 className="text-xl font-bold">Awards</h1>
         <p className="text-sm text-muted">
           Recognising the best of the Member Club.
         </p>
+        <Link
+          href="/events"
+          className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline"
+        >
+          <CalendarDays className="h-4 w-4" />
+          See upcoming community events →
+        </Link>
       </div>
 
       {awards.length === 0 ? (
