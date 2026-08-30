@@ -112,7 +112,7 @@ export default async function DiscoverPage({
   const results = query ? await searchAll(query) : [];
 
   return (
-    <div className="mx-auto max-w-2xl px-3 py-4 sm:px-4">
+    <div className="mx-auto max-w-2xl py-4">
       <div className="mb-3 px-1">
         <h1 className="text-xl font-bold">Discover</h1>
         <p className="text-sm text-muted">

@@ -152,7 +152,7 @@ export default async function AdminActivityPage({
               <th className="px-3 py-2">Joined</th>
               <th className="px-3 py-2">Last login</th>
               <th className="px-3 py-2">Login days</th>
-              <th className="px-3 py-2">Streak</th>
+              <th className="px-3 py-2">Check-in streak</th>
               <th className="px-3 py-2">Status</th>
               <th className="px-3 py-2">Points</th>
               <th className="px-3 py-2">Contacts</th>
@@ -187,7 +187,7 @@ export default async function AdminActivityPage({
                   {r.daysSinceLogin === null ? "Never" : `${r.daysSinceLogin}d ago`}
                 </td>
                 <td className="px-3 py-2.5">{r.totalLoginDays}</td>
-                <td className="px-3 py-2.5">{r.loginStreak}</td>
+                <td className="px-3 py-2.5">{r.checkinStreak}</td>
                 <td className="px-3 py-2.5">
                   <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_STYLES[r.activityStatus]}`}>
                     {r.activityStatus}
@@ -229,7 +229,7 @@ export default async function AdminActivityPage({
                 <div><dt className="text-muted">Last login</dt><dd>{r.daysSinceLogin === null ? "Never" : `${r.daysSinceLogin}d`}</dd></div>
                 <div><dt className="text-muted">Points</dt><dd>{r.points}</dd></div>
                 <div><dt className="text-muted">Login days</dt><dd>{r.totalLoginDays}</dd></div>
-                <div><dt className="text-muted">Streak</dt><dd>{r.loginStreak}</dd></div>
+                <div><dt className="text-muted">Check-in streak</dt><dd>{r.checkinStreak}</dd></div>
                 <div><dt className="text-muted">Contacts</dt><dd>{r.contactCount}</dd></div>
               </dl>
             </Card>

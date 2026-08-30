@@ -4,6 +4,8 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { BottomNav, HeaderNav, SideNav } from "@/components/app-nav";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguagePicker } from "@/components/language-picker";
 import { env } from "@/lib/env";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -20,7 +22,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <Logo size={28} />
             {env.appName}
           </Link>
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-2 text-sm sm:gap-3">
+            <LanguagePicker />
+            <ThemeToggle className="hidden sm:inline-flex" />
             <span className="rounded-full bg-brand-50 px-2.5 py-1 font-medium text-brand-700">
               {user.points} pts
             </span>
@@ -35,7 +39,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
       <div className="mx-auto flex w-full max-w-5xl flex-1">
         <SideNav isAdmin={user.role === "ADMIN"} cardPath={cardPath} />
-        <main className="min-w-0 flex-1 pb-4">{children}</main>
+        <main className="min-w-0 flex-1 px-3 pb-4 sm:px-4">{children}</main>
       </div>
 
       <BottomNav isAdmin={user.role === "ADMIN"} cardPath={cardPath} />

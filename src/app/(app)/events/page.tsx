@@ -7,6 +7,7 @@ import { EventCalendar } from "@/features/events/event-calendar";
 import { EventForm } from "@/features/events/event-form";
 import { RsvpButton } from "@/features/events/rsvp-button";
 import { Card } from "@/components/ui";
+import { TranslateButton } from "@/components/translate-button";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,7 @@ export default async function EventsPage() {
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4 px-3 py-4 sm:px-4">
+    <div className="mx-auto w-full max-w-2xl space-y-4 py-4">
       <div className="px-1">
         <h1 className="text-xl font-bold">Events</h1>
         <p className="mt-1 text-sm text-muted">
@@ -79,7 +80,10 @@ export default async function EventsPage() {
                 </p>
               </div>
               {e.description && (
-                <p className="mt-2 whitespace-pre-line text-sm">{e.description}</p>
+                <>
+                  <p className="mt-2 whitespace-pre-line text-sm">{e.description}</p>
+                  <TranslateButton text={e.description} className="mt-1" />
+                </>
               )}
               <div className="mt-3">
                 <RsvpButton

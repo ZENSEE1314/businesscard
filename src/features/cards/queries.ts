@@ -23,6 +23,8 @@ export interface CardView {
   subtitle?: string | null; // jobTitle or category
   org?: string | null;
   headline?: string | null;
+  whoIAm?: string | null;
+  whatICanOffer?: string | null;
   canHelp: string[];
   lookingFor: string[];
   avatarUrl?: string | null;
@@ -85,6 +87,8 @@ export async function getPersonalCard(username: string): Promise<CardView | null
     subtitle: profile.jobTitle,
     org: profile.companyName,
     headline: profile.headline,
+    whoIAm: profile.whoIAm,
+    whatICanOffer: profile.whatICanOffer,
     canHelp: profile.canHelp,
     lookingFor: profile.lookingFor,
     avatarUrl: profile.avatarUrl,

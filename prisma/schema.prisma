@@ -927,6 +927,8 @@ model Contact {
   sourceCardId   String? // username/slug of the card it was saved from
   eventId        String?
   notes          String?
+  category       String?       @db.VarChar(60) // owner's own label/group
+  followedUpAt   DateTime? // set when the owner follows up; clears the reminder
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 

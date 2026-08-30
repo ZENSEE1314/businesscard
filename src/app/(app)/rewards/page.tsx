@@ -14,7 +14,7 @@ export default async function RewardsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-2xl px-3 py-4 sm:px-4">
+    <div className="mx-auto max-w-2xl py-4">
       <div className="flex items-center justify-between px-1 pb-3">
         <h1 className="text-xl font-bold">Rewards</h1>
         <span className="rounded-full bg-brand-50 px-3 py-1 text-sm font-medium text-brand-700">

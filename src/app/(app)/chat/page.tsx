@@ -51,7 +51,7 @@ export default async function ChatPage({
   const conversations = await listConversations(user.id);
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-3 py-4 sm:px-4">
+    <div className="mx-auto w-full max-w-2xl py-4">
       <div className="flex items-center justify-between px-1 pb-3">
         <h1 className="text-xl font-bold">Messages</h1>
         <span className="text-sm text-muted">

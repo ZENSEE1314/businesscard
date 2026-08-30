@@ -27,7 +27,7 @@ export default async function HubPage() {
   const firstName = user?.fullName?.split(" ")[0] ?? "there";
 
   return (
-    <div className="mx-auto max-w-2xl px-3 py-4 sm:px-4">
+    <div className="mx-auto max-w-2xl py-4">
       <div className="px-1 pb-3">
         <h1 className="text-xl font-bold">
           {greeting()}, {firstName}

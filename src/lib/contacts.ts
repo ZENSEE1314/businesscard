@@ -119,6 +119,7 @@ export async function removeContact(ownerUserId: string, contactId: string) {
 export interface ListContactsOptions {
   search?: string;
   source?: ContactSource;
+  category?: string;
   sort?: "recent" | "name" | "company";
 }
 
@@ -126,6 +127,7 @@ const contactCardSelect = {
   id: true,
   source: true,
   notes: true,
+  category: true,
   createdAt: true,
   contactUserId: true,
   contact: {
@@ -164,6 +166,7 @@ export async function listContacts(
     contact: { status: "ACTIVE" }, // hide deleted/deactivated accounts
   };
   if (opts.source) where.source = opts.source;
+  if (opts.category && opts.category.trim()) where.category = opts.category.trim();
   if (opts.search && opts.search.trim()) {
     const q = opts.search.trim();
     where.OR = [

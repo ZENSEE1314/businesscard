@@ -48,7 +48,7 @@ export default async function PostDetailPage({
   const comments = JSON.parse(JSON.stringify(commentRows)) as CommentNode[];
 
   return (
-    <div className="mx-auto max-w-2xl px-3 py-4 sm:px-4">
+    <div className="mx-auto max-w-2xl py-4">
       <PostCard post={post} />
       <Card className="mt-4 p-4">
         <Comments

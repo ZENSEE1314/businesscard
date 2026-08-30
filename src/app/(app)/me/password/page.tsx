@@ -39,7 +39,7 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-3 py-4 sm:px-4">
+    <div className="mx-auto max-w-md py-4">
       <h1 className="px-1 pb-3 text-xl font-bold">Change password</h1>
       <Card className="p-5">
         {done && (

@@ -34,6 +34,8 @@ export const profileUpdateSchema = z.object({
   canHelp: tagList,
   lookingFor: tagList,
   bio: optionalStr(2000),
+  whoIAm: optionalStr(600),
+  whatICanOffer: optionalStr(600),
   jobTitle: optionalStr(120),
   companyName: optionalStr(120),
   phone: optionalStr(40),

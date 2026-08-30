@@ -109,7 +109,7 @@ export default async function MatchesPage() {
   ].sort((a, b) => b.matchedOn.length - a.matchedOn.length);
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4 px-3 py-4 sm:px-4">
+    <div className="mx-auto w-full max-w-2xl space-y-4 py-4">
       <div className="px-1">
         <h1 className="flex items-center gap-2 text-xl font-bold">
           <Sparkles className="h-5 w-5 text-brand-600" /> Matches

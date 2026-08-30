@@ -23,7 +23,7 @@ export default async function EditProfilePage() {
   if (!user?.profile) redirect("/onboarding");
 
   return (
-    <div className="mx-auto max-w-2xl px-3 py-4 sm:px-4">
+    <div className="mx-auto max-w-2xl py-4">
       <h1 className="px-1 pb-3 text-xl font-bold">Edit profile</h1>
       <ProfileEditForm
         role={user.role}

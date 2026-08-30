@@ -16,6 +16,8 @@ export interface DashboardSuggestedMatch {
   jobTitle: string | null;
   avatarUrl: string | null;
   sharedInterests: number;
+  // Which of the viewer's "looking for" tags this member can help with.
+  matchedLookingFor: string[];
 }
 
 export interface DashboardData {
@@ -43,6 +45,22 @@ export interface DashboardData {
   suggestedMatches: DashboardSuggestedMatch[];
   upcomingEvents: { id: string; title: string; startsAt: Date }[];
   pendingFollowUps: number;
+  followUps: {
+    contactId: string;
+    username: string;
+    name: string;
+    companyName: string | null;
+    avatarUrl: string | null;
+    daysWaiting: number;
+  }[];
+  referredUsers: {
+    id: string;
+    username: string;
+    name: string;
+    companyName: string | null;
+    avatarUrl: string | null;
+    joinedAt: Date;
+  }[];
   cardPath: string | null;
 }
 
@@ -172,9 +190,13 @@ export async function getDashboardData(): Promise<DashboardData | null> {
       .map((c) => {
         const theirCanHelp = c.profile?.canHelp ?? [];
         const theirLookingFor = c.profile?.lookingFor ?? [];
+        // Tags this member can help with that the viewer is looking for.
+        const matchedLookingFor = theirCanHelp.filter((t) =>
+          myLookingFor.includes(t),
+        );
         const shared =
           theirLookingFor.filter((t) => myCanHelp.includes(t)).length +
-          theirCanHelp.filter((t) => myLookingFor.includes(t)).length;
+          matchedLookingFor.length;
         return {
           userId: c.id,
           username: c.profile?.username ?? "",
@@ -183,24 +205,93 @@ export async function getDashboardData(): Promise<DashboardData | null> {
           jobTitle: c.profile?.jobTitle ?? null,
           avatarUrl: c.profile?.avatarUrl ?? null,
           sharedInterests: shared,
+          matchedLookingFor,
         };
       })
       .filter((m) => m.sharedInterests > 0)
-      .sort((a, b) => b.sharedInterests - a.sharedInterests)
-      .slice(0, 3);
+      // Prioritise members who can help with what the viewer is looking for.
+      .sort(
+        (a, b) =>
+          b.matchedLookingFor.length - a.matchedLookingFor.length ||
+          b.sharedInterests - a.sharedInterests,
+      )
+      .slice(0, 6);
   }
 
   // Upcoming events: BridgeX currently models events as dated posts/awards;
   // surface nothing rather than fake rows until an Event model exists.
   const upcomingEvents: { id: string; title: string; startsAt: Date }[] = [];
 
-  // Pending follow-ups: contacts added more than 14 days ago with no messages
-  // exchanged yet — a gentle nudge to reconnect.
-  const fourteenDaysAgo = new Date(Date.now() - 14 * 86_400_000);
-  const staleContacts = await prisma.contact.count({
-    where: { ownerUserId: user.id, createdAt: { lt: fourteenDaysAgo } },
+  // Follow-up reminders: contacts added 3+ days ago that the owner has not yet
+  // marked followed up. Clicking "Follow up" sets followedUpAt and removes them.
+  const threeDaysAgo = new Date(Date.now() - 3 * 86_400_000);
+  const followUpContacts = await prisma.contact.findMany({
+    where: {
+      ownerUserId: user.id,
+      followedUpAt: null,
+      createdAt: { lt: threeDaysAgo },
+      contact: { status: "ACTIVE" },
+    },
+    orderBy: { createdAt: "asc" },
+    take: 8,
+    select: {
+      id: true,
+      createdAt: true,
+      contact: {
+        select: {
+          profile: {
+            select: {
+              username: true,
+              fullName: true,
+              displayName: true,
+              avatarUrl: true,
+              companyName: true,
+            },
+          },
+        },
+      },
+    },
   });
-  const pendingFollowUps = Math.min(staleContacts, 9);
+  const followUps = followUpContacts.map((c) => ({
+    contactId: c.id,
+    username: c.contact.profile?.username ?? "",
+    name: c.contact.profile?.displayName || c.contact.profile?.fullName || "Member",
+    companyName: c.contact.profile?.companyName ?? null,
+    avatarUrl: c.contact.profile?.avatarUrl ?? null,
+    daysWaiting: Math.max(
+      0,
+      Math.floor((Date.now() - c.createdAt.getTime()) / 86_400_000),
+    ),
+  }));
+  const pendingFollowUps = followUps.length;
+
+  // Network growth: the members who joined through this user's link or card.
+  const referred = await prisma.user.findMany({
+    where: { referredById: user.id },
+    orderBy: { createdAt: "desc" },
+    take: 8,
+    select: {
+      id: true,
+      createdAt: true,
+      profile: {
+        select: {
+          username: true,
+          fullName: true,
+          displayName: true,
+          avatarUrl: true,
+          companyName: true,
+        },
+      },
+    },
+  });
+  const referredUsers = referred.map((u) => ({
+    id: u.id,
+    username: u.profile?.username ?? "",
+    name: u.profile?.displayName || u.profile?.fullName || "Member",
+    companyName: u.profile?.companyName ?? null,
+    avatarUrl: u.profile?.avatarUrl ?? null,
+    joinedAt: u.createdAt,
+  }));
 
   return {
     greetingName:
@@ -230,6 +321,8 @@ export async function getDashboardData(): Promise<DashboardData | null> {
     suggestedMatches,
     upcomingEvents,
     pendingFollowUps,
+    followUps,
+    referredUsers,
     cardPath: fullUser.profile?.username ? `/u/${fullUser.profile.username}` : null,
   };
 }

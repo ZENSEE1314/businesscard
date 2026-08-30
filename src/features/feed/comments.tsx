@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 import { Button, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
 import { timeAgo } from "@/lib/utils";
+import { TranslateButton } from "@/components/translate-button";
 
 interface CommentAuthor {
   id: string;
@@ -63,7 +64,10 @@ function CommentItem({
           </div>
           <p className="mt-0.5 whitespace-pre-wrap text-sm">{comment.body}</p>
         </div>
-        <span className="ml-3 text-xs text-muted">{timeAgo(comment.createdAt)}</span>
+        <div className="ml-3 mt-0.5 flex items-center gap-3">
+          <span className="text-xs text-muted">{timeAgo(comment.createdAt)}</span>
+          <TranslateButton text={comment.body} />
+        </div>
       </div>
     </div>
   );

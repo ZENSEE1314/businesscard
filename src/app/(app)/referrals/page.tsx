@@ -93,7 +93,7 @@ export default async function ReferralsPage() {
   const referralPoints = pointsAgg._sum.amount ?? 0;
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4 px-3 py-4 sm:px-4">
+    <div className="mx-auto w-full max-w-2xl space-y-4 py-4">
       <div className="px-1">
         <h1 className="text-xl font-bold">Refer &amp; Earn</h1>
         <p className="mt-1 text-sm text-muted">

@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { isPaidMember } from "@/features/events/queries";
 import { Card } from "@/components/ui";
 import { MarketplaceForm } from "@/features/marketplace/marketplace-form";
+import { TranslateButton } from "@/components/translate-button";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Marketplace" };
@@ -43,7 +44,7 @@ export default async function MarketplacePage() {
     t === "BRIDGEMAKER" ? "BridgeMaker" : t === "BRIDGEMASTER" ? "BridgeMaster" : null;
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4 px-3 py-4 sm:px-4">
+    <div className="mx-auto w-full max-w-2xl space-y-4 py-4">
       <div className="px-1">
         <h1 className="flex items-center gap-2 text-xl font-bold">
           <Store className="h-5 w-5 text-brand-600" /> Marketplace
@@ -97,9 +98,12 @@ export default async function MarketplacePage() {
                       <p className="mt-0.5 text-xs text-muted">{l.category}</p>
                     )}
                     {l.description && (
-                      <p className="mt-1 line-clamp-3 whitespace-pre-line text-sm text-muted">
-                        {l.description}
-                      </p>
+                      <>
+                        <p className="mt-1 line-clamp-3 whitespace-pre-line text-sm text-muted">
+                          {l.description}
+                        </p>
+                        <TranslateButton text={l.description} className="mt-1" />
+                      </>
                     )}
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
                       <span className="inline-flex items-center gap-1.5">

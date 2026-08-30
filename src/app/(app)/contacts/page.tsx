@@ -7,6 +7,7 @@ import { listContacts } from "@/lib/contacts";
 import type { ContactSource } from "@prisma/client";
 import { Card } from "@/components/ui";
 import { DeleteContactButton } from "@/components/contact-row-actions";
+import { EditContactButton } from "@/components/edit-contact-button";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,7 @@ const sourceLabel: Record<string, string> = {
 export default async function ContactsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; source?: string; sort?: string }>;
+  searchParams: Promise<{ q?: string; source?: string; sort?: string; category?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -63,11 +64,23 @@ export default async function ContactsPage({
     ? (sp.sort as "recent" | "name" | "company")
     : "recent";
 
+  const categoryFilter = sp.category ?? "";
   const contacts = await listContacts(user.id, {
     search: q || undefined,
     source: source || undefined,
+    category: categoryFilter || undefined,
     sort,
   });
+
+  // Distinct categories the user has assigned, for the filter + edit suggestions.
+  const allForCategories = await listContacts(user.id, {});
+  const categoryOptions = Array.from(
+    new Set(
+      allForCategories
+        .map((c) => c.category)
+        .filter((v): v is string => Boolean(v && v.trim())),
+    ),
+  ).sort();
 
   return (
     <div className="space-y-4">
@@ -103,6 +116,21 @@ export default async function ContactsPage({
             </option>
           ))}
         </select>
+        {categoryOptions.length > 0 && (
+          <select
+            name="category"
+            defaultValue={categoryFilter}
+            aria-label="Filter by category"
+            className="h-10 rounded-xl border border-border bg-surface px-3 text-sm"
+          >
+            <option value="">All categories</option>
+            {categoryOptions.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        )}
         <select
           name="sort"
           defaultValue={sort}
@@ -139,7 +167,7 @@ export default async function ContactsPage({
             return (
               <li
                 key={c.id}
-                className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3"
+                className="relative flex items-center gap-3 rounded-xl border border-border bg-surface p-3"
               >
                 {p?.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -150,9 +178,16 @@ export default async function ContactsPage({
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <Link href={`/u/${p?.username}`} className="truncate font-medium hover:text-primary">
-                    {name}
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Link href={`/u/${p?.username}`} className="truncate font-medium hover:text-primary">
+                      {name}
+                    </Link>
+                    {c.category && (
+                      <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
+                        {c.category}
+                      </span>
+                    )}
+                  </div>
                   <p className="truncate text-xs text-muted">
                     {[p?.jobTitle, p?.companyName].filter(Boolean).join(" · ") ||
                       [p?.city, p?.country].filter(Boolean).join(", ") ||
@@ -189,6 +224,13 @@ export default async function ContactsPage({
                   >
                     <MessageCircle className="h-4 w-4 text-primary" />
                   </Link>
+                  <EditContactButton
+                    contactId={c.id}
+                    name={name}
+                    initialCategory={c.category ?? null}
+                    initialNotes={c.notes ?? null}
+                    categorySuggestions={categoryOptions}
+                  />
                   <DeleteContactButton contactId={c.id} name={name} />
                 </div>
               </li>

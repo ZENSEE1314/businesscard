@@ -10,18 +10,21 @@ export async function GET(req: NextRequest) {
   return handle(async () => {
     await requireAdmin();
     const q = (new URL(req.url).searchParams.get("q") ?? "").trim();
-    if (q.length < 1) return ok({ results: [] });
 
+    // Empty query lists all members (newest first) so the admin sees everyone
+    // without having to search; a query filters by name / username / company.
     const profiles = await prisma.profile.findMany({
-      where: {
-        OR: [
-          { fullName: { contains: q, mode: "insensitive" } },
-          { username: { contains: q, mode: "insensitive" } },
-          { companyName: { contains: q, mode: "insensitive" } },
-        ],
-      },
-      take: 12,
-      orderBy: { fullName: "asc" },
+      where: q
+        ? {
+            OR: [
+              { fullName: { contains: q, mode: "insensitive" } },
+              { username: { contains: q, mode: "insensitive" } },
+              { companyName: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : undefined,
+      take: q ? 25 : 500,
+      orderBy: q ? { fullName: "asc" } : { createdAt: "desc" },
       select: {
         username: true,
         fullName: true,

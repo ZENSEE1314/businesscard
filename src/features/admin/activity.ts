@@ -6,7 +6,7 @@ import {
   type ActivityStatus,
 } from "@/lib/activity";
 import { getActivityThresholds } from "@/lib/settings";
-import { daysBetweenLocalDates, localDateKey } from "@/lib/time";
+import { addDaysToLocalDate, daysBetweenLocalDates, localDateKey } from "@/lib/time";
 
 // Admin-only user-activity reporting. Every caller must be behind the admin
 // layout guard AND these helpers are only imported by /admin pages/routes.
@@ -36,6 +36,7 @@ export interface ActivityRow {
   lastLoginAt: Date | null;
   totalLoginDays: number;
   loginStreak: number;
+  checkinStreak: number;
   points: number;
   contactCount: number;
   referralCount: number;
@@ -95,6 +96,25 @@ async function loadClassified(filters: ActivityFilters) {
   ]);
 
   const todayKey = localDateKey();
+
+  // Current daily check-in streak per user: the most recent check-in dated
+  // today or yesterday carries the live streak; anything older means it lapsed.
+  const yesterdayKey = addDaysToLocalDate(todayKey, -1);
+  const recentCheckins = await prisma.dailyCheckIn.findMany({
+    where: {
+      userId: { in: users.map((u) => u.id) },
+      localDate: { in: [todayKey, yesterdayKey] },
+    },
+    select: { userId: true, localDate: true, streakDay: true },
+    orderBy: { localDate: "desc" },
+  });
+  const checkinStreakByUser = new Map<string, number>();
+  for (const c of recentCheckins) {
+    if (checkinStreakByUser.has(c.userId)) continue; // keep the most recent
+    const gap = daysBetweenLocalDates(todayKey, c.localDate);
+    checkinStreakByUser.set(c.userId, gap <= 1 ? c.streakDay : 0);
+  }
+
   return users.map((u) => {
     const activityStatus = classifyActivityWithThresholds(
       {
@@ -118,6 +138,7 @@ async function loadClassified(filters: ActivityFilters) {
       lastLoginAt: u.lastLoginAt,
       totalLoginDays: u.totalLoginDays,
       loginStreak: u.loginStreak,
+      checkinStreak: checkinStreakByUser.get(u.id) ?? 0,
       points: u.points,
       contactCount: u._count.contactsOwned,
       referralCount: u._count.referrals,
@@ -258,6 +279,7 @@ const CSV_COLUMNS: { header: string; pick: (r: ActivityRow) => string | number }
   { header: "Days since login", pick: (r) => r.daysSinceLogin ?? "" },
   { header: "Total login days", pick: (r) => r.totalLoginDays },
   { header: "Login streak", pick: (r) => r.loginStreak },
+  { header: "Check-in streak", pick: (r) => r.checkinStreak },
   { header: "Activity status", pick: (r) => r.activityStatus },
   { header: "Points", pick: (r) => r.points },
   { header: "Contacts", pick: (r) => r.contactCount },

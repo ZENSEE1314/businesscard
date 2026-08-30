@@ -13,6 +13,7 @@ import {
 import { ButtonLink } from "@/components/ui";
 import { Logo } from "@/components/logo";
 import { InstallButton } from "@/components/install-button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { env } from "@/lib/env";
 
@@ -56,6 +57,7 @@ export default async function LandingPage() {
             {appName}
           </Link>
           <nav className="flex items-center gap-2">
+            <ThemeToggle className="mr-1" />
             <ButtonLink href="/login" variant="ghost" size="sm">
               Log in
             </ButtonLink>
@@ -73,9 +75,9 @@ export default async function LandingPage() {
             <Share2 className="h-3.5 w-3.5" /> Your business, one tap away
           </span>
           <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
-            Connect. Discover.{" "}
+            Your next opportunity could be{" "}
             <span className="bg-gradient-to-r from-brand-600 to-accent bg-clip-text text-transparent">
-              Grow.
+              one connection away
             </span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted">

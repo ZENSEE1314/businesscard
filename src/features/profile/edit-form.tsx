@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Upload, Loader2, ImagePlus, Video, X, Sparkles } from "lucide-react";
 import { Button, ButtonLink, Card, Input, Label, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/client";
+import { AiWriteButton } from "@/components/ai-write-button";
 
 type Dict = Record<string, unknown>;
 
@@ -283,6 +284,8 @@ export function ProfileEditForm({
     jobTitle: (profile.jobTitle as string) ?? "",
     companyName: (profile.companyName as string) ?? "",
     bio: (profile.bio as string) ?? "",
+    whoIAm: (profile.whoIAm as string) ?? "",
+    whatICanOffer: (profile.whatICanOffer as string) ?? "",
     phone: (profile.phone as string) ?? "",
     whatsapp: (profile.whatsapp as string) ?? "",
     email: (profile.email as string) ?? "",
@@ -389,6 +392,19 @@ export function ProfileEditForm({
     p.set("canHelp", res.data.canHelp);
     p.set("lookingFor", res.data.lookingFor);
     setAiConfirm(false);
+  }
+
+  // Facts the AI may use when writing profile text — never invented content.
+  function aiContext() {
+    return {
+      fullName: p.state.fullName,
+      jobTitle: p.state.jobTitle,
+      company: p.state.companyName,
+      businessDescription: [p.state.headline, p.state.bio]
+        .filter(Boolean)
+        .join(". "),
+      expertise: p.state.canHelp,
+    };
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -556,7 +572,54 @@ export function ProfileEditForm({
         </div>
 
         <div>
-          <Label>Bio</Label>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Label>What I do</Label>
+            <AiWriteButton
+              field="whoIAm"
+              language={aiLang}
+              getDraft={() => p.state.whoIAm}
+              getContext={aiContext}
+              onResult={(t) => p.set("whoIAm", t)}
+            />
+          </div>
+          <Textarea
+            rows={3}
+            value={p.state.whoIAm}
+            onChange={(e) => p.set("whoIAm", e.target.value)}
+            placeholder="A sentence or two about what you do."
+          />
+        </div>
+
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Label>What I provide</Label>
+            <AiWriteButton
+              field="whatICanOffer"
+              language={aiLang}
+              getDraft={() => p.state.whatICanOffer}
+              getContext={aiContext}
+              onResult={(t) => p.set("whatICanOffer", t)}
+            />
+          </div>
+          <Textarea
+            rows={3}
+            value={p.state.whatICanOffer}
+            onChange={(e) => p.set("whatICanOffer", e.target.value)}
+            placeholder="The products, services or help you can offer."
+          />
+        </div>
+
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Label>Bio</Label>
+            <AiWriteButton
+              field="bio"
+              language={aiLang}
+              getDraft={() => p.state.bio}
+              getContext={aiContext}
+              onResult={(t) => p.set("bio", t)}
+            />
+          </div>
           <Textarea rows={3} value={p.state.bio} onChange={(e) => p.set("bio", e.target.value)} />
         </div>
       </Card>

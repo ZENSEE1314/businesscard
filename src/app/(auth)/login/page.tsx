@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
@@ -15,6 +15,22 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const REMEMBER_KEY = "remembered-email";
+
+  // Prefill the email on this device when the user chose to be remembered. The
+  // browser's password manager fills the password (see credential store below).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(REMEMBER_KEY);
+      if (saved) {
+        setEmail(saved);
+        setRememberMe(true);
+      }
+    } catch {
+      /* storage unavailable */
+    }
+  }, []);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -28,7 +44,30 @@ export default function LoginPage() {
       setError(res.error ?? "Login failed.");
       return;
     }
-    router.push("/hub");
+
+    // Remember (or forget) the credentials on this device.
+    try {
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_KEY, email);
+        // Ask the browser to store the password securely (Credential Mgmt API).
+        const w = window as unknown as {
+          PasswordCredential?: new (data: {
+            id: string;
+            password: string;
+          }) => Credential;
+        };
+        if (w.PasswordCredential && navigator.credentials?.store) {
+          const cred = new w.PasswordCredential({ id: email, password });
+          await navigator.credentials.store(cred).catch(() => undefined);
+        }
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
+    } catch {
+      /* best-effort; never block login */
+    }
+
+    router.push("/dashboard");
     router.refresh();
   }
 

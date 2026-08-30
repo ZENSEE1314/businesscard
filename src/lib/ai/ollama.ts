@@ -317,20 +317,180 @@ export async function generateProfileContent(
   return parsed.data;
 }
 
-/** Dispatches to OpenAI-compatible API if a key is set, else Ollama. */
-async function runAiChat(messages: ChatMessage[]): Promise<string> {
+/**
+ * Dispatches to the preferred provider with graceful fallback to the other.
+ *
+ * Provider preference (AI_PROVIDER env): "ollama" or "openai". When unset it
+ * defaults to Ollama if OLLAMA_BASE_URL is configured (self-hosted primary),
+ * else OpenAI. If the primary provider fails and the other is configured, the
+ * request is retried on the fallback so a cold/edge Ollama never takes the
+ * feature down.
+ */
+async function runAiChat(
+  messages: ChatMessage[],
+  jsonMode = true,
+): Promise<string> {
   const openai = getOpenAIConfig();
-  if (openai) return openaiChat(openai, messages);
+  const ollama = getOllamaConfig();
 
-  const config = getOllamaConfig();
-  if (!config) {
-    throw new OllamaError(
-      503,
-      "AI generation is not configured yet. Ask the administrator to set OLLAMA_BASE_URL (or OPENAI_API_KEY for the built-in provider).",
-      "not_configured",
+  const pref = process.env.AI_PROVIDER?.trim().toLowerCase();
+  const preferOllama = pref === "ollama" || (!pref && ollama !== null);
+
+  const order: ("ollama" | "openai")[] = preferOllama
+    ? ["ollama", "openai"]
+    : ["openai", "ollama"];
+
+  let lastError: unknown = null;
+  for (const provider of order) {
+    if (provider === "ollama" && ollama) {
+      try {
+        return await ollamaChat(ollama, messages, jsonMode);
+      } catch (err) {
+        lastError = err;
+      }
+    } else if (provider === "openai" && openai) {
+      try {
+        return await openaiChat(openai, messages);
+      } catch (err) {
+        lastError = err;
+      }
+    }
+  }
+
+  if (lastError) throw lastError;
+  throw new OllamaError(
+    503,
+    "AI generation is not configured yet. Ask the administrator to set OLLAMA_BASE_URL (or OPENAI_API_KEY for the built-in provider).",
+    "not_configured",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Free-text helpers: write a single profile field, rewrite, or translate.
+// These return plain text (not JSON) and are used by /api/ai/text and
+// /api/ai/translate. Output is always length-capped by the caller.
+// ---------------------------------------------------------------------------
+
+/** A single public chat entrypoint returning trimmed plain text. */
+export async function aiCompleteText(
+  systemPrompt: string,
+  userPrompt: string,
+): Promise<string> {
+  const raw = await runAiChat(
+    [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    false,
+  );
+  // Strip stray code fences / surrounding quotes some models add.
+  return raw
+    .trim()
+    .replace(/^```(?:\w+)?\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .replace(/^["'“”]+|["'“”]+$/g, "")
+    .trim();
+}
+
+const LANG_NAME: Record<string, string> = {
+  en: "English",
+  id: "Bahasa Indonesia",
+  zh: "Simplified Chinese",
+  ms: "Malay",
+  ta: "Tamil",
+  ja: "Japanese",
+  ko: "Korean",
+  es: "Spanish",
+  fr: "French",
+  ar: "Arabic",
+  hi: "Hindi",
+};
+
+export function languageName(code: string): string {
+  return LANG_NAME[code] ?? code;
+}
+
+/**
+ * Translates text into the target language. Returns the input unchanged if the
+ * model judges it is already in the target language.
+ */
+export async function translateText(
+  text: string,
+  targetLang: string,
+): Promise<string> {
+  const target = languageName(targetLang);
+  const system = [
+    "You are a professional translator.",
+    `Translate the user's text into ${target}.`,
+    "Preserve meaning, tone, names, @mentions, #hashtags, URLs and emojis.",
+    "If the text is already in the target language, return it unchanged.",
+    "Return ONLY the translated text — no quotes, no notes, no explanations.",
+  ].join(" ");
+  return aiCompleteText(system, text);
+}
+
+export type WriteField =
+  | "bio"
+  | "whoIAm"
+  | "whatICanOffer"
+  | "whoIWantToFind"
+  | "headline";
+
+const FIELD_GUIDANCE: Record<WriteField, string> = {
+  bio: "a short professional bio, 2-4 sentences, first person",
+  whoIAm: "a concise 'what I do' summary, 1-3 sentences, first person",
+  whatICanOffer:
+    "a concise 'what I can offer / what I provide' summary, 1-3 sentences, first person",
+  whoIWantToFind:
+    "a concise 'who I want to find / what I'm looking for' summary, 1-3 sentences, first person",
+  headline: "a single punchy headline sentence, max 120 characters, no period",
+};
+
+/**
+ * Writes (or improves an existing draft of) one profile field from the user's
+ * own supplied facts. Never fabricates specifics.
+ */
+export async function generateProfileField(opts: {
+  field: WriteField;
+  draft?: string;
+  context?: ProfileInput;
+  language?: string;
+}): Promise<string> {
+  const lang = languageName(opts.language ?? "en");
+  const system = [
+    "You write accurate, professional business-networking profile text.",
+    "Use ONLY facts the user supplies. NEVER invent awards, revenue, customers, funding, certifications, partnerships or achievements.",
+    `Write ${FIELD_GUIDANCE[opts.field]}.`,
+    `Write in ${lang}. Return ONLY the text — no headings, no quotes, no notes.`,
+  ].join(" ");
+  const parts: string[] = [];
+  if (opts.context && Object.keys(opts.context).length > 0) {
+    parts.push("Facts (JSON): " + JSON.stringify(opts.context));
+  }
+  if (opts.draft?.trim()) {
+    parts.push(
+      "Improve and polish this draft, keeping the user's meaning:\n" +
+        opts.draft.trim(),
     );
   }
-  return ollamaChat(config, messages, true);
+  const user = parts.join("\n\n") || "Write it from the facts provided.";
+  return aiCompleteText(system, user);
+}
+
+/** Rewrites arbitrary user text more clearly without adding new facts. */
+export async function rewriteText(opts: {
+  text: string;
+  tone?: string;
+  language?: string;
+}): Promise<string> {
+  const lang = languageName(opts.language ?? "en");
+  const tone = opts.tone?.trim() || "clear, professional and concise";
+  const system = [
+    "You improve the user's text: fix grammar and flow while keeping the original meaning and all facts.",
+    "NEVER add new facts, claims or details that are not in the input.",
+    `Make it ${tone}. Write in ${lang}. Return ONLY the improved text — no quotes, no notes.`,
+  ].join(" ");
+  return aiCompleteText(system, opts.text);
 }
 
 /** Lightweight reachability probe for admin status display (provider-aware). */

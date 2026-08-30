@@ -13,6 +13,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getDashboardData, greetingForHour } from "@/features/dashboard/queries";
 import { CheckInCard } from "@/components/checkin-card";
+import { FollowUpButton } from "@/components/follow-up-button";
 import { Card } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -103,7 +104,7 @@ export default async function DashboardPage() {
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatTile label="Points" value={data.points} href="/rewards" />
           <StatTile label="Contacts" value={data.contactCount} href="/contacts" />
-          <StatTile label="Login streak" value={`${data.loginStreak}d`} />
+          <StatTile label="Check-in streak" value={`${data.checkin.streak}d`} />
           <StatTile label="New messages" value={data.unreadMessages} href="/chat" />
         </div>
 
@@ -163,18 +164,24 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      {/* Suggested matches */}
+      {/* Recommended for what you're looking for */}
       <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
-          Suggested business matches
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted">
+          Recommended for what you’re looking for
         </h2>
+        <p className="mb-2 text-xs text-muted">
+          Members who can help with the things you set under “I’m looking for”.
+        </p>
         {data.suggestedMatches.length === 0 ? (
           <Card className="p-5 text-sm text-muted">
-            No suggestions yet — add a few items under “I can help” and “I’m
-            looking for” in your profile and we’ll find your best matches.
+            No recommendations yet — add a few items under “I’m looking for” in{" "}
+            <Link href="/me/edit" className="font-medium text-primary">
+              your profile
+            </Link>{" "}
+            and we’ll match you with members who can help.
           </Card>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {data.suggestedMatches.map((m) => (
               <Link key={m.userId} href={`/u/${m.username}`}>
                 <Card className="p-4 transition-opacity hover:opacity-85">
@@ -195,9 +202,28 @@ export default async function DashboardPage() {
                       </p>
                     </div>
                   </div>
-                  <p className="mt-2 text-xs font-medium text-brand-700">
-                    {m.sharedInterests} shared interest{m.sharedInterests === 1 ? "" : "s"}
-                  </p>
+                  {m.matchedLookingFor.length > 0 ? (
+                    <div className="mt-2.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                        Can help with
+                      </p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {m.matchedLookingFor.slice(0, 4).map((t) => (
+                          <span
+                            key={t}
+                            className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700"
+                          >
+                            ✓ {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs font-medium text-brand-700">
+                      {m.sharedInterests} shared interest
+                      {m.sharedInterests === 1 ? "" : "s"}
+                    </p>
+                  )}
                 </Card>
               </Link>
             ))}
@@ -265,17 +291,32 @@ export default async function DashboardPage() {
           <h3 className="flex items-center gap-2 text-sm font-semibold">
             <BellRing className="h-4 w-4 text-amber-500" /> Follow-ups due
           </h3>
-          {data.pendingFollowUps > 0 ? (
-            <p className="mt-2 text-sm text-muted">
-              You have{" "}
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
-                {data.pendingFollowUps}
-              </span>{" "}
-              connection{data.pendingFollowUps === 1 ? "" : "s"} waiting for a
-              follow-up message.
-            </p>
-          ) : (
+          {data.followUps.length === 0 ? (
             <p className="mt-2 text-sm text-muted">You’re all caught up. 🎉</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {data.followUps.map((f) => (
+                <li key={f.contactId} className="flex items-center gap-3">
+                  {f.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={f.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                  ) : (
+                    <div className="grid h-9 w-9 place-items-center rounded-full bg-brand-50 text-xs font-bold text-brand-700">
+                      {initials(f.name)}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <Link href={`/u/${f.username}`} className="truncate text-sm font-medium hover:text-primary">
+                      {f.name}
+                    </Link>
+                    <p className="text-xs text-amber-700">
+                      Waiting {f.daysWaiting} day{f.daysWaiting === 1 ? "" : "s"} for a follow-up
+                    </p>
+                  </div>
+                  <FollowUpButton contactId={f.contactId} username={f.username} />
+                </li>
+              ))}
+            </ul>
           )}
         </Card>
       </section>
@@ -289,6 +330,34 @@ export default async function DashboardPage() {
               ? "Share your card to invite your first referral and earn +100 points."
               : `${data.referralCount} member${data.referralCount === 1 ? "" : "s"} joined through your link or card.`}
           </p>
+          {data.referredUsers.length > 0 && (
+            <ul className="mt-3 space-y-2">
+              {data.referredUsers.map((u) => (
+                <li key={u.id}>
+                  <Link
+                    href={`/u/${u.username}`}
+                    className="flex items-center gap-3 rounded-xl border border-border bg-surface p-2.5 hover:bg-surface-2"
+                  >
+                    {u.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={u.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                    ) : (
+                      <div className="grid h-9 w-9 place-items-center rounded-full bg-brand-50 text-xs font-bold text-brand-700">
+                        {initials(u.name)}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{u.name}</p>
+                      <p className="truncate text-xs text-muted">{u.companyName ?? "Bridge Member"}</p>
+                    </div>
+                    <span className="text-xs text-muted">
+                      {new Intl.DateTimeFormat("en", { day: "numeric", month: "short" }).format(u.joinedAt)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
           <Link
             href="/referrals"
             className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-semibold text-primary transition-colors hover:bg-surface-2"

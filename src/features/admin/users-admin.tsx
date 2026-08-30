@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Pencil, Trash2 } from "lucide-react";
 import { Button, Card, Input, Label } from "@/components/ui";
@@ -30,17 +30,28 @@ export function UsersAdmin() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
-  async function search(e: React.FormEvent) {
-    e.preventDefault();
+  const load = useCallback(async (query: string) => {
     setMsg(null);
-    const res = await apiFetch<{ results: SearchRow[] }>(`/api/admin/users/search?q=${encodeURIComponent(q)}`);
+    const res = await apiFetch<{ results: SearchRow[] }>(
+      `/api/admin/users/search?q=${encodeURIComponent(query)}`,
+    );
     if (res.ok) {
       setResults(res.data?.results ?? []);
       setSearched(true);
     } else {
       setResults([]);
-      setMsg(res.error ?? "Search failed.");
+      setMsg(res.error ?? "Could not load users.");
     }
+  }, []);
+
+  // Show every member on load — no need to search first.
+  useEffect(() => {
+    load("");
+  }, [load]);
+
+  async function search(e: React.FormEvent) {
+    e.preventDefault();
+    await load(q);
   }
 
   async function open(userId: string) {
@@ -104,14 +115,21 @@ export function UsersAdmin() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search by name, username or company…"
+          placeholder="Filter by name, username or company… (empty = all)"
           className="h-11 w-full bg-transparent text-sm outline-none"
         />
+        {q && (
+          <Button type="button" size="sm" variant="outline" onClick={() => { setQ(""); load(""); }}>
+            Clear
+          </Button>
+        )}
         <Button type="submit" size="sm">Search</Button>
       </form>
       {msg && <p className="text-sm text-red-600">{msg}</p>}
 
       {searched && (
+        <>
+        <p className="text-xs text-muted">{results.length} member{results.length === 1 ? "" : "s"}</p>
         <ul className="space-y-2">
           {results.length === 0 && (
             <Card className="p-6 text-center text-sm text-muted">No users found.</Card>
@@ -134,6 +152,7 @@ export function UsersAdmin() {
             </li>
           ))}
         </ul>
+        </>
       )}
 
       {detail && (

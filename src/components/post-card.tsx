@@ -3,6 +3,7 @@ import { BadgeCheck } from "lucide-react";
 import { Card } from "@/components/ui";
 import { timeAgo, whatsappNumber, absoluteUrl } from "@/lib/utils";
 import { PostActions } from "@/features/feed/post-actions";
+import { TranslateButton } from "@/components/translate-button";
 import type { FeedPost } from "@/features/feed/queries";
 
 export function PostCard({ post }: { post: FeedPost }) {
@@ -107,6 +108,9 @@ export function PostCard({ post }: { post: FeedPost }) {
           )}
           {post.body}
         </p>
+        {post.body?.trim() && (
+          <TranslateButton text={post.body} className="mt-1" />
+        )}
         {post.commentCount > 0 && (
           <Link href={`/post/${post.id}`} className="mt-1 block text-sm text-muted">
             View all {post.commentCount} comments

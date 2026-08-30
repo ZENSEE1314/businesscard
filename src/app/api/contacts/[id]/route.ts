@@ -8,7 +8,10 @@ import { handle, ok, Errors, ApiError } from "@/lib/api";
 export const dynamic = "force-dynamic";
 
 const patchSchema = z.object({
-  notes: z.string().max(2000).nullable(),
+  notes: z.string().max(2000).nullable().optional(),
+  category: z.string().trim().max(60).nullable().optional(),
+  // true = mark followed up (clears the reminder); false = needs follow-up again.
+  followedUp: z.boolean().optional(),
 });
 
 type Params = { params: Promise<{ id: string }> };
@@ -31,10 +34,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       throw Errors.notFound("Contact not found in your list.");
     }
 
-    const updated = await prisma.contact.update({
-      where: { id },
-      data: { notes: input.notes },
-    });
+    const data: {
+      notes?: string | null;
+      category?: string | null;
+      followedUpAt?: Date | null;
+    } = {};
+    if (input.notes !== undefined) data.notes = input.notes;
+    if (input.category !== undefined) {
+      data.category = input.category ? input.category : null;
+    }
+    if (input.followedUp !== undefined) {
+      data.followedUpAt = input.followedUp ? new Date() : null;
+    }
+
+    const updated = await prisma.contact.update({ where: { id }, data });
     return ok(updated);
   });
 }
