@@ -10,6 +10,8 @@ import {
 } from "@/lib/chat";
 import { ChatAvatar } from "@/features/chat/chat-avatar";
 import { ChatThread } from "@/features/chat/chat-thread";
+import { NeedFollowUpButton } from "@/components/need-followup-button";
+import { prisma } from "@/lib/db/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +37,14 @@ export default async function ChatThreadPage({
     throw err;
   }
 
+  // If the partner is a saved contact, allow re-flagging them for follow-up.
+  const contact = partner
+    ? await prisma.contact.findFirst({
+        where: { ownerUserId: user.id, contactUserId: partner.id },
+        select: { id: true, followedUpAt: true },
+      })
+    : null;
+
   return (
     <div className="mx-auto w-full max-w-2xl sm:px-4">
       {/* Thread header — sticks right under the app header */}
@@ -55,6 +65,12 @@ export default async function ChatThreadPage({
           )}
         </div>
         {partner && <ChatAvatar name={partner.name} url={partner.avatarUrl} size={36} />}
+        {contact && (
+          <NeedFollowUpButton
+            contactId={contact.id}
+            alreadyFlagged={!contact.followedUpAt}
+          />
+        )}
         {partner?.username && (
           <Link
             href={`/u/${partner.username}`}
