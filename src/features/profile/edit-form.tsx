@@ -480,7 +480,7 @@ export function ProfileEditForm({
 
         <div>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Label>What I do</Label>
+            <Label>What do I do</Label>
             <AiWriteButton
               field="whoIAm"
               language={aiLang}
@@ -499,7 +499,7 @@ export function ProfileEditForm({
 
         <div>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Label>What I provide</Label>
+            <Label>What I can help with</Label>
             <AiWriteButton
               field="whatICanOffer"
               language={aiLang}

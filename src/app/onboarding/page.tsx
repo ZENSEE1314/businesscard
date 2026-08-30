@@ -3,6 +3,7 @@ import { PartyPopper } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { Card, ButtonLink } from "@/components/ui";
 import { WhatsAppCommunityButton } from "@/components/whatsapp-community-button";
+import { getLocale, tt } from "@/lib/i18n/server";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function OnboardingPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  const locale = await getLocale();
 
   return (
     <main className="flex min-h-dvh items-center justify-center px-4 aurora">
@@ -17,25 +19,23 @@ export default async function OnboardingPage() {
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand-50 text-brand-600">
           <PartyPopper className="h-7 w-7" />
         </div>
-        <h1 className="mt-4 text-2xl font-bold">Welcome to {env.appName}!</h1>
-        <p className="mt-2 text-muted">
-          Your account is ready and your digital name card is live. Complete
-          your profile to earn <strong>+100 points</strong> and make a great
-          first impression.
-        </p>
+        <h1 className="mt-4 text-2xl font-bold">
+          {tt(locale, "onboard.welcome", { app: env.appName })}
+        </h1>
+        <p className="mt-2 text-muted">{tt(locale, "onboard.subtitle")}</p>
         <div className="mt-6 flex flex-col gap-2">
           <ButtonLink href="/me/edit" size="lg">
-            Create my name card
+            {tt(locale, "onboard.createCard")}
           </ButtonLink>
           <ButtonLink href="/hub" variant="ghost" size="lg">
-            Skip for now &mdash; go to home
+            {tt(locale, "onboard.skip")}
           </ButtonLink>
         </div>
         <div className="mt-4 border-t border-border pt-4">
           <p className="mb-2 text-sm text-muted">
-            Connect with other members and never miss an update.
+            {tt(locale, "onboard.communityHint")}
           </p>
-          <WhatsAppCommunityButton />
+          <WhatsAppCommunityButton label={tt(locale, "community.join")} />
         </div>
       </Card>
     </main>

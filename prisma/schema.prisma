@@ -241,6 +241,9 @@ model User {
   reportsMade     Report[] @relation("Reporter")
   reportsAbout    Report[] @relation("ReportedUser")
 
+  reviewsWritten  Review[] @relation("ReviewAuthor")
+  reviewsReceived Review[] @relation("ReviewSubject")
+
   blocksInitiated Block[] @relation("Blocker")
   blocksReceived  Block[] @relation("Blocked")
 
@@ -874,6 +877,23 @@ model AnalyticsEvent {
 
   @@index([userId, type, createdAt])
   @@index([targetId, type])
+}
+
+// "Who I have helped" — a member leaves a star rating + comment for someone
+// they've worked with. One review per author per subject (editable).
+model Review {
+  id        String   @id @default(uuid())
+  authorId  String
+  author    User     @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   User     @relation("ReviewSubject", fields: [subjectId], references: [id], onDelete: Cascade)
+  rating    Int // 1-5
+  comment   String?  @db.VarChar(1000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([authorId, subjectId])
+  @@index([subjectId, createdAt])
 }
 
 model AdminLog {

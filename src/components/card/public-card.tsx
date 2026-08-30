@@ -4,10 +4,12 @@ import { qrSvg } from "@/lib/qr";
 import { absoluteUrl } from "@/lib/utils";
 import { cardLinks, type CardView, type MediaItem } from "@/features/cards/queries";
 import type { PublicConnection } from "@/features/cards/connections";
+import { Star } from "lucide-react";
 import { ContactActions, ShareButton } from "@/components/card/card-actions";
 import { NfcButton } from "@/components/card/nfc-button";
 import { InstallButton } from "@/components/install-button";
 import { WhatsAppCommunityButton } from "@/components/whatsapp-community-button";
+import { ReviewForm } from "@/components/card/review-form";
 
 function socialUrl(platform: string, value: string): string {
   const v = value.trim().replace(/^@/, "");
@@ -38,6 +40,19 @@ const socialLabel: Record<string, string> = {
   telegram: "TG",
   twitter: "X",
 };
+
+function Stars({ value, className = "" }: { value: number; className?: string }) {
+  return (
+    <span className={`inline-flex items-center gap-0.5 ${className}`} aria-label={`${value} out of 5`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          className={`h-4 w-4 ${n <= Math.round(value) ? "fill-amber-400 text-amber-400" : "text-muted-2"}`}
+        />
+      ))}
+    </span>
+  );
+}
 
 function MediaSection({ title, items }: { title: string; items: MediaItem[] }) {
   if (items.length === 0) return null;
@@ -273,7 +288,7 @@ export async function PublicCard({
           {card.whoIAm && (
             <div className="mt-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                What I do
+                What do I do
               </p>
               <p className="mt-1 text-sm leading-relaxed">{card.whoIAm}</p>
             </div>
@@ -282,7 +297,7 @@ export async function PublicCard({
           {card.whatICanOffer && (
             <div className="mt-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                What I provide
+                What I can help with
               </p>
               <p className="mt-1 text-sm leading-relaxed">{card.whatICanOffer}</p>
             </div>
@@ -395,6 +410,51 @@ export async function PublicCard({
               </>
             );
           })()}
+
+          {/* Who I have helped — reviews */}
+          <div className="mt-5 border-t border-border pt-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Who I have helped</h3>
+              {card.reviewSummary.count > 0 && (
+                <span className="inline-flex items-center gap-1.5 text-xs text-muted">
+                  <Stars value={card.reviewSummary.average} />
+                  {card.reviewSummary.average} · {card.reviewSummary.count} review
+                  {card.reviewSummary.count === 1 ? "" : "s"}
+                </span>
+              )}
+            </div>
+
+            {card.reviews.length === 0 ? (
+              <p className="mt-2 text-sm text-muted">No reviews yet.</p>
+            ) : (
+              <ul className="mt-3 space-y-3">
+                {card.reviews.map((r) => (
+                  <li key={r.id} className="flex gap-3">
+                    {r.authorAvatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={r.authorAvatarUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+                    ) : (
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-xs font-bold text-brand-700">
+                        {r.authorName.charAt(0)}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium">{r.authorName}</span>
+                        <Stars value={r.rating} />
+                      </div>
+                      {r.comment && (
+                        <p className="mt-0.5 text-sm text-muted">{r.comment}</p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Signed-in, non-owner viewers can leave a review. */}
+            {!isGuest && !isOwner && <ReviewForm subjectUserId={card.userId} />}
+          </div>
 
           {/* QR */}
           <div className="mt-6 flex flex-col items-center border-t border-border pt-5">

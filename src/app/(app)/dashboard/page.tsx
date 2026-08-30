@@ -99,10 +99,9 @@ export default async function DashboardPage() {
             </h1>
             <p className="truncate text-sm text-muted">
               {data.companyName ? `${data.companyName} · ` : ""}
-              Member for{" "}
               {data.memberDays === 0
-                ? "today"
-                : `${data.memberDays} day${data.memberDays === 1 ? "" : "s"}`}
+                ? tt(locale, "dash.memberForToday")
+                : tt(locale, "dash.memberForDays", { n: data.memberDays })}
             </p>
           </div>
         </div>
@@ -118,13 +117,13 @@ export default async function DashboardPage() {
           <li>
             {data.checkin.checkedInToday ? (
               <span className="font-medium text-green-700">
-                ✓ Checked in today (+{data.checkin.todayPoints} pts)
+                {tt(locale, "dash.checkedInToday", { n: data.checkin.todayPoints ?? 0 })}
               </span>
             ) : (
-              "Daily check-in pending"
+              tt(locale, "dash.checkinPending")
             )}
           </li>
-          <li>{data.totalLoginDays} total login days as a BridgeX member</li>
+          <li>{tt(locale, "dash.totalLoginDays", { n: data.totalLoginDays })}</li>
         </ul>
       </section>
 
@@ -143,7 +142,7 @@ export default async function DashboardPage() {
               className="flex flex-col items-center gap-2 rounded-xl border border-border bg-surface p-4 text-sm font-medium hover:bg-surface-2"
             >
               <Share2 className="h-5 w-5 text-brand-600" />
-              My name card
+              {tt(locale, "dash.myNameCard")}
             </Link>
           )}
           <Link
@@ -151,21 +150,21 @@ export default async function DashboardPage() {
             className="flex flex-col items-center gap-2 rounded-xl border border-border bg-surface p-4 text-sm font-medium hover:bg-surface-2"
           >
             <Sparkles className="h-5 w-5 text-brand-600" />
-            Business Hub
+            {tt(locale, "dash.businessHub")}
           </Link>
           <Link
             href="/chat"
             className="flex flex-col items-center gap-2 rounded-xl border border-border bg-surface p-4 text-sm font-medium hover:bg-surface-2"
           >
             <MessageSquare className="h-5 w-5 text-brand-600" />
-            Messages
+            {tt(locale, "dash.messages")}
           </Link>
           <Link
             href="/rewards"
             className="flex flex-col items-center gap-2 rounded-xl border border-border bg-surface p-4 text-sm font-medium hover:bg-surface-2"
           >
             <Users className="h-5 w-5 text-brand-600" />
-            Rewards
+            {tt(locale, "dash.rewards")}
           </Link>
         </div>
       </section>
@@ -176,15 +175,11 @@ export default async function DashboardPage() {
           {tt(locale, "dash.recommended")}
         </h2>
         <p className="mb-2 text-xs text-muted">
-          Members who can help with the things you set under “I’m looking for”.
+          {tt(locale, "dash.recommendedHint")}
         </p>
         {data.suggestedMatches.length === 0 ? (
           <Card className="p-5 text-sm text-muted">
-            No recommendations yet — add a few items under “I’m looking for” in{" "}
-            <Link href="/me/edit" className="font-medium text-primary">
-              your profile
-            </Link>{" "}
-            and we’ll match you with members who can help.
+            {tt(locale, "dash.noRecommendations")}
           </Card>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -211,7 +206,7 @@ export default async function DashboardPage() {
                   {m.matchedLookingFor.length > 0 ? (
                     <div className="mt-2.5">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-                        Can help with
+                        {tt(locale, "dash.canHelpWith")}
                       </p>
                       <div className="mt-1 flex flex-wrap gap-1">
                         {m.matchedLookingFor.slice(0, 4).map((t) => (
@@ -226,8 +221,7 @@ export default async function DashboardPage() {
                     </div>
                   ) : (
                     <p className="mt-2 text-xs font-medium text-brand-700">
-                      {m.sharedInterests} shared interest
-                      {m.sharedInterests === 1 ? "" : "s"}
+                      {tt(locale, "dash.sharedInterests", { n: m.sharedInterests })}
                     </p>
                   )}
                 </Card>
@@ -244,13 +238,12 @@ export default async function DashboardPage() {
             {tt(locale, "dash.recentConnections")}
           </h2>
           <Link href="/contacts" className="text-xs font-medium text-primary">
-            View all <ArrowRight className="inline h-3 w-3" />
+            {tt(locale, "dash.viewAll")} <ArrowRight className="inline h-3 w-3" />
           </Link>
         </div>
         {data.recentConnections.length === 0 ? (
           <Card className="p-5 text-sm text-muted">
-            No contacts yet. Open someone’s digital card and tap “Save contact”
-            to start building your network.
+            {tt(locale, "dash.noContactsYet")}
           </Card>
         ) : (
           <div className="space-y-2">
@@ -290,7 +283,7 @@ export default async function DashboardPage() {
             <CalendarDays className="h-4 w-4 text-brand-600" /> {tt(locale, "dash.upcomingEvents")}
           </h3>
           <p className="mt-2 text-sm text-muted">
-            Event announcements will appear here as they are scheduled.
+            {tt(locale, "dash.eventsHint")}
           </p>
         </Card>
         <Card className="p-5">
@@ -298,7 +291,7 @@ export default async function DashboardPage() {
             <BellRing className="h-4 w-4 text-amber-500" /> {tt(locale, "dash.followUps")}
           </h3>
           {data.followUps.length === 0 ? (
-            <p className="mt-2 text-sm text-muted">You’re all caught up. 🎉</p>
+            <p className="mt-2 text-sm text-muted">{tt(locale, "dash.allCaughtUp")}</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {data.followUps.map((f) => (
@@ -316,7 +309,7 @@ export default async function DashboardPage() {
                       {f.name}
                     </Link>
                     <p className="text-xs text-amber-700">
-                      Waiting {f.daysWaiting} day{f.daysWaiting === 1 ? "" : "s"} for a follow-up
+                      {tt(locale, "dash.waitingDays", { n: f.daysWaiting })}
                     </p>
                   </div>
                   <FollowUpButton contactId={f.contactId} username={f.username} />
@@ -333,8 +326,8 @@ export default async function DashboardPage() {
           <h3 className="text-sm font-semibold">{tt(locale, "dash.networkGrowth")}</h3>
           <p className="mt-2 text-sm text-muted">
             {data.referralCount === 0
-              ? "Share your card to invite your first referral and earn +100 points."
-              : `${data.referralCount} member${data.referralCount === 1 ? "" : "s"} joined through your link or card.`}
+              ? tt(locale, "dash.growthZero")
+              : tt(locale, "dash.growthCount", { n: data.referralCount })}
           </p>
           {data.referredUsers.length > 0 && (
             <ul className="mt-3 space-y-2">
@@ -368,7 +361,7 @@ export default async function DashboardPage() {
             href="/referrals"
             className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-semibold text-primary transition-colors hover:bg-surface-2"
           >
-            Refer &amp; earn <ArrowRight className="h-3.5 w-3.5" />
+            {tt(locale, "dash.referAndEarn")} <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </Card>
       </section>

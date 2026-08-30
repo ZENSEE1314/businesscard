@@ -9,8 +9,16 @@ export async function getLocale(): Promise<Locale> {
   return normalizeLocale(store.get(LOCALE_COOKIE)?.value);
 }
 
-/** Translate a key for a known locale (server components). */
-export function tt(locale: Locale, key: string): string {
+/** Translate a key for a known locale (server components; supports {params}). */
+export function tt(
+  locale: Locale,
+  key: string,
+  params?: Record<string, string | number>,
+): string {
   const entry = dict[key];
-  return entry ? (entry[locale] ?? entry.en) : key;
+  const s = entry ? (entry[locale] ?? entry.en) : key;
+  if (!params) return s;
+  return s.replace(/\{(\w+)\}/g, (_, k) =>
+    k in params ? String(params[k]) : `{${k}}`,
+  );
 }

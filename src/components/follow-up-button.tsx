@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MessageCircle, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/client";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Marks a contact as followed up (clears the dashboard reminder) and opens the
@@ -17,6 +18,7 @@ export function FollowUpButton({
   username: string;
 }) {
   const router = useRouter();
+  const t = useT();
   const [busy, setBusy] = useState(false);
 
   async function followUp() {
@@ -36,7 +38,7 @@ export function FollowUpButton({
       className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-fg disabled:opacity-60"
     >
       {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
-      Follow up
+      {t("dash.followUp")}
     </button>
   );
 }

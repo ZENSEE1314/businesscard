@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Flame, Gift, CheckCircle2, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/client";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 interface CheckinStatus {
   enabled: boolean;
@@ -28,6 +29,7 @@ interface ClaimResponse {
 
 export function CheckInCard({ initial }: { initial: CheckinStatus }) {
   const router = useRouter();
+  const t = useT();
   const [status, setStatus] = useState(initial);
   const [justClaimed, setJustClaimed] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,12 +60,12 @@ export function CheckInCard({ initial }: { initial: CheckinStatus }) {
         <div>
           <h2 className="flex items-center gap-2 font-semibold">
             <Gift className="h-5 w-5 text-brand-600" />
-            Daily check-in
+            {t("checkin.title")}
           </h2>
           <p className="mt-1 text-sm text-muted">
             {status.checkedInToday
-              ? `You claimed +${status.todayPoints} points today.`
-              : `Check in to earn +${status.basePoints} points today.`}
+              ? t("checkin.claimedToday", { n: status.todayPoints ?? 0 })
+              : t("checkin.earnToday", { n: status.basePoints })}
           </p>
         </div>
         <span
@@ -76,10 +78,10 @@ export function CheckInCard({ initial }: { initial: CheckinStatus }) {
         >
           {status.checkedInToday ? (
             <>
-              <CheckCircle2 className="h-3.5 w-3.5" /> Done today
+              <CheckCircle2 className="h-3.5 w-3.5" /> {t("checkin.doneToday")}
             </>
           ) : (
-            "Pending"
+            t("checkin.pending")
           )}
         </span>
       </div>
@@ -87,16 +89,17 @@ export function CheckInCard({ initial }: { initial: CheckinStatus }) {
       <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
         <span className="inline-flex items-center gap-1.5 font-medium">
           <Flame className="h-4 w-4 text-orange-500" />
-          {status.streak} day{status.streak === 1 ? "" : "s"} streak
+          {t("checkin.dayStreak", { n: status.streak })}
         </span>
         <span className="text-muted">
-          {status.totalCheckInDays} total check-in day
-          {status.totalCheckInDays === 1 ? "" : "s"}
+          {t("checkin.totalDays", { n: status.totalCheckInDays })}
         </span>
         {status.nextMilestone && (
           <span className="text-muted">
-            Next bonus: +{status.nextMilestone.bonus} pts at day{" "}
-            {status.nextMilestone.day}
+            {t("checkin.nextBonus", {
+              bonus: status.nextMilestone.bonus,
+              day: status.nextMilestone.day,
+            })}
           </span>
         )}
       </div>
@@ -109,7 +112,7 @@ export function CheckInCard({ initial }: { initial: CheckinStatus }) {
 
       {justClaimed !== null && (
         <p className="mt-3 rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
-          Daily check-in successful — +{justClaimed} points!
+          {t("checkin.success", { n: justClaimed })}
         </p>
       )}
 
@@ -120,7 +123,7 @@ export function CheckInCard({ initial }: { initial: CheckinStatus }) {
           className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-fg transition-opacity hover:opacity-90 disabled:opacity-60 sm:w-auto"
         >
           {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-          {busy ? "Checking in…" : "Check in now"}
+          {busy ? t("checkin.checkingIn") : t("checkin.checkInNow")}
         </button>
       )}
     </div>

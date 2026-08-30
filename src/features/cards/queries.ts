@@ -45,6 +45,18 @@ export interface CardView {
   media: MediaItem[];
   isBusiness: boolean;
   referralCode: string;
+  reviews: ReviewItem[];
+  reviewSummary: { count: number; average: number };
+}
+
+export interface ReviewItem {
+  id: string;
+  authorName: string;
+  authorUsername: string | null;
+  authorAvatarUrl: string | null;
+  rating: number;
+  comment: string | null;
+  createdAt: Date;
 }
 
 export interface MediaItem {
@@ -67,6 +79,42 @@ function pickSocials(p: Social): Social {
   };
 }
 
+async function fetchReviews(subjectUserId: string): Promise<{
+  reviews: ReviewItem[];
+  reviewSummary: { count: number; average: number };
+}> {
+  const rows = await prisma.review.findMany({
+    where: { subjectId: subjectUserId },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+    select: {
+      id: true,
+      rating: true,
+      comment: true,
+      createdAt: true,
+      author: {
+        select: {
+          profile: { select: { fullName: true, displayName: true, username: true, avatarUrl: true } },
+        },
+      },
+    },
+  });
+  const reviews: ReviewItem[] = rows.map((r) => ({
+    id: r.id,
+    authorName: r.author.profile?.displayName || r.author.profile?.fullName || "Member",
+    authorUsername: r.author.profile?.username ?? null,
+    authorAvatarUrl: r.author.profile?.avatarUrl ?? null,
+    rating: r.rating,
+    comment: r.comment,
+    createdAt: r.createdAt,
+  }));
+  const count = reviews.length;
+  const average = count
+    ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / count) * 10) / 10
+    : 0;
+  return { reviews, reviewSummary: { count, average } };
+}
+
 export async function getPersonalCard(username: string): Promise<CardView | null> {
   const profile = await prisma.profile.findUnique({
     where: { username: username.toLowerCase() },
@@ -75,6 +123,8 @@ export async function getPersonalCard(username: string): Promise<CardView | null
     },
   });
   if (!profile || profile.user.status !== "ACTIVE") return null;
+
+  const rev = await fetchReviews(profile.userId);
 
   return {
     kind: "personal",
@@ -109,6 +159,8 @@ export async function getPersonalCard(username: string): Promise<CardView | null
     media: [],
     isBusiness: profile.user.role === "BUSINESS",
     referralCode: profile.user.referralCode,
+    reviews: rev.reviews,
+    reviewSummary: rev.reviewSummary,
   };
 }
 
@@ -132,6 +184,8 @@ export async function getBusinessCard(slug: string): Promise<CardView | null> {
     },
   });
   if (!biz || biz.user.status !== "ACTIVE") return null;
+
+  const rev = await fetchReviews(biz.userId);
 
   return {
     kind: "business",
@@ -171,6 +225,8 @@ export async function getBusinessCard(slug: string): Promise<CardView | null> {
     })),
     isBusiness: true,
     referralCode: biz.user.referralCode,
+    reviews: rev.reviews,
+    reviewSummary: rev.reviewSummary,
   };
 }
 

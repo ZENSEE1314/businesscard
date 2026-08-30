@@ -21,11 +21,21 @@ export function useLocale(): Locale {
   return useContext(LocaleContext);
 }
 
-/** Returns a translate function bound to the current locale. */
-export function useT(): (key: string) => string {
+function interpolate(s: string, params?: Record<string, string | number>): string {
+  if (!params) return s;
+  return s.replace(/\{(\w+)\}/g, (_, k) =>
+    k in params ? String(params[k]) : `{${k}}`,
+  );
+}
+
+/** Returns a translate function bound to the current locale (supports {params}). */
+export function useT(): (
+  key: string,
+  params?: Record<string, string | number>,
+) => string {
   const locale = useContext(LocaleContext);
-  return (key: string) => {
+  return (key, params) => {
     const entry = dict[key];
-    return entry ? (entry[locale] ?? entry.en) : key;
+    return interpolate(entry ? (entry[locale] ?? entry.en) : key, params);
   };
 }

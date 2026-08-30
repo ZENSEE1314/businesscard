@@ -8,6 +8,7 @@ import type { ContactSource } from "@prisma/client";
 import { Card } from "@/components/ui";
 import { DeleteContactButton } from "@/components/contact-row-actions";
 import { EditContactButton } from "@/components/edit-contact-button";
+import { getLocale, tt } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,7 @@ export default async function ContactsPage({
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
+  const locale = await getLocale();
   const sp = await searchParams;
   const q = sp.q ?? "";
   const source = (sp.source ?? "") as ContactSource | "";
@@ -85,9 +87,9 @@ export default async function ContactsPage({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Contacts</h1>
+        <h1 className="text-xl font-bold">{tt(locale, "contacts.title")}</h1>
         <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
-          {contacts.length} saved
+          {tt(locale, "contacts.saved", { n: contacts.length })}
         </span>
       </div>
 
@@ -99,7 +101,7 @@ export default async function ContactsPage({
             type="search"
             name="q"
             defaultValue={q}
-            placeholder="Search name, company, role…"
+            placeholder={tt(locale, "contacts.searchPlaceholder")}
             aria-label="Search contacts"
             className="h-10 w-full rounded-xl border border-border bg-surface pl-9 pr-3 text-sm outline-none focus:border-brand-500"
           />
@@ -123,7 +125,7 @@ export default async function ContactsPage({
             aria-label="Filter by category"
             className="h-10 rounded-xl border border-border bg-surface px-3 text-sm"
           >
-            <option value="">All categories</option>
+            <option value="">{tt(locale, "contacts.allCategories")}</option>
             {categoryOptions.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
@@ -147,16 +149,16 @@ export default async function ContactsPage({
           type="submit"
           className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-fg"
         >
-          Apply
+          {tt(locale, "contacts.apply")}
         </button>
       </form>
 
       {contacts.length === 0 ? (
         <Card className="p-8 text-center">
           <Users className="mx-auto h-10 w-10 text-muted" />
-          <p className="mt-3 font-medium">No contacts found</p>
+          <p className="mt-3 font-medium">{tt(locale, "contacts.none")}</p>
           <p className="mt-1 text-sm text-muted">
-            Open someone’s digital card and tap “Save contact” to add them here.
+            {tt(locale, "contacts.noneHint")}
           </p>
         </Card>
       ) : (
