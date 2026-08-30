@@ -344,55 +344,10 @@ export function ProfileEditForm({
   const cardUsername =
     typeof profile.username === "string" ? profile.username : "";
 
-  // --- AI assistant state ---
+  // AI output language for the per-field "Write with AI" buttons.
   const [aiLang, setAiLang] = useState<"en" | "id" | "zh">("en");
-  const [aiBusy, setAiBusy] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [aiConfirm, setAiConfirm] = useState(false);
 
   const isBusiness = role === "BUSINESS" && business;
-
-  const hasManualContent =
-    p.state.headline.trim() !== "" ||
-    p.state.canHelp.length > 0 ||
-    p.state.lookingFor.length > 0;
-
-  async function generateWithAI() {
-    setAiBusy(true);
-    setAiError(null);
-    const res = await apiFetch<{
-      headline: string;
-      canHelp: string[];
-      lookingFor: string[];
-    }>("/api/ai/profile", {
-      method: "POST",
-      body: JSON.stringify({
-        fullName: p.state.fullName,
-        jobTitle: p.state.jobTitle,
-        company: p.state.companyName,
-        industry: undefined,
-        location: [p.state.city, p.state.country].filter(Boolean).join(", "),
-        businessDescription: p.state.bio || p.state.headline,
-        products: [],
-        services: [],
-        expertise: p.state.canHelp,
-        businessGoals: undefined,
-        idealCustomers: p.state.lookingFor,
-        desiredPartners: p.state.lookingFor,
-        language: aiLang,
-      }),
-    });
-    setAiBusy(false);
-    if (!res.ok) {
-      setAiError(res.error ?? "AI generation failed. Please try again.");
-      return;
-    }
-    // Fill the three editable fields; the user can tweak or regenerate.
-    p.set("headline", res.data.headline);
-    p.set("canHelp", res.data.canHelp);
-    p.set("lookingFor", res.data.lookingFor);
-    setAiConfirm(false);
-  }
 
   // Facts the AI may use when writing profile text — never invented content.
   function aiContext() {
@@ -493,12 +448,6 @@ export function ProfileEditForm({
           <Field label="Job title" value={p.state.jobTitle} onChange={(v) => p.set("jobTitle", v)} />
         </div>
         <Field label="Company" value={p.state.companyName} onChange={(v) => p.set("companyName", v)} />
-        <Field
-          label="What I do (headline)"
-          value={p.state.headline}
-          onChange={(v) => p.set("headline", v)}
-          placeholder="e.g. Professional crypto education & trading community"
-        />
         <TagInput
           label="I can help with"
           hint="Add tags — press Enter or comma"
@@ -513,63 +462,21 @@ export function ProfileEditForm({
           onChange={(v) => p.set("lookingFor", v)}
           placeholder="e.g. Investors, Distributors, Partners"
         />
-        {/* AI assistant */}
-        <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-4">
-          <h3 className="flex items-center gap-2 text-sm font-semibold">
-            <Sparkles className="h-4 w-4 text-brand-600" />
-            AI writing assistant
-          </h3>
-          <p className="mt-1 text-xs text-muted">
-            Generates your &ldquo;What I do&rdquo; headline, &ldquo;I can help with&rdquo; and
-            &ldquo;I&rsquo;m looking for&rdquo; tags from the details above &mdash; never inventing
-            facts. Everything stays editable.
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <select
-              value={aiLang}
-              onChange={(e) => setAiLang(e.target.value as "en" | "id" | "zh")}
-              aria-label="Generation language"
-              className="h-9 rounded-lg border border-border bg-surface px-2 text-sm"
-            >
-              <option value="en">English</option>
-              <option value="id">Bahasa Indonesia</option>
-              <option value="zh">中文</option>
-            </select>
-            <Button
-              type="button"
-              size="sm"
-              disabled={aiBusy}
-              onClick={() => {
-                if (hasManualContent && !aiConfirm) {
-                  setAiConfirm(true);
-                  return;
-                }
-                generateWithAI();
-              }}
-            >
-              {aiBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              {aiBusy ? "Generating…" : hasManualContent ? "Regenerate with AI" : "Generate with AI"}
-            </Button>
-          </div>
-          {aiConfirm && (
-            <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              This will replace your current headline, &ldquo;I can help with&rdquo; and
-              &ldquo;I&rsquo;m looking for&rdquo; text.{" "}
-              <button type="button" onClick={generateWithAI} className="font-semibold underline">
-                Replace anyway
-              </button>{" "}
-              ·{" "}
-              <button type="button" onClick={() => setAiConfirm(false)} className="font-semibold underline">
-                Cancel
-              </button>
-            </p>
-          )}
-          {aiError && (
-            <p role="alert" className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-danger">
-              {aiError}
-            </p>
-          )}
-        </div>
+        {/* AI writing language for the per-field "Write with AI" buttons below. */}
+        <label className="flex items-center gap-2 text-xs font-medium text-muted">
+          <Sparkles className="h-3.5 w-3.5 text-brand-600" />
+          AI writing language
+          <select
+            value={aiLang}
+            onChange={(e) => setAiLang(e.target.value as "en" | "id" | "zh")}
+            aria-label="AI writing language"
+            className="h-8 rounded-lg border border-border bg-surface px-2 text-sm"
+          >
+            <option value="en">English</option>
+            <option value="id">Bahasa Indonesia</option>
+            <option value="zh">中文</option>
+          </select>
+        </label>
 
         <div>
           <div className="flex flex-wrap items-center justify-between gap-2">
