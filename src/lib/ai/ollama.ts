@@ -1,24 +1,23 @@
 import "server-only";
 import { z } from "zod";
 
-// Ollama integration for AI-assisted profile content.
+// AI-assisted profile content generation.
 //
 // Architecture (Railway):
 //   BridgeX Next.js app → authenticated server API (/api/ai/profile)
-//     → Ollama service on Railway private networking (ollama-ai.railway.internal:11434)
-//     → model kimi-k3:cloud (verified available at ollama.com/library/kimi-k3,
-//       tagged "cloud", 2.81T params; served through the standard /api/chat
-//       endpoint of a signed-in Ollama server).
+//     → OpenAI-compatible gateway (TokenRa, https://tokenra.io/v1)
+//     → model kimi-k3 via POST /v1/chat/completions (Bearer API key).
 //
-// NOTE ON `ollama launch claude --model kimi-k3:cloud`: that command launches an
-// INTERACTIVE coding CLI workflow on a developer machine — it is NOT how an
-// application should call the model. The app always talks HTTP to the Ollama
-// server's /api/chat endpoint instead.
+// The OpenAI-compatible path is the primary provider — configured with:
+//   OPENAI_API_KEY   (required to enable)
+//   OPENAI_BASE_URL  (default https://tokenra.io/v1)
+//   OPENAI_MODEL     (default kimi-k3)
+//   OPENAI_TIMEOUT_MS (default 55000)
 //
-// Cloud models require the Ollama service to be authenticated (once, via
-// `ollama signin` inside the container or a mounted ~/.ollama). If cloud auth
-// is missing, Ollama returns an error which we surface verbatim to admins —
-// the rest of BridgeX keeps working because every failure here is contained.
+// A self-hosted Ollama service remains supported as a fallback provider via
+// OLLAMA_BASE_URL (+ optional OLLAMA_MODEL / OLLAMA_API_KEY); it is only used
+// when OPENAI_API_KEY is not set. Every failure here is contained — the rest
+// of BridgeX keeps working when the AI provider is down or out of quota.
 
 export interface OllamaConfig {
   baseUrl: string;
@@ -46,15 +45,15 @@ export interface OpenAIConfig {
   timeoutMs: number;
 }
 
-/** OpenAI-compatible fallback (also works with any OpenAI-compatible endpoint). */
+/** OpenAI-compatible provider (TokenRa gateway, OpenAI, or any compatible endpoint). */
 export function getOpenAIConfig(): OpenAIConfig | null {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) return null;
   return {
-    baseUrl: (process.env.OPENAI_BASE_URL?.trim() || "https://api.openai.com/v1").replace(/\/+$/, ""),
-    model: process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini",
+    baseUrl: (process.env.OPENAI_BASE_URL?.trim() || "https://tokenra.io/v1").replace(/\/+$/, ""),
+    model: process.env.OPENAI_MODEL?.trim() || "kimi-k3",
     apiKey,
-    timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS ?? "30000"),
+    timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS ?? "55000"),
   };
 }
 
@@ -227,15 +226,35 @@ async function openaiChat(
       body: JSON.stringify({
         model: config.model,
         messages,
-        response_format: { type: "json_object" },
         temperature: 0.4,
+        // NOTE: no `response_format` — some OpenAI-compatible gateway channels
+        // (e.g. TokenRa's Chinese-model channels) reject it with 400. The
+        // system prompt already demands JSON and extractJson() strips fences.
       }),
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
+      let upstreamMsg = "";
+      let upstreamCode = "";
+      try {
+        const parsed = JSON.parse(text) as { error?: { message?: string; code?: string } };
+        upstreamMsg = parsed.error?.message ?? "";
+        upstreamCode = parsed.error?.code ?? "";
+      } catch {
+        /* keep raw text below */
+      }
+      // Quota errors on TokenRa come back as 403 insufficient_user_quota —
+      // give the admin a direct, actionable message instead of raw JSON.
+      if (upstreamCode === "insufficient_user_quota" || /insufficient_user_quota|额度不足/i.test(upstreamMsg)) {
+        throw new OllamaError(
+          503,
+          "The AI provider account has no balance left. Top up at tokenra.io (Console → Billing) and try again.",
+          "insufficient_quota",
+        );
+      }
       throw new OllamaError(
         502,
-        `AI service error (${res.status}): ${text.slice(0, 300) || res.statusText}`,
+        `AI service error (${res.status}): ${(upstreamMsg || text).slice(0, 300) || res.statusText}`,
         "ai_error",
       );
     }
@@ -314,13 +333,41 @@ async function runAiChat(messages: ChatMessage[]): Promise<string> {
   return ollamaChat(config, messages, true);
 }
 
-/** Lightweight reachability probe for admin status display. */
+/** Lightweight reachability probe for admin status display (provider-aware). */
 export async function checkOllamaHealth(): Promise<{
   reachable: boolean;
   detail: string;
 }> {
+  const openai = getOpenAIConfig();
+  if (openai) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch(`${openai.baseUrl}/models`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${openai.apiKey}` },
+        signal: controller.signal,
+        cache: "no-store",
+      });
+      clearTimeout(timer);
+      if (!res.ok) {
+        return { reachable: false, detail: `HTTP ${res.status} from the AI gateway.` };
+      }
+      const body = (await res.json()) as { data?: { id?: string }[] };
+      const ids = (body.data ?? []).map((m) => m.id).filter(Boolean) as string[];
+      return {
+        reachable: true,
+        detail: `Gateway reachable (${openai.baseUrl}). Model: ${openai.model}${
+          ids.length ? ` · ${ids.length} models enabled` : ""
+        }`,
+      };
+    } catch {
+      return { reachable: false, detail: "Could not connect to the AI gateway." };
+    }
+  }
+
   const config = getOllamaConfig();
-  if (!config) return { reachable: false, detail: "OLLAMA_BASE_URL is not set." };
+  if (!config) return { reachable: false, detail: "No AI provider configured (set OPENAI_API_KEY or OLLAMA_BASE_URL)." };
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5000);

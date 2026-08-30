@@ -1,16 +1,35 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   buildUserPrompt,
   profileContentSchema,
   generateProfileContent,
   getOllamaConfig,
+  getOpenAIConfig,
   isAiProfileGenerationEnabled,
 } from "@/lib/ai/ollama";
+
+beforeEach(() => {
+  // Keep the OpenAI-compatible provider out of the picture unless a test
+  // explicitly enables it — otherwise Ollama-path tests are ambiguous.
+  vi.stubEnv("OPENAI_API_KEY", "");
+});
 
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
+
+function mockFetchOnce(body: unknown, status = 200) {
+  return vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { "Content-Type": "application/json" },
+      }),
+    ),
+  );
+}
 
 describe("configuration", () => {
   it("returns null when OLLAMA_BASE_URL is missing (feature off)", () => {
@@ -80,18 +99,6 @@ describe("response validation", () => {
 });
 
 describe("generateProfileContent against a mocked Ollama server", () => {
-  function mockFetchOnce(body: unknown, status = 200) {
-    return vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        new Response(JSON.stringify(body), {
-          status,
-          headers: { "Content-Type": "application/json" },
-        }),
-      ),
-    );
-  }
-
   it("parses a valid /api/chat response (JSON mode)", async () => {
     vi.stubEnv("OLLAMA_BASE_URL", "http://ollama.test:11434");
     mockFetchOnce({
@@ -166,5 +173,85 @@ describe("generateProfileContent against a mocked Ollama server", () => {
       })),
     );
     await expect(generateProfileContent({})).rejects.toThrow(/too long/i);
+  });
+});
+
+describe("OpenAI-compatible provider (TokenRa)", () => {
+  it("reads config with TokenRa defaults", () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    const cfg = getOpenAIConfig();
+    expect(cfg).not.toBeNull();
+    expect(cfg!.baseUrl).toBe("https://tokenra.io/v1");
+    expect(cfg!.model).toBe("kimi-k3");
+    expect(cfg!.apiKey).toBe("sk-test");
+    expect(isAiProfileGenerationEnabled()).toBe(true);
+  });
+
+  it("is disabled without a key even when Ollama is unset", () => {
+    expect(getOpenAIConfig()).toBeNull();
+    expect(isAiProfileGenerationEnabled()).toBe(false);
+  });
+
+  it("sends an OpenAI-style request (no response_format) and parses the reply", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    vi.stubEnv("OPENAI_BASE_URL", "https://tokenra.io/v1");
+    vi.stubEnv("OPENAI_MODEL", "kimi-k3");
+    mockFetchOnce({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              headline: "Gateway-powered headline.",
+              canHelp: ["intros"],
+              lookingFor: ["partners"],
+            }),
+          },
+        },
+      ],
+    });
+    const result = await generateProfileContent({ fullName: "Zen See", language: "en" });
+    expect(result.headline).toContain("Gateway-powered");
+
+    const fetchMock = vi.mocked(fetch);
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(String(url)).toBe("https://tokenra.io/v1/chat/completions");
+    expect(init!.method).toBe("POST");
+    const headers = init!.headers as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer sk-test");
+    const body = JSON.parse(String(init!.body));
+    expect(body.model).toBe("kimi-k3");
+    expect(body.stream).toBeUndefined();
+    expect(body.response_format).toBeUndefined();
+    expect(body.messages[0].role).toBe("system");
+  });
+
+  it("maps quota errors to an actionable message", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    mockFetchOnce(
+      { error: { message: "用户额度不足", code: "insufficient_user_quota" } },
+      403,
+    );
+    await expect(generateProfileContent({})).rejects.toThrow(/no balance left/i);
+  });
+
+  it("extracts JSON wrapped in code fences from gateway replies", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    mockFetchOnce({
+      choices: [
+        {
+          message: {
+            content:
+              '```json\n{"headline":"H","canHelp":["A"],"lookingFor":["B"]}\n```',
+          },
+        },
+      ],
+    });
+    const result = await generateProfileContent({});
+    expect(result.headline).toBe("H");
+  });
+
+  it("still throws not_configured when no provider is set", async () => {
+    vi.stubEnv("OLLAMA_BASE_URL", "");
+    await expect(generateProfileContent({})).rejects.toThrow(/not configured/i);
   });
 });
