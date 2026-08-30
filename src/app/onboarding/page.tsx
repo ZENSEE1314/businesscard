@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { PartyPopper } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { Card, ButtonLink } from "@/components/ui";
+import { WhatsAppCommunityButton } from "@/components/whatsapp-community-button";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +30,12 @@ export default async function OnboardingPage() {
           <ButtonLink href="/hub" variant="ghost" size="lg">
             Skip for now &mdash; go to home
           </ButtonLink>
+        </div>
+        <div className="mt-4 border-t border-border pt-4">
+          <p className="mb-2 text-sm text-muted">
+            Connect with other members and never miss an update.
+          </p>
+          <WhatsAppCommunityButton />
         </div>
       </Card>
     </main>

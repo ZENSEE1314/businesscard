@@ -7,6 +7,7 @@ import type { PublicConnection } from "@/features/cards/connections";
 import { ContactActions, ShareButton } from "@/components/card/card-actions";
 import { NfcButton } from "@/components/card/nfc-button";
 import { InstallButton } from "@/components/install-button";
+import { WhatsAppCommunityButton } from "@/components/whatsapp-community-button";
 
 function socialUrl(platform: string, value: string): string {
   const v = value.trim().replace(/^@/, "");
@@ -350,6 +351,7 @@ export async function PublicCard({
             />
             <ShareButton targetId={card.userId} url={card.profileUrl} title={card.name} />
             <NfcButton cardUrl={card.profileUrl} vcardUrl={absoluteUrl(vcardUrl)} />
+            <WhatsAppCommunityButton />
           </div>
 
           {/* Contact details */}
