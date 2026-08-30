@@ -4,6 +4,8 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { env } from "@/lib/env";
 import { PwaRegister } from "@/components/pwa-register";
+import { LocaleProvider } from "@/lib/i18n/client";
+import { getLocale } from "@/lib/i18n/server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,9 +49,10 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const locale = await getLocale();
   return (
-    <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
+    <html lang={locale} className={`${geistSans.variable} h-full antialiased`}>
       <head>
         {/* Apply the saved theme before first paint to avoid a flash. */}
         <script
@@ -59,7 +62,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="min-h-full flex flex-col">
-        {children}
+        <LocaleProvider locale={locale}>{children}</LocaleProvider>
         <PwaRegister />
       </body>
     </html>

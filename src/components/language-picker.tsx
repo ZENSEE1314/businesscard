@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
 import {
   LANGUAGE_OPTIONS,
@@ -15,6 +16,7 @@ import {
  * instances can react without a reload.
  */
 export function LanguagePicker({ className = "" }: { className?: string }) {
+  const router = useRouter();
   const [lang, setLang] = useState("en");
   const [mounted, setMounted] = useState(false);
 
@@ -31,6 +33,8 @@ export function LanguagePicker({ className = "" }: { className?: string }) {
     } catch {
       /* ignore */
     }
+    // Re-render server components so the whole app switches language.
+    router.refresh();
   }
 
   return (

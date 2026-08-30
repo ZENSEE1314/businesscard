@@ -6,9 +6,12 @@ import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
 import { PasswordInput } from "@/components/ui/password-input";
 import { apiFetch } from "@/lib/client";
+import { useT } from "@/lib/i18n/client";
+import { LanguagePicker } from "@/components/language-picker";
 
 export default function LoginPage() {
   const router = useRouter();
+  const t = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
@@ -73,8 +76,11 @@ export default function LoginPage() {
 
   return (
     <Card className="p-6 sm:p-8">
-      <h1 className="text-2xl font-bold">Welcome back</h1>
-      <p className="mt-1 text-sm text-muted">Log in to your account.</p>
+      <div className="mb-3 flex justify-end">
+        <LanguagePicker />
+      </div>
+      <h1 className="text-2xl font-bold">{t("auth.welcomeBack")}</h1>
+      <p className="mt-1 text-sm text-muted">{t("auth.loginSubtitle")}</p>
 
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         {error && (
@@ -86,7 +92,7 @@ export default function LoginPage() {
           </div>
         )}
         <div>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("auth.email")}</Label>
           <Input
             id="email"
             name="email"
@@ -100,10 +106,10 @@ export default function LoginPage() {
         <div>
           <div className="mb-1.5 flex items-center justify-between">
             <Label htmlFor="password" className="mb-0">
-              Password
+              {t("auth.password")}
             </Label>
             <Link href="/forgot" className="text-xs font-medium text-primary">
-              Forgot password?
+              {t("auth.forgot")}
             </Link>
           </div>
           <PasswordInput
@@ -122,17 +128,17 @@ export default function LoginPage() {
             onChange={(e) => setRememberMe(e.target.checked)}
             className="h-4 w-4 accent-[var(--primary)]"
           />
-          Remember me on this device
+          {t("auth.rememberMe")}
         </label>
         <Button type="submit" className="w-full" size="lg" disabled={loading}>
-          {loading ? "Logging in…" : "Log in"}
+          {loading ? t("auth.loggingIn") : t("auth.login")}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted">
-        No account?{" "}
+        {t("auth.noAccount")}{" "}
         <Link href="/register" className="font-medium text-primary">
-          Create one
+          {t("auth.createOne")}
         </Link>
       </p>
     </Card>

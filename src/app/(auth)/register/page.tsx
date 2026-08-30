@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
 import { PasswordInput } from "@/components/ui/password-input";
 import { apiFetch } from "@/lib/client";
+import { LanguagePicker } from "@/components/language-picker";
 
 function RegisterForm() {
   const router = useRouter();
@@ -50,6 +51,9 @@ function RegisterForm() {
 
   return (
     <Card className="p-6 sm:p-8">
+      <div className="mb-3 flex justify-end">
+        <LanguagePicker />
+      </div>
       <h1 className="text-2xl font-bold">Create your account</h1>
       <p className="mt-1 text-sm text-muted">
         Free forever. Your digital name card is created instantly. Upgrade to a

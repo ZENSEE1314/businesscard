@@ -1,0 +1,40 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { Card } from "@/components/ui";
+import { LanguagePicker } from "@/components/language-picker";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { getLocale, tt } from "@/lib/i18n/server";
+
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Settings" };
+
+export default async function SettingsPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  const locale = await getLocale();
+
+  return (
+    <div className="mx-auto max-w-2xl py-4">
+      <h1 className="px-1 pb-3 text-xl font-bold">{tt(locale, "settings.title")}</h1>
+
+      <div className="space-y-4">
+        <Card className="p-5">
+          <h2 className="text-sm font-semibold">{tt(locale, "settings.appLanguage")}</h2>
+          <p className="mt-1 text-xs text-muted">{tt(locale, "settings.appLanguageHint")}</p>
+          <div className="mt-3">
+            <LanguagePicker />
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="text-sm font-semibold">{tt(locale, "settings.theme")}</h2>
+          <p className="mt-1 text-xs text-muted">{tt(locale, "settings.themeHint")}</p>
+          <div className="mt-3">
+            <ThemeToggle />
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}

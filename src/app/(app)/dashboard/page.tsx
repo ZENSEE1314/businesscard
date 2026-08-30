@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { getDashboardData, greetingForHour } from "@/features/dashboard/queries";
+import { getDashboardData } from "@/features/dashboard/queries";
+import { getLocale, tt } from "@/lib/i18n/server";
 import { CheckInCard } from "@/components/checkin-card";
 import { FollowUpButton } from "@/components/follow-up-button";
 import { Card } from "@/components/ui";
@@ -60,15 +61,20 @@ export default async function DashboardPage() {
   const data = await getDashboardData();
   if (!data) redirect("/login");
 
-  const greeting = greetingForHour(
-    Number(
-      new Intl.DateTimeFormat("en-GB", {
-        timeZone: process.env.DAILY_CHECK_IN_TIMEZONE || "Asia/Jakarta",
-        hour: "2-digit",
-        hour12: false,
-      }).format(new Date()),
-    ),
+  const locale = await getLocale();
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: process.env.DAILY_CHECK_IN_TIMEZONE || "Asia/Jakarta",
+      hour: "2-digit",
+      hour12: false,
+    }).format(new Date()),
   );
+  const greeting =
+    hour < 12
+      ? tt(locale, "dash.goodMorning")
+      : hour < 17
+        ? tt(locale, "dash.goodAfternoon")
+        : tt(locale, "dash.goodEvening");
 
   return (
     <div className="space-y-5">
@@ -102,10 +108,10 @@ export default async function DashboardPage() {
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile label="Points" value={data.points} href="/rewards" />
-          <StatTile label="Contacts" value={data.contactCount} href="/contacts" />
-          <StatTile label="Check-in streak" value={`${data.checkin.streak}d`} />
-          <StatTile label="New messages" value={data.unreadMessages} href="/chat" />
+          <StatTile label={tt(locale, "dash.points")} value={data.points} href="/rewards" />
+          <StatTile label={tt(locale, "dash.contacts")} value={data.contactCount} href="/contacts" />
+          <StatTile label={tt(locale, "dash.checkinStreak")} value={`${data.checkin.streak}d`} />
+          <StatTile label={tt(locale, "dash.newMessages")} value={data.unreadMessages} href="/chat" />
         </div>
 
         <ul className="mt-4 space-y-1 text-sm text-muted">
@@ -128,7 +134,7 @@ export default async function DashboardPage() {
       {/* Quick actions */}
       <section>
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
-          Quick actions
+          {tt(locale, "dash.quickActions")}
         </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {data.cardPath && (
@@ -167,7 +173,7 @@ export default async function DashboardPage() {
       {/* Recommended for what you're looking for */}
       <section>
         <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted">
-          Recommended for what you’re looking for
+          {tt(locale, "dash.recommended")}
         </h2>
         <p className="mb-2 text-xs text-muted">
           Members who can help with the things you set under “I’m looking for”.
@@ -235,7 +241,7 @@ export default async function DashboardPage() {
       <section>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-            Recent connections
+            {tt(locale, "dash.recentConnections")}
           </h2>
           <Link href="/contacts" className="text-xs font-medium text-primary">
             View all <ArrowRight className="inline h-3 w-3" />
@@ -281,7 +287,7 @@ export default async function DashboardPage() {
       <section className="grid gap-3 sm:grid-cols-2">
         <Card className="p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
-            <CalendarDays className="h-4 w-4 text-brand-600" /> Upcoming events
+            <CalendarDays className="h-4 w-4 text-brand-600" /> {tt(locale, "dash.upcomingEvents")}
           </h3>
           <p className="mt-2 text-sm text-muted">
             Event announcements will appear here as they are scheduled.
@@ -289,7 +295,7 @@ export default async function DashboardPage() {
         </Card>
         <Card className="p-5">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
-            <BellRing className="h-4 w-4 text-amber-500" /> Follow-ups due
+            <BellRing className="h-4 w-4 text-amber-500" /> {tt(locale, "dash.followUps")}
           </h3>
           {data.followUps.length === 0 ? (
             <p className="mt-2 text-sm text-muted">You’re all caught up. 🎉</p>
@@ -324,7 +330,7 @@ export default async function DashboardPage() {
       {/* Network growth */}
       <section>
         <Card className="p-5">
-          <h3 className="text-sm font-semibold">Your network growth</h3>
+          <h3 className="text-sm font-semibold">{tt(locale, "dash.networkGrowth")}</h3>
           <p className="mt-2 text-sm text-muted">
             {data.referralCount === 0
               ? "Share your card to invite your first referral and earn +100 points."

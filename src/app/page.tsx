@@ -15,6 +15,7 @@ import { Logo } from "@/components/logo";
 import { InstallButton } from "@/components/install-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { getLocale, tt } from "@/lib/i18n/server";
 import { env } from "@/lib/env";
 
 const leadership = [
@@ -47,6 +48,7 @@ export default async function LandingPage() {
   if (user) redirect("/dashboard");
 
   const appName = env.appName;
+  const locale = await getLocale();
   return (
     <main className="flex-1">
       {/* Header */}
@@ -59,10 +61,10 @@ export default async function LandingPage() {
           <nav className="flex items-center gap-2">
             <ThemeToggle className="mr-1" />
             <ButtonLink href="/login" variant="ghost" size="sm">
-              Log in
+              {tt(locale, "landing.login")}
             </ButtonLink>
             <ButtonLink href="/register" size="sm">
-              Get started
+              {tt(locale, "landing.getStarted")}
             </ButtonLink>
           </nav>
         </div>
@@ -72,21 +74,20 @@ export default async function LandingPage() {
       <section className="aurora">
         <div className="mx-auto max-w-6xl px-4 py-20 text-center sm:py-28">
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted">
-            <Share2 className="h-3.5 w-3.5" /> Your business, one tap away
+            <Share2 className="h-3.5 w-3.5" /> {tt(locale, "landing.heroBadge")}
           </span>
           <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
-            Your next opportunity could be{" "}
+            {tt(locale, "landing.heroTitlePrefix")}{" "}
             <span className="bg-gradient-to-r from-brand-600 to-accent bg-clip-text text-transparent">
-              one connection away
+              {tt(locale, "landing.heroTitleHighlight")}
             </span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted">
-            Build your professional profile, discover trusted businesses,
-            connect directly and earn rewards — all in one friendly app.
+            {tt(locale, "landing.heroSubtitle")}
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <ButtonLink href="/register" size="lg" className="w-full sm:w-auto">
-              Create my free profile <ArrowRight className="h-4 w-4" />
+              {tt(locale, "landing.createFreeProfile")} <ArrowRight className="h-4 w-4" />
             </ButtonLink>
             <ButtonLink
               href="/membership"
@@ -94,7 +95,7 @@ export default async function LandingPage() {
               size="lg"
               className="w-full sm:w-auto"
             >
-              Explore Member Club
+              {tt(locale, "landing.exploreMemberClub")}
             </ButtonLink>
           </div>
           <div className="mt-4 flex justify-center">

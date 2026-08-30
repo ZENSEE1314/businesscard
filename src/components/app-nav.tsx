@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { apiFetch } from "@/lib/client";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 // ---------------------------------------------------------------------------
 // Menu model
@@ -41,21 +42,22 @@ interface MenuItem {
 }
 
 const USER_MENU: MenuItem[] = [
-    { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/hub", label: "Hub", icon: LayoutDashboard },
-  { href: "/matches", label: "Matches", icon: Compass },
-  { href: "/events", label: "Events", icon: Calendar },
-  { href: "/contacts", label: "Contacts", icon: Users },
-  { href: "__CARD__", label: "Digital Name Card", icon: IdCard }, // replaced with the user's card path
-  { href: "/referrals", label: "Refer & Earn", icon: UserPlus },
-  { href: "/marketplace", label: "Marketplace", icon: Store },
-  { href: "/rewards", label: "Rewards", icon: Gift },
-  { href: "/chat", label: "Messages", icon: MessageSquare },
-  { href: "/membership", label: "Membership", icon: Crown },
-  { href: "/awards", label: "Awards & Events", icon: Trophy },
-  { href: "/me", label: "Profile", icon: User },
-  { href: "/me/edit", label: "Account Settings", icon: Settings },
-  { href: "/points", label: "Point History", icon: Gift },
+  { href: "/dashboard", label: "nav.home", icon: Home },
+  { href: "/hub", label: "nav.hub", icon: LayoutDashboard },
+  { href: "/matches", label: "nav.matches", icon: Compass },
+  { href: "/events", label: "nav.events", icon: Calendar },
+  { href: "/contacts", label: "nav.contacts", icon: Users },
+  { href: "__CARD__", label: "nav.card", icon: IdCard }, // replaced with the user's card path
+  { href: "/referrals", label: "nav.refer", icon: UserPlus },
+  { href: "/marketplace", label: "nav.marketplace", icon: Store },
+  { href: "/rewards", label: "nav.rewards", icon: Gift },
+  { href: "/chat", label: "nav.messages", icon: MessageSquare },
+  { href: "/membership", label: "nav.membership", icon: Crown },
+  { href: "/awards", label: "nav.awards", icon: Trophy },
+  { href: "/settings", label: "nav.settings", icon: Settings },
+  { href: "/me", label: "nav.profile", icon: User },
+  { href: "/me/edit", label: "nav.accountSettings", icon: Settings },
+  { href: "/points", label: "nav.pointHistory", icon: Gift },
 ];
 
 const ADMIN_MENU: MenuItem[] = [
@@ -92,6 +94,7 @@ function MenuList({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const t = useT();
   const [loggingOut, setLoggingOut] = useState(false);
 
   async function logout() {
@@ -122,7 +125,7 @@ function MenuList({
                 )}
               >
                 <item.icon className="h-[18px] w-[18px] shrink-0" />
-                {item.label}
+                {t(item.label)}
               </Link>
             </li>
           );
@@ -132,7 +135,7 @@ function MenuList({
       {isAdmin && (
         <>
           <p className="mt-4 px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
-            Administration
+            {t("nav.administration")}
           </p>
           <ul className="space-y-0.5">
             {ADMIN_MENU.map((item) => {
@@ -167,7 +170,7 @@ function MenuList({
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-danger outline-none hover:bg-red-50 focus-visible:bg-red-50 disabled:opacity-60"
         >
           <LogOut className="h-[18px] w-[18px] shrink-0" />
-          {loggingOut ? "Logging out…" : "Log Out"}
+          {loggingOut ? t("common.loggingOut") : t("common.logout")}
         </button>
       </div>
     </nav>
@@ -188,6 +191,7 @@ export function HeaderNav({
   points: number;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useT();
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -222,7 +226,7 @@ export function HeaderNav({
         className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm font-medium hover:bg-surface-2"
       >
         <Menu className="h-4 w-4" />
-        Menu
+        {t("common.menu")}
         <ChevronDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} />
       </button>
 
@@ -252,8 +256,8 @@ export function HeaderNav({
 // ---------------------------------------------------------------------------
 
 const BOTTOM_ITEMS = [
-  { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/contacts", label: "Contacts", icon: Users },
+  { href: "/dashboard", label: "nav.home", icon: Home },
+  { href: "/contacts", label: "nav.contacts", icon: Users },
 ];
 
 export function BottomNav({
@@ -264,6 +268,7 @@ export function BottomNav({
   cardPath: string | null;
 }) {
   const pathname = usePathname();
+  const t = useT();
   const [open, setOpen] = useState(false);
 
   // Close the sheet whenever the route changes (render-time adjustment —
@@ -307,7 +312,7 @@ export function BottomNav({
                 )}
               >
                 <item.icon className="h-5 w-5" />
-                {item.label}
+                {t(item.label)}
               </Link>
             );
           })}
@@ -320,7 +325,7 @@ export function BottomNav({
             )}
           >
             <MessageSquare className="h-5 w-5" />
-            Chat
+            {t("common.chat")}
           </Link>
           <button
             onClick={() => setOpen(true)}
@@ -332,7 +337,7 @@ export function BottomNav({
             )}
           >
             <Menu className="h-5 w-5" />
-            More
+            {t("common.more")}
           </button>
         </div>
       </nav>
@@ -363,6 +368,7 @@ export function BottomNav({
 // Keep the old SideNav export working for any existing imports.
 export function SideNav({ isAdmin, cardPath }: { isAdmin: boolean; cardPath: string | null }) {
   const pathname = usePathname();
+  const t = useT();
   const primary = USER_MENU.slice(0, 7).map((i) => ({
     ...i,
     href: i.href === "__CARD__" ? cardPath ?? "/me" : i.href,
@@ -382,14 +388,14 @@ export function SideNav({ isAdmin, cardPath }: { isAdmin: boolean; cardPath: str
             )}
           >
             <item.icon className="h-5 w-5" />
-            {item.label}
+            {t(item.label)}
           </Link>
         );
       })}
       {isAdmin && (
         <>
           <p className="mt-3 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted">
-            Admin
+            {t("nav.administration")}
           </p>
           {ADMIN_MENU.slice(0, 4).map((item) => {
             const active = isActive(pathname, item.href);

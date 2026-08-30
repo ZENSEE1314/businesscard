@@ -1,5 +1,13 @@
-// Viewer's preferred app language for on-demand translation. Stored per-device
-// in localStorage (no account/DB dependency) so anyone can pick their language.
+import {
+  LOCALES,
+  LOCALE_COOKIE,
+  LOCALE_LABEL,
+  normalizeLocale,
+} from "@/lib/i18n/config";
+
+// The app language (English / 中文 / Bahasa Indonesia). Stored in a cookie so
+// server-rendered pages localize, and mirrored to localStorage for client reads
+// (e.g. the Translate button's target language).
 
 export const STORAGE_KEY = "app-language";
 
@@ -8,47 +16,55 @@ export interface LanguageOption {
   label: string;
 }
 
-export const LANGUAGE_OPTIONS: LanguageOption[] = [
-  { code: "en", label: "English" },
-  { code: "id", label: "Bahasa Indonesia" },
-  { code: "ms", label: "Bahasa Melayu" },
-  { code: "zh", label: "中文" },
-  { code: "ta", label: "தமிழ்" },
-  { code: "hi", label: "हिन्दी" },
-  { code: "ja", label: "日本語" },
-  { code: "ko", label: "한국어" },
-  { code: "es", label: "Español" },
-  { code: "fr", label: "Français" },
-  { code: "ar", label: "العربية" },
-];
+export const LANGUAGE_OPTIONS: LanguageOption[] = LOCALES.map((code) => ({
+  code,
+  label: LOCALE_LABEL[code],
+}));
 
-const SUPPORTED = new Set(LANGUAGE_OPTIONS.map((o) => o.code));
+function readCookie(): string | null {
+  try {
+    const m = document.cookie.match(
+      new RegExp(`(?:^|; )${LOCALE_COOKIE}=([^;]*)`),
+    );
+    return m ? decodeURIComponent(m[1]) : null;
+  } catch {
+    return null;
+  }
+}
 
-/** Reads the stored language, falling back to the browser language or English. */
+/** Reads the app language (localStorage → cookie → browser → English). */
 export function getPreferredLanguage(): string {
   try {
     const v = localStorage.getItem(STORAGE_KEY);
-    if (v && SUPPORTED.has(v)) return v;
+    if (v) return normalizeLocale(v);
   } catch {
     /* storage unavailable */
   }
+  const cookie = readCookie();
+  if (cookie) return normalizeLocale(cookie);
   try {
-    const nav = navigator.language?.slice(0, 2).toLowerCase();
-    if (nav && SUPPORTED.has(nav)) return nav;
+    return normalizeLocale(navigator.language?.slice(0, 2).toLowerCase());
   } catch {
-    /* no navigator */
+    return "en";
   }
-  return "en";
 }
 
+/** Persists the app language to localStorage AND the server-readable cookie. */
 export function setPreferredLanguage(code: string) {
+  const loc = normalizeLocale(code);
   try {
-    localStorage.setItem(STORAGE_KEY, code);
+    localStorage.setItem(STORAGE_KEY, loc);
+  } catch {
+    /* ignore */
+  }
+  try {
+    // 1 year, site-wide; server reads this on every render.
+    document.cookie = `${LOCALE_COOKIE}=${loc}; path=/; max-age=31536000; samesite=lax`;
   } catch {
     /* ignore */
   }
 }
 
 export function languageLabel(code: string): string {
-  return LANGUAGE_OPTIONS.find((o) => o.code === code)?.label ?? code;
+  return LOCALE_LABEL[normalizeLocale(code)];
 }
