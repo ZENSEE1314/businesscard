@@ -66,6 +66,45 @@ CREATE TABLE IF NOT EXISTS "Withdrawal" (
     CONSTRAINT "Withdrawal_pkey" PRIMARY KEY ("id")
 );
 
+-- Legacy guard: an older "Event" / "EventAttendee" table from the original
+-- schema era may already exist with a different shape. Add any missing
+-- columns so the indexes below cannot fail with 42703. All idempotent.
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "hostId" TEXT;
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "title" VARCHAR(140);
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "description" VARCHAR(2000);
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "location" VARCHAR(160);
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "startsAt" TIMESTAMP(3);
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "endsAt" TIMESTAMP(3);
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "capacity" INTEGER;
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "visibility" "EventVisibility" NOT NULL DEFAULT 'PUBLIC';
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "status" "EventStatus" NOT NULL DEFAULT 'PUBLISHED';
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3);
+
+ALTER TABLE "EventAttendee" ADD COLUMN IF NOT EXISTS "eventId" TEXT;
+ALTER TABLE "EventAttendee" ADD COLUMN IF NOT EXISTS "userId" TEXT;
+ALTER TABLE "EventAttendee" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+-- If the legacy tables were empty, we can safely enforce NOT NULL on the
+-- columns that the new schema requires. Never fail on leftover legacy rows.
+DO $$
+DECLARE n int;
+BEGIN
+  SELECT count(*) INTO n FROM "Event";
+  IF n = 0 THEN
+    ALTER TABLE "Event" ALTER COLUMN "hostId" SET NOT NULL;
+    ALTER TABLE "Event" ALTER COLUMN "title" SET NOT NULL;
+    ALTER TABLE "Event" ALTER COLUMN "startsAt" SET NOT NULL;
+    ALTER TABLE "Event" ALTER COLUMN "updatedAt" SET NOT NULL;
+  END IF;
+  SELECT count(*) INTO n FROM "EventAttendee";
+  IF n = 0 THEN
+    ALTER TABLE "EventAttendee" ALTER COLUMN "eventId" SET NOT NULL;
+    ALTER TABLE "EventAttendee" ALTER COLUMN "userId" SET NOT NULL;
+  END IF;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
 CREATE INDEX IF NOT EXISTS "Event_status_startsAt_idx" ON "Event"("status", "startsAt");
 CREATE INDEX IF NOT EXISTS "Event_hostId_idx" ON "Event"("hostId");
 CREATE UNIQUE INDEX IF NOT EXISTS "EventAttendee_eventId_userId_key" ON "EventAttendee"("eventId", "userId");
