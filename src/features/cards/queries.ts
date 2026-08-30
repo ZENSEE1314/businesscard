@@ -15,6 +15,8 @@ export interface CardView {
   kind: "personal" | "business";
   userId: string;
   handle: string; // username or slug
+  /** Profile username of the underlying member — personal = handle; business = owner's username. Used for in-app contact saving and chat. */
+  ownerUsername: string | null;
   path: string; // /u/x or /business/x
   profileUrl: string;
   name: string;
@@ -76,6 +78,7 @@ export async function getPersonalCard(username: string): Promise<CardView | null
     kind: "personal",
     userId: profile.userId,
     handle: profile.username,
+    ownerUsername: profile.username,
     path: `/u/${profile.username}`,
     profileUrl: absoluteUrl(`/u/${profile.username}`),
     name: profile.displayName || profile.fullName,
@@ -109,7 +112,14 @@ export async function getBusinessCard(slug: string): Promise<CardView | null> {
   const biz = await prisma.businessProfile.findUnique({
     where: { slug: slug.toLowerCase() },
     include: {
-      user: { select: { id: true, status: true, referralCode: true } },
+      user: {
+        select: {
+          id: true,
+          status: true,
+          referralCode: true,
+          profile: { select: { username: true } },
+        },
+      },
       category: { select: { name: true } },
       awards: {
         include: { award: { select: { name: true, year: true } } },
@@ -123,6 +133,7 @@ export async function getBusinessCard(slug: string): Promise<CardView | null> {
     kind: "business",
     userId: biz.userId,
     handle: biz.slug,
+    ownerUsername: biz.user.profile?.username ?? null,
     path: `/business/${biz.slug}`,
     profileUrl: absoluteUrl(`/business/${biz.slug}`),
     name: biz.name,

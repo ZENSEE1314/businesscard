@@ -156,9 +156,12 @@ export async function PublicCard({
   const registerHref = card.referralCode
     ? `/register?ref=${encodeURIComponent(card.referralCode)}&src=link&card=${encodeURIComponent(card.handle)}`
     : "/register";
+  // Chat opens with the member's profile username — for business cards the
+  // handle is the slug, so use ownerUsername when available.
+  const chatHandle = card.ownerUsername ?? card.handle;
   const messageHref = isGuest
     ? registerHref
-    : `/chat?with=${encodeURIComponent(card.handle)}`;
+    : `/chat?with=${encodeURIComponent(chatHandle)}`;
 
   const socials = Object.entries(card.socials).filter(
     ([, v]) => v && v.trim().length > 0,
@@ -318,9 +321,9 @@ export async function PublicCard({
               isOwner={isOwner}
               editHref="/me/edit"
               saveInApp={
-                !isOwner && viewerSignedIn && card.kind === "personal"
+                !isOwner && viewerSignedIn
                   ? {
-                      username: card.handle,
+                      username: card.ownerUsername ?? card.handle,
                       registerHref,
                       source: "SHARED_LINK",
                     }

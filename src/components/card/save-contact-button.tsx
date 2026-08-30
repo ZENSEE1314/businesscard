@@ -8,12 +8,13 @@ import { apiFetch } from "@/lib/client";
 /**
  * "Save Contact" flow on a public digital card.
  *
- * - Signed-in visitors: saves the card owner into their BridgeX contacts
- *   (duplicate-safe), then offers message / view-card actions. The standard
- *   .vcf download stays available for the phone address book.
- * - Guests: downloads the standards-compliant vCard file directly and is
- *   invited to register (the register URL carries ref + src so the connection
- *   is created automatically after signup).
+ * - Signed-in visitors: one tap saves the card owner into their BridgeX
+ *   contacts (duplicate-safe) AND opens the standard .vcf import so the
+ *   contact also lands in the phone's address book. Then message /
+ *   view-contacts actions are offered.
+ * - Guests: no BridgeX account to save into — downloads the vCard file
+ *   directly and is invited to register (the register URL carries ref + src
+ *   so the connection is created automatically after signup).
  *
  * A website can never silently write into a phone's address book — the .vcf
  * download opens the device's normal contact-import flow with user consent.
@@ -32,6 +33,16 @@ export function SaveContactButton({
   const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
   const [error, setError] = useState<string | null>(null);
 
+  // Opens the device's contact-import flow for the .vcf (user-initiated).
+  function triggerVcfDownload() {
+    const a = document.createElement("a");
+    a.href = vcardUrl;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
   async function save() {
     setState("saving");
     setError(null);
@@ -42,6 +53,7 @@ export function SaveContactButton({
     if (!res.ok) {
       // Duplicate (409) still counts as saved from the user's perspective.
       if (res.code === "conflict") {
+        triggerVcfDownload();
         setState("saved");
         return;
       }
@@ -49,6 +61,8 @@ export function SaveContactButton({
       setState("idle");
       return;
     }
+    // Saved in-app — also open the phone address book import in one tap.
+    triggerVcfDownload();
     setState("saved");
   }
 
