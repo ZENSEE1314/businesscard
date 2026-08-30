@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(env.appUrl),
   applicationName: env.appName,
   title: {
-    default: `${env.appName} — Connect. Discover. Grow.`,
+    default: `${env.appName} — Your next opportunity is one connection away`,
     template: `%s · ${env.appName}`,
   },
   description:
