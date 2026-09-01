@@ -45,7 +45,7 @@ export const MEMBERSHIP_TIERS: Record<Tier, TierConfig> = {
   BRIDGEMAKER: {
     tier: "BRIDGEMAKER",
     label: "BridgeMaker",
-    priceIdr: 5_000_000,
+    priceIdr: 2_000_000,
     tagline: "Get your business online and seen.",
     tiktokAds: 3,
     webAds: 10,
@@ -64,7 +64,7 @@ export const MEMBERSHIP_TIERS: Record<Tier, TierConfig> = {
   BRIDGEMASTER: {
     tier: "BRIDGEMASTER",
     label: "BridgeMaster",
-    priceIdr: 25_000_000,
+    priceIdr: 8_000_000,
     tagline: "The full Member Club experience.",
     tiktokAds: 5,
     webAds: 20,
