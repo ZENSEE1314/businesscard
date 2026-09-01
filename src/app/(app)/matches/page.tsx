@@ -35,16 +35,15 @@ export default async function MatchesPage() {
   const viewingLookingFor = viewerProfile?.lookingFor ?? [];
 
   const [people, businesses] = await Promise.all([
+    // Show all active members (newest first) so new sign-ups appear for
+    // swiping; tag-based matches are surfaced to the top afterwards.
     prisma.profile.findMany({
       where: {
         userId: { not: viewer.id },
         user: { status: "ACTIVE" },
-        OR: [
-          ...(viewingCanHelp.length > 0 ? [{ lookingFor: { hasSome: viewingCanHelp } }] : []),
-          ...(viewingLookingFor.length > 0 ? [{ canHelp: { hasSome: viewingLookingFor } }] : []),
-        ],
       },
-      take: 30,
+      take: 60,
+      orderBy: { createdAt: "desc" },
       select: {
         userId: true,
         fullName: true,
@@ -60,12 +59,9 @@ export default async function MatchesPage() {
     prisma.businessProfile.findMany({
       where: {
         user: { status: "ACTIVE", id: { not: viewer.id } },
-        OR: [
-          ...(viewingCanHelp.length > 0 ? [{ lookingFor: { hasSome: viewingCanHelp } }] : []),
-          ...(viewingLookingFor.length > 0 ? [{ canHelp: { hasSome: viewingLookingFor } }] : []),
-        ],
       },
-      take: 30,
+      take: 60,
+      orderBy: { createdAt: "desc" },
       select: {
         userId: true,
         name: true,
