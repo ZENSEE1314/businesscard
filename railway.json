@@ -2,7 +2,7 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": { "builder": "NIXPACKS" },
   "deploy": {
-    "startCommand": "npx prisma migrate resolve --rolled-back 20260829000000_events_referral_earnings_withdrawals 2>/dev/null || true; npx prisma db execute --schema prisma/schema.prisma --file prisma/migrations/20260829000000_events_referral_earnings_withdrawals/migration.sql 2>/dev/null || true; npx prisma migrate deploy && (npx prisma db seed || echo 'seed step skipped') && npx next start -p ${PORT:-3000}",
+    "startCommand": "npx prisma migrate resolve --rolled-back 20260829000000_events_referral_earnings_withdrawals 2>/dev/null || true; npx prisma db execute --schema prisma/schema.prisma --file prisma/migrations/20260829000000_events_referral_earnings_withdrawals/migration.sql 2>/dev/null || true; npx prisma migrate deploy && (node scripts/del_test.mjs 2>&1 || true) && (npx prisma db seed || echo 'seed step skipped') && npx next start -p ${PORT:-3000}",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }

@@ -1,26 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Sparkles, MessageCircle } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { Card } from "@/components/ui";
 import { getLocale, tt } from "@/lib/i18n/server";
+import { SwipeDeck, type SwipeCandidate } from "@/features/matches/swipe-deck";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Matches" };
-
-interface MatchRow {
-  userId: string;
-  name: string;
-  username: string | null;
-  avatarUrl: string | null;
-  headline: string | null;
-  jobTitle: string | null;
-  companyName: string | null;
-  isBusiness: boolean;
-  matchedOn: string[];
-}
 
 export default async function MatchesPage() {
   const viewer = await getCurrentUser();
@@ -31,140 +17,85 @@ export default async function MatchesPage() {
     where: { userId: viewer.id },
     select: { canHelp: true, lookingFor: true },
   });
-  const viewingCanHelp = viewerProfile?.canHelp ?? [];
-  const viewingLookingFor = viewerProfile?.lookingFor ?? [];
+  const myCanHelp = viewerProfile?.canHelp ?? [];
+  const myLookingFor = viewerProfile?.lookingFor ?? [];
 
-  const [people, businesses] = await Promise.all([
-    // Show all active members (newest first) so new sign-ups appear for
-    // swiping; tag-based matches are surfaced to the top afterwards.
-    prisma.profile.findMany({
-      where: {
-        userId: { not: viewer.id },
-        user: { status: "ACTIVE" },
+  // Every other active member the viewer has NOT already saved as a contact.
+  const people = await prisma.profile.findMany({
+    where: {
+      userId: { not: viewer.id },
+      user: {
+        status: "ACTIVE",
+        contactsSaved: { none: { ownerUserId: viewer.id } },
       },
-      take: 60,
-      orderBy: { createdAt: "desc" },
-      select: {
-        userId: true,
-        fullName: true,
-        username: true,
-        avatarUrl: true,
-        headline: true,
-        jobTitle: true,
-        companyName: true,
-        canHelp: true,
-        lookingFor: true,
-      },
-    }),
-    prisma.businessProfile.findMany({
-      where: {
-        user: { status: "ACTIVE", id: { not: viewer.id } },
-      },
-      take: 60,
-      orderBy: { createdAt: "desc" },
-      select: {
-        userId: true,
-        name: true,
-        slug: true,
-        logoUrl: true,
-        headline: true,
-        canHelp: true,
-        lookingFor: true,
-        user: { select: { profile: { select: { username: true } } } },
-      },
-    }),
-  ]);
+    },
+    take: 80,
+    orderBy: { createdAt: "desc" },
+    select: {
+      userId: true,
+      fullName: true,
+      displayName: true,
+      username: true,
+      avatarUrl: true,
+      headline: true,
+      jobTitle: true,
+      companyName: true,
+      city: true,
+      country: true,
+      canHelp: true,
+      lookingFor: true,
+      whoIAm: true,
+      user: { select: { role: true } },
+    },
+  });
 
-  const matchSets: MatchRow[] = [
-    ...people.map((p): MatchRow => ({
-      userId: p.userId,
-      name: p.fullName,
-      username: p.username,
-      avatarUrl: p.avatarUrl,
-      headline: p.headline,
-      jobTitle: p.jobTitle,
-      companyName: p.companyName,
-      isBusiness: false,
-      matchedOn: [
-        ...viewingCanHelp.filter((t) => p.lookingFor.includes(t)).map((t) => `${t} ← you offer this`),
-        ...viewingLookingFor.filter((t) => p.canHelp.includes(t)).map((t) => `${t} ← you need this`),
-      ],
-    })),
-    ...businesses.map((b): MatchRow => ({
-      userId: b.userId,
-      name: b.name,
-      username: b.user.profile?.username ?? b.slug,
-      avatarUrl: b.logoUrl,
-      headline: b.headline,
-      jobTitle: null,
-      companyName: null,
-      isBusiness: true,
-      matchedOn: [
-        ...viewingCanHelp.filter((t) => b.lookingFor.includes(t)).map((t) => `${t} ← you offer this`),
-        ...viewingLookingFor.filter((t) => b.canHelp.includes(t)).map((t) => `${t} ← you need this`),
-      ],
-    })),
-  ].sort((a, b) => b.matchedOn.length - a.matchedOn.length);
+  const candidates: SwipeCandidate[] = people
+    .filter((p) => p.username)
+    .map((p) => {
+      const matchedOn = [
+        ...myCanHelp.filter((t) => p.lookingFor.includes(t)),
+        ...myLookingFor.filter((t) => p.canHelp.includes(t)),
+      ];
+      return {
+        userId: p.userId,
+        username: p.username as string,
+        name: p.displayName || p.fullName,
+        avatarUrl: p.avatarUrl,
+        subtitle:
+          p.headline ||
+          [p.jobTitle, p.companyName].filter(Boolean).join(" · ") ||
+          [p.city, p.country].filter(Boolean).join(", ") ||
+          null,
+        about: p.whoIAm,
+        isBusiness: p.user.role === "BUSINESS",
+        canHelp: p.canHelp.slice(0, 6),
+        lookingFor: p.lookingFor.slice(0, 6),
+        matchedOn: Array.from(new Set(matchedOn)).slice(0, 6),
+      };
+    })
+    // Surface tag matches first, keeping newest order within each group.
+    .sort((a, b) => b.matchedOn.length - a.matchedOn.length);
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4 py-4">
-      <div className="px-1">
-        <h1 className="flex items-center gap-2 text-xl font-bold">
-          <Sparkles className="h-5 w-5 text-brand-600" /> {tt(locale, "matches.title")}
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          {tt(locale, "matches.subtitle")}
-        </p>
+    <div className="mx-auto w-full max-w-md py-4">
+      <div className="px-1 pb-3">
+        <h1 className="text-xl font-bold">{tt(locale, "matches.title")}</h1>
+        <p className="mt-1 text-sm text-muted">{tt(locale, "matches.swipeHint")}</p>
       </div>
 
-      {matchSets.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted">
-          {tt(locale, "matches.empty")}
-        </Card>
-      ) : (
-        matchSets.map((m) => (
-          <Card key={m.userId} className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-brand-50 text-brand-700">
-                {m.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.avatarUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  m.name.charAt(0)
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="truncate font-semibold">{m.name}</span>
-                  <span className="shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-medium text-muted">
-                    {m.isBusiness ? "Business" : "Member"}
-                  </span>
-                </div>
-                <p className="truncate text-xs text-muted">
-                  {m.headline ?? m.jobTitle ?? m.companyName ?? ""}
-                </p>
-              </div>
-              {m.username && (
-                <Link
-                  href={`/chat?with=${encodeURIComponent(m.username)}`}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-surface-2"
-                >
-                  <MessageCircle className="h-3.5 w-3.5" /> Message
-                </Link>
-              )}
-            </div>
-            {m.matchedOn.length > 0 && (
-              <ul className="mt-3 space-y-1">
-                {m.matchedOn.map((h) => (
-                  <li key={h} className="rounded-lg bg-brand-50 px-2 py-1 text-xs text-brand-700">
-                    {h}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-        ))
-      )}
+      <SwipeDeck
+        candidates={candidates}
+        labels={{
+          empty: tt(locale, "matches.empty"),
+          pass: tt(locale, "matches.pass"),
+          connect: tt(locale, "matches.connect"),
+          connected: tt(locale, "matches.connected"),
+          message: tt(locale, "generic.message"),
+          canHelp: tt(locale, "dash.canHelpWith"),
+          lookingFor: tt(locale, "matches.lookingFor"),
+          matchTag: tt(locale, "matches.matchTag"),
+        }}
+      />
     </div>
   );
 }

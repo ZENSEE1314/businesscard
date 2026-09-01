@@ -164,10 +164,20 @@ export const dict: Record<string, Record<Locale, string>> = {
     id: "Kami memasangkan yang Anda tawarkan dengan kebutuhan orang — dan siapa yang bisa membantu.",
   },
   "matches.empty": {
-    en: "No matches yet. Add what you offer and what you’re looking for to your profile.",
-    zh: "还没有匹配。请在资料中填写您能提供的和正在寻找的内容。",
-    id: "Belum ada kecocokan. Tambahkan yang Anda tawarkan dan cari ke profil Anda.",
+    en: "You’re all caught up! Check back later for new members to connect with.",
+    zh: "已全部看完！稍后再来查看新成员。",
+    id: "Semua sudah dilihat! Cek lagi nanti untuk anggota baru.",
   },
+  "matches.swipeHint": {
+    en: "Swipe right to connect, left to pass.",
+    zh: "右滑连接，左滑跳过。",
+    id: "Geser kanan untuk terhubung, kiri untuk lewati.",
+  },
+  "matches.pass": { en: "Pass", zh: "跳过", id: "Lewati" },
+  "matches.connect": { en: "Connect", zh: "连接", id: "Hubungkan" },
+  "matches.connected": { en: "Saved to contacts:", zh: "已加入联系人：", id: "Disimpan ke kontak:" },
+  "matches.lookingFor": { en: "Looking for", zh: "正在寻找", id: "Mencari" },
+  "matches.matchTag": { en: "Why you match", zh: "匹配原因", id: "Kenapa cocok" },
 
   // Referrals
   "referrals.title": { en: "Refer & Earn", zh: "推荐赚积分", id: "Referal & Hadiah" },
