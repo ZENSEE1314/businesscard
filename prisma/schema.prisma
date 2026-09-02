@@ -152,6 +152,18 @@ enum EventStatus {
   CANCELLED
 }
 
+// Business Opportunities sections (the rebranded Marketplace). Every listing
+// is posted under one of these intents so visitors can browse by what they
+// need: money, buyers, supply, reach, partners or people.
+enum OpportunitySection {
+  INVESTORS
+  CUSTOMERS
+  SUPPLIERS
+  DISTRIBUTORS
+  PARTNERSHIP
+  JOBS
+}
+
 enum WithdrawalStatus {
   PENDING
   APPROVED
@@ -1002,6 +1014,7 @@ model MarketplaceListing {
   title       String   @db.VarChar(120)
   description String?  @db.VarChar(2000)
   category    String?  @db.VarChar(60)
+  section     OpportunitySection?
   priceNote   String?  @db.VarChar(80) // free-form price label, e.g. "Rp 250.000" or "Negotiable"
   imageUrl    String?
   whatsapp    String?  @db.VarChar(40)
@@ -1052,6 +1065,9 @@ model EventAttendee {
   event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Set when the attendee scans the host's attendance QR at the venue.
+  attendedAt DateTime?
 
   createdAt DateTime @default(now())
 

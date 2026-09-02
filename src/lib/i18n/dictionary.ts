@@ -13,6 +13,7 @@ export const dict: Record<string, Record<Locale, string>> = {
   "nav.card": { en: "Digital Name Card", zh: "电子名片", id: "Kartu Nama Digital" },
   "nav.refer": { en: "Refer & Earn", zh: "推荐赚积分", id: "Referal & Hadiah" },
   "nav.marketplace": { en: "Marketplace", zh: "市场", id: "Marketplace" },
+  "nav.opportunities": { en: "Opportunities", zh: "商业机会", id: "Peluang Bisnis" },
   "nav.rewards": { en: "Rewards", zh: "奖励", id: "Hadiah" },
   "nav.messages": { en: "Messages", zh: "消息", id: "Pesan" },
   "nav.membership": { en: "Membership", zh: "会员", id: "Keanggotaan" },
@@ -298,6 +299,57 @@ export const dict: Record<string, Record<Locale, string>> = {
   "checkin.success": { en: "Daily check-in successful — +{n} points!", zh: "签到成功 — +{n} 积分！", id: "Check-in berhasil — +{n} poin!" },
   "checkin.checkInNow": { en: "Check in now", zh: "立即签到", id: "Check-in sekarang" },
   "checkin.checkingIn": { en: "Checking in…", zh: "正在签到…", id: "Sedang check-in…" },
+
+  // Business Opportunities (rebranded marketplace)
+  "opp.title": { en: "Business Opportunities", zh: "商业机会", id: "Peluang Bisnis" },
+  "opp.subtitle": {
+    en: "Find investors, customers, suppliers, distributors, partners, talent and services.",
+    zh: "寻找投资者、客户、供应商、分销商、合作伙伴、人才与服务。",
+    id: "Temukan investor, pelanggan, pemasok, distributor, mitra, talenta, dan layanan.",
+  },
+  "opp.postListing": { en: "Post a listing", zh: "发布信息", id: "Unggah iklan" },
+  "opp.empty": {
+    en: "No listings here yet — be the first to post!",
+    zh: "这里还没有信息——快来发布第一条吧！",
+    id: "Belum ada iklan di sini — jadilah yang pertama!",
+  },
+  "opp.sectionInvestors": { en: "Looking for investors", zh: "寻找投资者", id: "Mencari investor" },
+  "opp.sectionCustomers": { en: "Looking for customers", zh: "寻找客户", id: "Mencari pelanggan" },
+  "opp.sectionSuppliers": { en: "Looking for suppliers", zh: "寻找供应商", id: "Mencari pemasok" },
+  "opp.sectionDistributors": { en: "Looking for distributors", zh: "寻找分销商", id: "Mencari distributor" },
+  "opp.sectionPartnership": { en: "Partnership opportunities", zh: "合作机会", id: "Peluang kemitraan" },
+  "opp.sectionJobs": { en: "Job & service requests", zh: "求职与服务需求", id: "Permintaan kerja & layanan" },
+
+  // Weekly networking missions
+  "mission.title": { en: "Weekly missions", zh: "每周任务", id: "Misi mingguan" },
+  "mission.subtitle": {
+    en: "Complete networking goals this week and claim points for each.",
+    zh: "完成本周社交目标并领取积分。",
+    id: "Selesaikan target networking minggu ini dan klaim poinnya.",
+  },
+  "mission.connect_business_owners": {
+    en: "Connect 3 business owners",
+    zh: "连接 3 位企业主",
+    id: "Hubungkan 3 pemilik bisnis",
+  },
+  "mission.attend_event": { en: "Attend one event", zh: "参加一场活动", id: "Hadiri satu acara" },
+  "mission.share_card": {
+    en: "Share your card 10 times",
+    zh: "分享名片 10 次",
+    id: "Bagikan kartu 10 kali",
+  },
+  "mission.reply_message": { en: "Reply to a message", zh: "回复一条消息", id: "Balas satu pesan" },
+  "mission.post_hub": { en: "Post in the hub", zh: "在社区发帖", id: "Posting di Hub" },
+  "mission.claim": { en: "Claim +{n}", zh: "领取 +{n}", id: "Klaim +{n}" },
+  "mission.claimed": { en: "Claimed", zh: "已领取", id: "Sudah diklaim" },
+  "mission.progressOf": { en: "{done}/{target}", zh: "{done}/{target}", id: "{done}/{target}" },
+  "mission.allBonus": {
+    en: "All 5 complete bonus: +{n} points",
+    zh: "全部 5 项完成奖励：+{n} 积分",
+    id: "Bonus semua 5 selesai: +{n} poin",
+  },
+  "mission.claimAll": { en: "Claim +{n} bonus", zh: "领取 +{n} 奖励", id: "Klaim bonus +{n}" },
+  "mission.weekOf": { en: "Week of {date}", zh: "{date} 当周", id: "Pekan {date}" },
 
   // Onboarding
   "onboard.welcome": { en: "Welcome to {app}!", zh: "欢迎来到 {app}！", id: "Selamat datang di {app}!" },

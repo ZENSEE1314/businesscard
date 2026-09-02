@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CalendarDays, MapPin, Users } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -87,12 +88,18 @@ export default async function EventsPage() {
                   <TranslateButton text={e.description} className="mt-1" />
                 </>
               )}
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap items-center gap-3">
                 <RsvpButton
                   eventId={e.id}
                   going={e.rsvpStatus === "GOING"}
                   full={e.capacity !== null && e.attendeeCount >= e.capacity}
                 />
+                <Link
+                  href={`/events/${e.id}`}
+                  className="text-sm font-semibold text-brand-700 hover:underline"
+                >
+                  Details{e.hostId === user.id ? " & QR codes" : ""} →
+                </Link>
               </div>
             </Card>
           ))

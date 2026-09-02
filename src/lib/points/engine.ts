@@ -193,6 +193,11 @@ interface AdjustOptions {
   adminId?: string;
   referenceType?: string;
   referenceId?: string;
+  // Optional event key (groups the award for rule/limit queries) and stable
+  // idempotency key — when set, a repeated award with the same key is a no-op,
+  // so callers can safely retry or race (e.g. mission/milestone claims).
+  eventKey?: string;
+  idempotencyKey?: string;
 }
 
 // Manual/admin adjustment or reversal. Always records a transaction row and
@@ -200,6 +205,21 @@ interface AdjustOptions {
 export async function adjustPoints(opts: AdjustOptions): Promise<number> {
   return prisma.$transaction(
     async (tx) => {
+      // Idempotency: if this exact key already granted points, no-op.
+      if (opts.idempotencyKey) {
+        const existing = await tx.pointTransaction.findUnique({
+          where: { idempotencyKey: opts.idempotencyKey },
+          select: { id: true },
+        });
+        if (existing) {
+          const u = await tx.user.findUnique({
+            where: { id: opts.userId },
+            select: { points: true },
+          });
+          return u?.points ?? 0;
+        }
+      }
+
       const user = await tx.user.findUnique({
         where: { id: opts.userId },
         select: { points: true },
@@ -231,11 +251,26 @@ export async function adjustPoints(opts: AdjustOptions): Promise<number> {
           createdByAdmin: opts.adminId,
           referenceType: opts.referenceType,
           referenceId: opts.referenceId,
+          eventKey: opts.eventKey,
+          idempotencyKey: opts.idempotencyKey,
         },
       });
 
       return updated.points;
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-  );
+  ).catch((err: unknown) => {
+    // Unique-constraint race on idempotencyKey => another concurrent claim
+    // won; treat as a no-op and report the current balance.
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002" &&
+      opts.idempotencyKey
+    ) {
+      return prisma.user
+        .findUnique({ where: { id: opts.userId }, select: { points: true } })
+        .then((u) => u?.points ?? 0);
+    }
+    throw err;
+  });
 }

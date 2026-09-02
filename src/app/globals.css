@@ -139,3 +139,96 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ---------------------------------------------------------------------------
+   Micro-animations (check-in celebration, mission bars, expandable strips).
+   All respect prefers-reduced-motion via the global rule above.
+--------------------------------------------------------------------------- */
+@keyframes pop-in {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.anim-pop {
+  animation: pop-in 480ms cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+
+@keyframes float-up {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.anim-float {
+  animation: float-up 420ms ease-out both;
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(-8deg) scale(1.08);
+  }
+  75% {
+    transform: rotate(8deg) scale(1.08);
+  }
+}
+.anim-wiggle {
+  animation: wiggle 520ms ease-in-out;
+}
+
+@keyframes confetti-pop {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx, 0), var(--ty, -80px)) scale(0.3)
+      rotate(var(--rot, 180deg));
+    opacity: 0;
+  }
+}
+.anim-confetti {
+  animation: confetti-pop 950ms ease-out forwards;
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
+  }
+}
+.anim-glow {
+  animation: glow-pulse 1.8s ease-out infinite;
+}
+
+/* Smooth height animation via the grid-rows trick (no max-height hacks). */
+.anim-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 320ms ease;
+}
+.anim-collapse.open {
+  grid-template-rows: 1fr;
+}
+.anim-collapse > * {
+  overflow: hidden;
+  min-height: 0;
+}

@@ -219,6 +219,8 @@ export interface CheckinStatus {
   lastCheckInAt: Date | null;
   nextMilestone: { day: number; bonus: number } | null;
   basePoints: number;
+  /** All configured streak milestones (sorted by day) for the rewards strip. */
+  milestones: { day: number; bonus: number }[];
 }
 
 /** Read-model for dashboard/UI display. Never mutates anything. */
@@ -260,6 +262,9 @@ export async function getCheckInStatus(userId: string): Promise<CheckinStatus> {
     lastCheckInAt: recent?.createdAt ?? null,
     nextMilestone: upcoming,
     basePoints: settings.basePoints,
+    milestones: settings.streakBonusEnabled
+      ? [...settings.milestones].sort((a, b) => a.day - b.day)
+      : [],
   };
 }
 

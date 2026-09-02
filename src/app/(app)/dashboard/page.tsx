@@ -15,6 +15,8 @@ import { getDashboardData } from "@/features/dashboard/queries";
 import { getLocale, tt } from "@/lib/i18n/server";
 import { CheckInCard } from "@/components/checkin-card";
 import { FollowUpButton } from "@/components/follow-up-button";
+import { MissionsCard } from "@/features/missions/missions-card";
+import { getMissionBoard } from "@/lib/missions";
 import { Card } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -58,7 +60,10 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const data = await getDashboardData();
+  const [data, missionBoard] = await Promise.all([
+    getDashboardData(),
+    getMissionBoard(user.id),
+  ]);
   if (!data) redirect("/login");
 
   const locale = await getLocale();
@@ -129,6 +134,9 @@ export default async function DashboardPage() {
 
       {/* Daily check-in */}
       <CheckInCard initial={data.checkin} />
+
+      {/* Weekly networking missions */}
+      <MissionsCard board={missionBoard} />
 
       {/* Quick actions */}
       <section>

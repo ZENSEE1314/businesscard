@@ -5,6 +5,7 @@ import { createSession, setSessionCookie } from "@/lib/auth/session";
 import { generateUniqueUsername } from "@/lib/auth/provisioning";
 import { registerSchema } from "@/lib/validation/auth";
 import { awardPoints, adjustPoints, PointEvents } from "@/lib/points/engine";
+import { awardReferralMilestones } from "@/lib/referral-milestones";
 import { addContact } from "@/lib/contacts";
 import type { SignupSource } from "@prisma/client";
 import { handle, created, Errors, getClientIp } from "@/lib/api";
@@ -58,6 +59,18 @@ export async function POST(req: NextRequest) {
     const signupCardHandle =
       req.nextUrl.searchParams.get("card")?.slice(0, 120) ?? null;
 
+    // Event invite: the QR on an event page links here with the event id so
+    // the signup is attributed to the event (and its host via ref code).
+    const eventParam = req.nextUrl.searchParams.get("event") ?? null;
+    let signupEventId: string | null = null;
+    if (eventParam) {
+      const event = await prisma.event.findUnique({
+        where: { id: eventParam },
+        select: { id: true, status: true },
+      });
+      if (event && event.status === "PUBLISHED") signupEventId = event.id;
+    }
+
     const username = await generateUniqueUsername(
       input.fullName || input.email.split("@")[0]!,
     );
@@ -71,6 +84,7 @@ export async function POST(req: NextRequest) {
         referredById,
         signupSource: referredById ? signupSource : "DIRECT",
         signupCardHandle,
+        signupEventId,
         profile: {
           create: {
             username,
@@ -81,6 +95,13 @@ export async function POST(req: NextRequest) {
       },
       select: { id: true, role: true },
     });
+
+    // Event-invite signups become attendees of that event right away.
+    if (signupEventId) {
+      await prisma.eventAttendee
+        .create({ data: { eventId: signupEventId, userId: user.id } })
+        .catch(() => undefined);
+    }
 
     // Registration bonus.
     await awardPoints({
@@ -111,28 +132,41 @@ export async function POST(req: NextRequest) {
       //     connect (the register form states this when src is present).
       // Duplicates are impossible thanks to the unique pair constraint.
       // --------------------------------------------------------------
-      const contactSource: "QR_SCAN" | "NFC_CARD" | "SHARED_LINK" | "REFERRAL" =
+      const contactSource:
+        | "QR_SCAN"
+        | "NFC_CARD"
+        | "SHARED_LINK"
+        | "REFERRAL"
+        | "EVENT" =
         signupSource === "QR_SCAN"
           ? "QR_SCAN"
           : signupSource === "NFC_CARD"
             ? "NFC_CARD"
             : signupSource === "CARD_LINK"
               ? "SHARED_LINK"
-              : "REFERRAL";
+              : signupSource === "EVENT_INVITE"
+                ? "EVENT"
+                : "REFERRAL";
 
       await addContact({
         ownerUserId: user.id,
         contactUserId: referredById,
         source: contactSource,
         sourceCardId: signupCardHandle,
+        eventId: signupEventId,
       }).catch(() => undefined);
 
       await addContact({
         ownerUserId: referredById,
         contactUserId: user.id,
-        source: contactSource === "REFERRAL" ? "REFERRAL" : "CARD_SIGNUP",
+        source: contactSource === "REFERRAL" || contactSource === "EVENT" ? contactSource : "CARD_SIGNUP",
         sourceCardId: signupCardHandle,
+        eventId: signupEventId,
       }).catch(() => undefined);
+
+      // Referral milestone rewards: every 5 friends crosses the next
+      // milestone for a growing points bonus (idempotent).
+      await awardReferralMilestones(referredById).catch(() => undefined);
     }
 
     const token = await createSession({

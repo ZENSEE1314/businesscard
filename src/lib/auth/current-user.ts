@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import type { Role } from "@prisma/client";
+import type { Role, MembershipTier } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { verifySessionToken } from "./jwt";
 import { SESSION_COOKIE, isSessionActive } from "./session";
@@ -17,6 +17,7 @@ export interface CurrentUser {
   fullName: string | null;
   avatarUrl: string | null;
   businessSlug: string | null;
+  membershipTier: MembershipTier | null;
 }
 
 // Resolves the authenticated user for the current request, or null.
@@ -40,6 +41,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       role: true,
       status: true,
       points: true,
+      membershipTier: true,
       profile: { select: { username: true, fullName: true, avatarUrl: true } },
       businessProfile: { select: { slug: true } },
     },
@@ -59,5 +61,6 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     fullName: user.profile?.fullName ?? null,
     avatarUrl: user.profile?.avatarUrl ?? null,
     businessSlug: user.businessProfile?.slug ?? null,
+    membershipTier: user.membershipTier,
   };
 });

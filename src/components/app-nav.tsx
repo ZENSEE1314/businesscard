@@ -49,7 +49,7 @@ const USER_MENU: MenuItem[] = [
   { href: "/contacts", label: "nav.contacts", icon: Users },
   { href: "__CARD__", label: "nav.card", icon: IdCard }, // replaced with the user's card path
   { href: "/referrals", label: "nav.refer", icon: UserPlus },
-  { href: "/marketplace", label: "nav.marketplace", icon: Store },
+  { href: "/opportunities", label: "nav.opportunities", icon: Store },
   { href: "/rewards", label: "nav.rewards", icon: Gift },
   { href: "/chat", label: "nav.messages", icon: MessageSquare },
   { href: "/membership", label: "nav.membership", icon: Crown },

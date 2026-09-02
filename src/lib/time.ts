@@ -33,6 +33,40 @@ export function addDaysToLocalDate(key: string, n: number): string {
   return new Date(t).toISOString().slice(0, 10);
 }
 
+/** Hour of day (0-23) for an instant in the given IANA timezone. */
+export function hourOfDayInTz(date: Date, timeZone: string = DEFAULT_TIMEZONE): number {
+  return Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      hour: "2-digit",
+      hour12: false,
+    }).format(date),
+  );
+}
+
+/**
+ * UTC instant of local midnight for a local date key in the given timezone.
+ * Iterative correction handles fixed offsets (Asia/Jakarta) exactly; DST zones
+ * converge in practice for midnight instants.
+ */
+export function startOfLocalDay(
+  localKey: string,
+  timeZone: string = DEFAULT_TIMEZONE,
+): Date {
+  let t = Date.parse(`${localKey}T00:00:00Z`);
+  for (let i = 0; i < 3; i++) {
+    const keyAtT = localDateKey(new Date(t), timeZone);
+    if (keyAtT !== localKey) {
+      t += daysBetweenLocalDates(localKey, keyAtT) * 86_400_000;
+      continue;
+    }
+    const hour = hourOfDayInTz(new Date(t), timeZone);
+    if (hour === 0) return new Date(t);
+    t -= hour * 3_600_000;
+  }
+  return new Date(t);
+}
+
 /** Human label for how long someone has been a member ("Joined today", "Member for 42 days"). */
 export function membershipDurationLabel(joinedAt: Date, now: Date = new Date(), timeZone: string = DEFAULT_TIMEZONE): string {
   const joined = daysBetweenLocalDates(localDateKey(now, timeZone), localDateKey(joinedAt, timeZone));

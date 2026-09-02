@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { TIER_ORDER, getTierConfig, type Tier } from "@/lib/membership";
+import { isFastUpgrade } from "@/lib/referral-milestones";
 
 /**
  * Referral money — "Refer & Earn" cash program.
@@ -174,22 +175,36 @@ export async function markWithdrawalPaid(withdrawalId: string, adminId: string) 
   });
 }
 
-/** Records the 20% commission rows for an approved membership order. */
+/** Records the 20% commission rows for an approved membership order.
+ *
+ * Fast-upgrade bonus: when the referred member buys a paid membership within
+ * 7 DAYS of joining, the referrer earns DOUBLE the usual commission (rateBps
+ * is doubled too so the ledger shows the boosted rate).
+ */
 export async function recordCommissionForMembership(membershipId: string) {
   const m = await prisma.membership.findUnique({
     where: { id: membershipId },
-    select: { id: true, tier: true, userId: true, user: { select: { referredById: true } } },
+    select: {
+      id: true,
+      tier: true,
+      userId: true,
+      user: { select: { referredById: true, createdAt: true } },
+    },
   });
   const referrerId = m?.user.referredById;
   if (!m || !referrerId || !(TIER_ORDER as string[]).includes(m.tier)) return null;
+
+  const fastUpgrade = isFastUpgrade(m.user.createdAt, new Date());
+  const multiplier = fastUpgrade ? 2 : 1;
+
   return prisma.referralEarning.create({
     data: {
       referrerId,
       referredUserId: m.userId,
       membershipId: m.id,
       tier: m.tier,
-      amountIdr: commissionFor(m.tier as Tier),
-      rateBps: COMMISSION_BPS,
+      amountIdr: commissionFor(m.tier as Tier) * multiplier,
+      rateBps: COMMISSION_BPS * multiplier,
     },
     select: { id: true },
   });

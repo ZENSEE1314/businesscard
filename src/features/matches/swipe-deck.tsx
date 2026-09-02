@@ -31,9 +31,27 @@ interface Labels {
 
 const PASSED_KEY = "matches-passed";
 
+// Today's key in the app timezone (matches the server's daily rotation) so
+// the per-device "passed" memory resets when the daily deck reshuffles.
+function todayKey(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+interface PassedStore {
+  day: string;
+  ids: string[];
+}
+
 function readPassed(): Set<string> {
   try {
-    return new Set(JSON.parse(localStorage.getItem(PASSED_KEY) || "[]"));
+    const raw = JSON.parse(localStorage.getItem(PASSED_KEY) || "null") as PassedStore | null;
+    if (!raw || raw.day !== todayKey() || !Array.isArray(raw.ids)) return new Set();
+    return new Set(raw.ids);
   } catch {
     return new Set();
   }
@@ -44,8 +62,8 @@ function rememberPassed(userId: string) {
     const s = readPassed();
     s.add(userId);
     // Cap the history so it can't grow without bound.
-    const arr = Array.from(s).slice(-500);
-    localStorage.setItem(PASSED_KEY, JSON.stringify(arr));
+    const store: PassedStore = { day: todayKey(), ids: Array.from(s).slice(-500) };
+    localStorage.setItem(PASSED_KEY, JSON.stringify(store));
   } catch {
     /* ignore */
   }
@@ -81,6 +99,7 @@ export function SwipeDeck({
   const [index, setIndex] = useState(0);
   const [drag, setDrag] = useState(0);
   const [leaving, setLeaving] = useState<null | "left" | "right">(null);
+  const [dragging, setDragging] = useState(false);
   const [justConnected, setJustConnected] = useState<string | null>(null);
   const startX = useRef<number | null>(null);
 
@@ -120,6 +139,7 @@ export function SwipeDeck({
   function onPointerDown(e: React.PointerEvent) {
     if (leaving) return;
     startX.current = e.clientX;
+    setDragging(true);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
   }
   function onPointerMove(e: React.PointerEvent) {
@@ -133,6 +153,7 @@ export function SwipeDeck({
     else if (drag < -threshold) decide("left");
     else setDrag(0);
     startX.current = null;
+    setDragging(false);
   }
 
   if (!current) {
@@ -168,7 +189,7 @@ export function SwipeDeck({
           className="absolute inset-0 cursor-grab touch-none active:cursor-grabbing"
           style={{
             transform: `translateX(${offset}px) rotate(${rotation}deg)`,
-            transition: leaving || startX.current === null ? "transform 0.25s ease" : "none",
+            transition: leaving || !dragging ? "transform 0.25s ease" : "none",
           }}
         >
           <CardFace c={current} labels={labels}>
