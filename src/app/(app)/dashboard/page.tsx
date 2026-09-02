@@ -8,6 +8,7 @@ import {
   CalendarDays,
   BellRing,
   ArrowRight,
+  Eye,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -177,6 +178,86 @@ export default async function DashboardPage() {
         </div>
       </section>
 
+      {/* Today's daily business matches — same pick as the /matches deck */}
+      <section>
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+            {tt(locale, "dash.todaysMatches")}
+          </h2>
+          <Link href="/matches" className="text-xs font-medium text-primary">
+            {tt(locale, "dash.openDeck")} <ArrowRight className="inline h-3 w-3" />
+          </Link>
+        </div>
+        <p className="mb-2 text-xs text-muted">
+          {tt(locale, "dash.todaysMatchesHint", { n: data.dailyMatchQuota })}
+        </p>
+        {data.dailyMatches.length === 0 ? (
+          <Card className="p-5 text-sm text-muted">{tt(locale, "dash.noMatchesYet")}</Card>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {data.dailyMatches.map((m) => (
+              <Card key={m.userId} className="p-4">
+                <div className="flex items-center gap-3">
+                  {m.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={m.avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+                  ) : (
+                    <div className="grid h-10 w-10 place-items-center rounded-full bg-brand-50 text-sm font-bold text-brand-700">
+                      {initials(m.name)}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/u/${m.username}`}
+                      className="block truncate text-sm font-medium hover:text-primary"
+                    >
+                      {m.name}
+                    </Link>
+                    <p className="truncate text-xs text-muted">
+                      {m.subtitle ?? (m.isBusiness ? "Business member" : "BridgeX member")}
+                    </p>
+                  </div>
+                </div>
+                {m.matchedOn.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {m.matchedOn.slice(0, 3).map((t) => (
+                      <span
+                        key={t}
+                        className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700"
+                      >
+                        ✓ {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-3 flex gap-2">
+                  <Link
+                    href={`/u/${m.username}`}
+                    className="flex h-8 flex-1 items-center justify-center rounded-lg border border-border text-xs font-semibold text-primary transition-colors hover:bg-surface-2"
+                  >
+                    {tt(locale, "dash.viewCard")}
+                  </Link>
+                  <Link
+                    href={`/chat?with=${encodeURIComponent(m.username)}`}
+                    className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-brand-600 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    {tt(locale, "dash.messageCta")}
+                  </Link>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+        {data.dailyMatchQuota < 3 && (
+          <p className="mt-2 text-center text-xs text-muted">
+            <Link href="/membership" className="font-medium text-brand-700 underline">
+              {tt(locale, "dash.matchesUpgrade")}
+            </Link>
+          </p>
+        )}
+      </section>
+
       {/* Recommended for what you're looking for */}
       <section>
         <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted">
@@ -281,6 +362,70 @@ export default async function DashboardPage() {
               </Link>
             ))}
           </div>
+        )}
+      </section>
+
+      {/* Who viewed my card — real ProfileView / contact-save analytics */}
+      <section>
+        <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-muted">
+          <Eye className="h-4 w-4" /> {tt(locale, "dash.whoViewed")}
+        </h2>
+        <div className="grid grid-cols-3 gap-3">
+          <StatTile label={tt(locale, "dash.totalViews")} value={data.cardStats.totalViews} />
+          <StatTile
+            label={tt(locale, "dash.newViewers")}
+            value={data.cardStats.newViewersLast7Days}
+          />
+          <StatTile
+            label={tt(locale, "dash.contactSaves")}
+            value={data.cardStats.totalContactSaves}
+          />
+        </div>
+        {data.cardStats.totalViews === 0 ? (
+          <Card className="mt-3 p-5 text-sm text-muted">
+            {tt(locale, "dash.noViewsYet")}
+          </Card>
+        ) : (
+          <Card className="mt-3 p-5">
+            <h3 className="text-sm font-semibold">{tt(locale, "dash.recentViewers")}</h3>
+            <ul className="mt-3 divide-y divide-border">
+              {data.cardStats.recentViewers.slice(0, 5).map((v, i) => (
+                <li key={`${v.username ?? "anon"}-${i}`} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                  {v.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={v.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                  ) : (
+                    <div className="grid h-9 w-9 place-items-center rounded-full bg-brand-50 text-xs font-bold text-brand-700">
+                      {v.name ? initials(v.name) : "👤"}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    {v.username ? (
+                      <Link
+                        href={`/u/${v.username}`}
+                        className="block truncate text-sm font-medium hover:text-primary"
+                      >
+                        {v.name ?? "BridgeX member"}
+                      </Link>
+                    ) : (
+                      <p className="truncate text-sm font-medium">
+                        {v.name ?? tt(locale, "dash.anonymousViewer")}
+                      </p>
+                    )}
+                    <p className="truncate text-xs text-muted">{v.companyName ?? ""}</p>
+                  </div>
+                  <span className="shrink-0 text-xs text-muted">
+                    {new Intl.DateTimeFormat("en", {
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }).format(v.at)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Card>
         )}
       </section>
 

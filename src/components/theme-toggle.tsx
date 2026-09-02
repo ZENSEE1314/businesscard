@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Moon, Sun, Monitor } from "lucide-react";
 
 type Theme = "light" | "dark" | "system";
@@ -27,6 +27,16 @@ function readStored(): Theme {
   return "system";
 }
 
+/** useSyncExternalStore subscription: theme changes here and in other tabs. */
+function subscribeTheme(onChange: () => void): () => void {
+  window.addEventListener("theme-change", onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    window.removeEventListener("theme-change", onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
 const OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
   { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },
@@ -37,24 +47,26 @@ const OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
  * Light/dark/system theme switch. Persists the choice to localStorage and
  * applies it immediately; the inline script in the root layout applies the
  * stored value before first paint to avoid a flash.
+ *
+ * The active value is read through useSyncExternalStore so the component
+ * hydrates with the server value ("system") and syncs to the stored theme
+ * right after mount — no setState-in-effect needed.
  */
 export function ThemeToggle({ className = "" }: { className?: string }) {
-  const [theme, setTheme] = useState<Theme>("system");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setTheme(readStored());
-    setMounted(true);
-  }, []);
+  const theme = useSyncExternalStore(subscribeTheme, readStored, () => "system" as Theme);
 
   function choose(next: Theme) {
-    setTheme(next);
     try {
       localStorage.setItem(STORAGE_KEY, next);
     } catch {
       /* ignore persistence failure */
     }
     applyTheme(next);
+    try {
+      window.dispatchEvent(new Event("theme-change"));
+    } catch {
+      /* ignore */
+    }
   }
 
   return (
@@ -64,7 +76,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       aria-label="Theme"
     >
       {OPTIONS.map((o) => {
-        const active = mounted && theme === o.value;
+        const active = theme === o.value;
         const Icon = o.icon;
         return (
           <button

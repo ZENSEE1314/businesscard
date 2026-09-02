@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore, useState } from "react";
 import { Languages } from "lucide-react";
 import { apiFetch } from "@/lib/client";
 import {
   getPreferredLanguage,
   languageLabel,
+  subscribePreferredLanguage,
 } from "@/lib/preferred-language";
 
 /**
@@ -21,16 +22,21 @@ export function TranslateButton({
   text: string;
   className?: string;
 }) {
-  const [lang, setLang] = useState("en");
+  // Target language comes from the external store — hydrates as "en" and
+  // syncs to the stored preference after mount, and follows live changes.
+  const lang = useSyncExternalStore(
+    subscribePreferredLanguage,
+    getPreferredLanguage,
+    () => "en",
+  );
   const [translated, setTranslated] = useState<string | null>(null);
   const [showing, setShowing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Reset any shown translation when the app language changes mid-view.
   useEffect(() => {
-    setLang(getPreferredLanguage());
     function onChange() {
-      setLang(getPreferredLanguage());
       setTranslated(null);
       setShowing(false);
     }

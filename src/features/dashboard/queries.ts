@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { getCheckInStatus } from "@/lib/checkin";
 import { membershipDays } from "@/lib/time";
 import { classifyActivityWithThresholds } from "@/lib/activity";
+import { getCardStats, type CardStats } from "@/lib/card-stats";
+import { getDailyMatches, type DailyMatch } from "@/features/matches/daily";
 
 // Dashboard read-model: every metric comes from real database values.
 // Nothing here is hardcoded — missing data renders as a friendly empty state.
@@ -61,6 +63,11 @@ export interface DashboardData {
     avatarUrl: string | null;
     joinedAt: Date;
   }[];
+  // "Who viewed my card" analytics (ProfileView + CONTACT_SAVE events).
+  cardStats: CardStats;
+  // Today's deterministic business matches (same pick as the /matches deck).
+  dailyMatches: DailyMatch[];
+  dailyMatchQuota: number;
   cardPath: string | null;
 }
 
@@ -293,6 +300,13 @@ export async function getDashboardData(): Promise<DashboardData | null> {
     joinedAt: u.createdAt,
   }));
 
+  // "Who viewed my card" analytics + today's deterministic daily matches
+  // (same seed as the /matches deck → both surfaces show the same people).
+  const [cardStats, daily] = await Promise.all([
+    getCardStats(user.id),
+    getDailyMatches(user.id, fullUser.membershipTier),
+  ]);
+
   return {
     greetingName:
       fullUser.profile?.displayName?.split(" ")[0] ||
@@ -323,6 +337,9 @@ export async function getDashboardData(): Promise<DashboardData | null> {
     pendingFollowUps,
     followUps,
     referredUsers,
+    cardStats,
+    dailyMatches: daily.matches,
+    dailyMatchQuota: daily.quota,
     cardPath: fullUser.profile?.username ? `/u/${fullUser.profile.username}` : null,
   };
 }

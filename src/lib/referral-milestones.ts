@@ -77,7 +77,7 @@ export interface MilestoneView {
 export async function getReferralMilestones(
   referrerId: string,
   totalReferrals: number,
-): Promise<{ milestones: MilestoneView[]; next: MilestoneView | null }> {
+): Promise<{ milestones: MilestoneView[]; next: MilestoneView }> {
   const currentStep = milestoneStepFor(totalReferrals);
   // Show reached milestones (up to 2 back) plus the next two ahead.
   const firstStep = Math.max(1, currentStep - 1);

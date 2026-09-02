@@ -188,6 +188,25 @@ export const dict: Record<string, Record<Locale, string>> = {
     zh: "还没有推荐。分享上方链接，邀请您的第一位会员。",
     id: "Belum ada referal. Bagikan tautan di atas untuk mengundang anggota pertama.",
   },
+  "referrals.milestones": { en: "Milestone rewards", zh: "里程碑奖励", id: "Hadiah milestone" },
+  "referrals.milestoneDesc": {
+    en: "Every 5 friends you refer pays a growing points bonus — 5 friends → 250 pts, 10 → 500, 15 → 750, and it keeps growing.",
+    zh: "每推荐 5 位好友即可获得递增的积分奖励 — 5 位 → 250 积分，10 位 → 500，15 位 → 750，持续增长。",
+    id: "Setiap 5 teman yang Anda referensikan memberi bonus poin yang terus bertambah — 5 teman → 250 poin, 10 → 500, 15 → 750, dan terus bertambah.",
+  },
+  "referrals.nextMilestone": { en: "Next milestone", zh: "下一个里程碑", id: "Milestone berikutnya" },
+  "referrals.friends": { en: "friends", zh: "位好友", id: "teman" },
+  "referrals.friendsToGo": { en: "{n} more to go", zh: "还需 {n} 位", id: "lagi {n} teman" },
+  "referrals.progressOf": { en: "{done}/{target} friends referred", zh: "已推荐 {done}/{target} 位好友", id: "{done}/{target} teman direferensikan" },
+  "referrals.milestoneClaimed": { en: "Claimed", zh: "已领取", id: "Diklaim" },
+  "referrals.milestoneReached": { en: "Reached — points added", zh: "已达成 — 积分已发放", id: "Tercapai — poin ditambahkan" },
+  "referrals.fastUpgrade": { en: "Fast-upgrade bonus: double commission", zh: "快速升级奖励：双倍佣金", id: "Bonus upgrade cepat: komisi ganda" },
+  "referrals.fastUpgradeDesc": {
+    en: "If a friend you referred becomes a paid member within 7 days of joining, you earn DOUBLE the referral commission — 40% instead of 20%.",
+    zh: "如果您推荐的好友在加入后 7 天内成为付费会员，您将获得双倍推荐佣金 — 40% 而非 20%。",
+    id: "Jika teman yang Anda referensikan menjadi anggota berbayar dalam 7 hari sejak bergabung, Anda mendapat komisi referal GANDA — 40%, bukan 20%.",
+  },
+  "referrals.paidMember": { en: "Paid member", zh: "付费会员", id: "Anggota berbayar" },
 
   // Points
   "points.title": { en: "Point history", zh: "积分记录", id: "Riwayat poin" },
@@ -286,6 +305,24 @@ export const dict: Record<string, Record<Locale, string>> = {
     id: "Bagikan kartu Anda untuk mengundang referal pertama dan dapatkan +100 poin.",
   },
   "dash.growthCount": { en: "{n} members joined through your link or card.", zh: "已有 {n} 位会员通过您的链接或名片加入。", id: "{n} anggota bergabung melalui tautan atau kartu Anda." },
+
+  // Daily business matches (dashboard + /matches deck)
+  "dash.todaysMatches": { en: "Today's matches", zh: "今日匹配", id: "Kecocokan hari ini" },
+  "dash.todaysMatchesHint": { en: "Fresh business matches for you every day — follow up or meet someone new.", zh: "每天为您匹配新的商机人脉 — 跟进或结识新朋友。", id: "Kecocokan bisnis baru untuk Anda setiap hari — tindak lanjuti atau temukan orang baru." },
+  "dash.openDeck": { en: "Open deck", zh: "打开匹配", id: "Buka dek" },
+  "dash.noMatchesYet": { en: "No matches available right now — check back tomorrow.", zh: "暂时没有匹配 — 请明天再来看看。", id: "Belum ada kecocokan saat ini — cek lagi besok." },
+  "dash.viewCard": { en: "View card", zh: "查看名片", id: "Lihat kartu" },
+  "dash.messageCta": { en: "Message", zh: "发消息", id: "Kirim pesan" },
+  "dash.matchesUpgrade": { en: "Upgrade for more daily matches — BridgeMaker 2/day · BridgeMaster 3/day", zh: "升级以获得更多每日匹配 — BridgeMaker 每天 2 位 · BridgeMaster 每天 3 位", id: "Upgrade untuk lebih banyak kecocokan harian — BridgeMaker 2/hari · BridgeMaster 3/hari" },
+
+  // Who viewed my card
+  "dash.whoViewed": { en: "Who viewed my card", zh: "谁看了我的名片", id: "Siapa yang melihat kartu saya" },
+  "dash.totalViews": { en: "Total views", zh: "总浏览量", id: "Total kunjungan" },
+  "dash.newViewers": { en: "New viewers (7d)", zh: "新访客（7天）", id: "Pengunjung baru (7hr)" },
+  "dash.contactSaves": { en: "Contact saves", zh: "联系人保存", id: "Kontak disimpan" },
+  "dash.noViewsYet": { en: "No card views yet — share your digital name card to get noticed.", zh: "还没有人查看您的名片 — 分享您的电子名片让大家看到您。", id: "Belum ada yang melihat kartu Anda — bagikan kartu nama digital Anda." },
+  "dash.recentViewers": { en: "Recent viewers", zh: "最近的访客", id: "Pengunjung terbaru" },
+  "dash.anonymousViewer": { en: "Anonymous viewer", zh: "匿名访客", id: "Pengunjung anonim" },
 
   // Check-in card
   "checkin.title": { en: "Daily check-in", zh: "每日签到", id: "Check-in harian" },

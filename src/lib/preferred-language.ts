@@ -65,6 +65,19 @@ export function setPreferredLanguage(code: string) {
   }
 }
 
+/**
+ * useSyncExternalStore subscription for the app language: reacts to in-app
+ * changes ("app-language-change" events) and to edits in other tabs (storage).
+ */
+export function subscribePreferredLanguage(onChange: () => void): () => void {
+  window.addEventListener("app-language-change", onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    window.removeEventListener("app-language-change", onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
 export function languageLabel(code: string): string {
   return LOCALE_LABEL[normalizeLocale(code)];
 }

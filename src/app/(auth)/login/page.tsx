@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
@@ -9,30 +9,40 @@ import { apiFetch } from "@/lib/client";
 import { useT } from "@/lib/i18n/client";
 import { LanguagePicker } from "@/components/language-picker";
 
+const REMEMBER_KEY = "remembered-email";
+
+// No live updates needed — the remembered email only changes on submit, after
+// which the form is left. Subscribe is therefore a no-op.
+function subscribeRememberedEmail() {
+  return () => {};
+}
+function readRememberedEmail(): string {
+  try {
+    return localStorage.getItem(REMEMBER_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const t = useT();
-  const [email, setEmail] = useState("");
+
+  // Prefill the email on this device when the user chose to be remembered.
+  // useSyncExternalStore hydrates with "" (server snapshot) and syncs to the
+  // stored value right after mount — no setState-in-effect needed. The
+  // browser's password manager fills the password.
+  const rememberedEmail = useSyncExternalStore(
+    subscribeRememberedEmail,
+    readRememberedEmail,
+    () => "",
+  );
+  const [emailInput, setEmailInput] = useState<string | null>(null);
+  const email = emailInput ?? rememberedEmail;
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const REMEMBER_KEY = "remembered-email";
-
-  // Prefill the email on this device when the user chose to be remembered. The
-  // browser's password manager fills the password (see credential store below).
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(REMEMBER_KEY);
-      if (saved) {
-        setEmail(saved);
-        setRememberMe(true);
-      }
-    } catch {
-      /* storage unavailable */
-    }
-  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -100,7 +110,7 @@ export default function LoginPage() {
             autoComplete="username"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmailInput(e.target.value)}
           />
         </div>
         <div>

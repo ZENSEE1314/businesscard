@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
 import {
   LANGUAGE_OPTIONS,
   getPreferredLanguage,
   setPreferredLanguage,
+  subscribePreferredLanguage,
 } from "@/lib/preferred-language";
 
 /**
@@ -14,19 +15,20 @@ import {
  * used as the target for the Translate buttons across posts, events and the
  * marketplace. Dispatches an "app-language-change" event so open TranslateButton
  * instances can react without a reload.
+ *
+ * The current language is read through useSyncExternalStore so the component
+ * hydrates with the server value ("en") and syncs to the real stored value
+ * right after mount — no setState-in-effect needed.
  */
 export function LanguagePicker({ className = "" }: { className?: string }) {
   const router = useRouter();
-  const [lang, setLang] = useState("en");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setLang(getPreferredLanguage());
-    setMounted(true);
-  }, []);
+  const lang = useSyncExternalStore(
+    subscribePreferredLanguage,
+    getPreferredLanguage,
+    () => "en",
+  );
 
   function choose(code: string) {
-    setLang(code);
     setPreferredLanguage(code);
     try {
       window.dispatchEvent(new CustomEvent("app-language-change", { detail: code }));
@@ -45,7 +47,7 @@ export function LanguagePicker({ className = "" }: { className?: string }) {
       <Globe className="h-3.5 w-3.5 text-muted" />
       <span className="sr-only">App language</span>
       <select
-        value={mounted ? lang : "en"}
+        value={lang}
         onChange={(e) => choose(e.target.value)}
         className="bg-transparent text-xs font-medium outline-none"
         aria-label="App language"

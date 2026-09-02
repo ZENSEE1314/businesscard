@@ -1,4 +1,3 @@
-import type { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/permissions/guards";
 import { handle, ok, ApiError } from "@/lib/api";
 
@@ -38,7 +37,7 @@ export async function GET() {
  * POST — pull the configured model into the Ollama server (persists on its
  * volume). Admin-only; reachable only server-side over the private network.
  */
-export async function POST(_req: NextRequest) {
+export async function POST() {
   return handle(async () => {
     await requireAdmin();
     const base = ollamaBase();

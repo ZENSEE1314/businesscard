@@ -31,7 +31,9 @@ export function UsersAdmin() {
   const [msg, setMsg] = useState<string | null>(null);
 
   const load = useCallback(async (query: string) => {
-    setMsg(null);
+    // No synchronous setState before the await — the initial load runs inside
+    // an effect and setState-in-effect is not allowed. Error clearing happens
+    // in the calling handlers.
     const res = await apiFetch<{ results: SearchRow[] }>(
       `/api/admin/users/search?q=${encodeURIComponent(query)}`,
     );
@@ -44,13 +46,31 @@ export function UsersAdmin() {
     }
   }, []);
 
-  // Show every member on load — no need to search first.
+  // Show every member on load — no need to search first. The fetch resolves
+  // asynchronously (state updates happen in the .then callback, never
+  // synchronously inside the effect body).
   useEffect(() => {
-    load("");
-  }, [load]);
+    let ignore = false;
+    apiFetch<{ results: SearchRow[] }>("/api/admin/users/search?q=").then(
+      (res) => {
+        if (ignore) return;
+        if (res.ok) {
+          setResults(res.data?.results ?? []);
+          setSearched(true);
+        } else {
+          setResults([]);
+          setMsg(res.error ?? "Could not load users.");
+        }
+      },
+    );
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   async function search(e: React.FormEvent) {
     e.preventDefault();
+    setMsg(null);
     await load(q);
   }
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Gift, UserPlus, Users, Share2, Wallet } from "lucide-react";
+import { Gift, Trophy, UserPlus, Users, Share2, Wallet, Zap } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { env } from "@/lib/env";
@@ -10,6 +10,8 @@ import { ReferralShare } from "@/features/referrals/referral-share";
 import { ReferralMoney } from "@/features/referrals/referral-money";
 import { ChatAvatar } from "@/features/chat/chat-avatar";
 import { earningTotals, listEarnings, listWithdrawals } from "@/lib/referral-money";
+import { getReferralMilestones } from "@/lib/referral-milestones";
+import { TIER_ORDER, getTierConfig, type Tier } from "@/lib/membership";
 import { getMinWithdrawalIdr } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
@@ -66,6 +68,7 @@ export default async function ReferralsPage() {
         createdAt: true,
         signupSource: true,
         status: true,
+        membershipTier: true,
         profile: {
           select: {
             username: true,
@@ -93,6 +96,14 @@ export default async function ReferralsPage() {
   const shareText = `Join me on ${env.appName} — create your free digital name card and grow your business network: ${link}`;
   const totalReferrals = me?._count.referrals ?? referred.length;
   const referralPoints = pointsAgg._sum.amount ?? 0;
+
+  // Milestone ladder (5 → 250 pts, 10 → 500, 15 → 750 …) with claim state.
+  const milestones = await getReferralMilestones(user.id, totalReferrals);
+  const next = milestones.next;
+  const progressPct = Math.min(
+    100,
+    Math.round((totalReferrals / Math.max(next.target, 1)) * 100),
+  );
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-4 py-4">
@@ -126,6 +137,84 @@ export default async function ReferralsPage() {
             +{referralPoints.toLocaleString()}
           </p>
         </Card>
+      </div>
+
+      {/* Milestone rewards — every 5 friends pays a growing bonus */}
+      <Card className="p-5">
+        <h2 className="flex items-center gap-1.5 font-semibold">
+          <Trophy className="h-4 w-4 text-amber-500" />
+          {tt(locale, "referrals.milestones")}
+        </h2>
+        <p className="mt-1 text-sm text-muted">{tt(locale, "referrals.milestoneDesc")}</p>
+
+        {/* Progress toward the next milestone */}
+        <div className="mt-4 rounded-xl border border-border bg-surface-2 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs">
+            <span className="font-semibold">
+              {tt(locale, "referrals.nextMilestone")}: {next.target}{" "}
+              {tt(locale, "referrals.friends")} →{" "}
+              <span className="text-brand-700">
+                +{next.reward} {tt(locale, "common.points")}
+              </span>
+            </span>
+            <span className="text-muted">
+              {tt(locale, "referrals.friendsToGo", {
+                n: Math.max(next.target - totalReferrals, 0),
+              })}
+            </span>
+          </div>
+          <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-border">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent transition-all"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+          <p className="mt-1.5 text-[11px] text-muted">
+            {tt(locale, "referrals.progressOf", {
+              done: Math.min(totalReferrals, next.target),
+              target: next.target,
+            })}
+          </p>
+        </div>
+
+        {/* Ladder */}
+        <ul className="mt-3 space-y-1.5">
+          {milestones.milestones.map((m) => (
+            <li
+              key={m.step}
+              className="flex items-center justify-between gap-2 rounded-xl border border-border px-3 py-2"
+            >
+              <span className="text-sm font-medium">
+                {m.target} {tt(locale, "referrals.friends")} →{" "}
+                <span className="font-bold text-brand-700">+{m.reward}</span>
+              </span>
+              {m.claimed ? (
+                <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
+                  ✓ {tt(locale, "referrals.milestoneClaimed")}
+                </span>
+              ) : m.reached ? (
+                <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                  {tt(locale, "referrals.milestoneReached")}
+                </span>
+              ) : (
+                <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-[11px] font-medium text-muted">
+                  {tt(locale, "referrals.friendsToGo", { n: m.target - totalReferrals })}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </Card>
+
+      {/* Fast-upgrade double commission explainer */}
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        <p className="flex items-center gap-1.5 text-sm font-bold text-amber-800">
+          <Zap className="h-4 w-4 shrink-0" />
+          {tt(locale, "referrals.fastUpgrade")}
+        </p>
+        <p className="mt-1 text-sm text-amber-800/90">
+          {tt(locale, "referrals.fastUpgradeDesc")}
+        </p>
       </div>
 
       {/* Share */}
@@ -204,9 +293,19 @@ export default async function ReferralsPage() {
                         : ""}
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
-                    Joined
-                  </span>
+                  {r.membershipTier &&
+                  (TIER_ORDER as string[]).includes(r.membershipTier) ? (
+                    <span
+                      className="shrink-0 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white"
+                      title={tt(locale, "referrals.paidMember")}
+                    >
+                      ⭐ {getTierConfig(r.membershipTier as Tier).label}
+                    </span>
+                  ) : (
+                    <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
+                      Joined
+                    </span>
+                  )}
                 </li>
               );
             })}
