@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Loader2, ImagePlus, Video, X, Sparkles } from "lucide-react";
 import { Button, ButtonLink, Card, Input, Label, Textarea } from "@/components/ui";
+import { PhoneField } from "@/components/ui/phone-field";
 import { apiFetch } from "@/lib/client";
 import { AiWriteButton } from "@/components/ai-write-button";
 
@@ -535,8 +536,8 @@ export function ProfileEditForm({
       <Card className="space-y-4 p-5">
         <h2 className="font-semibold">Contact</h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Phone" value={p.state.phone} onChange={(v) => p.set("phone", v)} />
-          <Field label="WhatsApp" value={p.state.whatsapp} onChange={(v) => p.set("whatsapp", v)} />
+          <PhoneField label="Phone" value={p.state.phone} onChange={(v) => p.set("phone", v)} />
+          <PhoneField label="WhatsApp" value={p.state.whatsapp} onChange={(v) => p.set("whatsapp", v)} />
           <Field label="Email" type="email" value={p.state.email} onChange={(v) => p.set("email", v)} />
           <Field label="Website" value={p.state.website} onChange={(v) => p.set("website", v)} placeholder="https://" />
           <Field label="City" value={p.state.city} onChange={(v) => p.set("city", v)} />
@@ -642,8 +643,8 @@ export function ProfileEditForm({
             <Textarea rows={3} value={b.state.description} onChange={(e) => b.set("description", e.target.value)} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Phone" value={b.state.phone} onChange={(v) => b.set("phone", v)} />
-            <Field label="WhatsApp" value={b.state.whatsapp} onChange={(v) => b.set("whatsapp", v)} />
+            <PhoneField label="Phone" value={b.state.phone} onChange={(v) => b.set("phone", v)} />
+            <PhoneField label="WhatsApp" value={b.state.whatsapp} onChange={(v) => b.set("whatsapp", v)} />
             <Field label="Email" type="email" value={b.state.email} onChange={(v) => b.set("email", v)} />
             <Field label="Website" value={b.state.website} onChange={(v) => b.set("website", v)} placeholder="https://" />
             <Field label="City" value={b.state.city} onChange={(v) => b.set("city", v)} />
